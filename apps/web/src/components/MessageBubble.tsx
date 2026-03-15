@@ -1,10 +1,8 @@
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import type { MessageResponse, ContentBlock } from "../types";
-import { CodeBlock } from "./CodeBlock";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
 import { processMessageContent } from "./processMessageContent";
+import { MessageContent } from "./MessageContent";
 
 interface MessageBubbleProps {
   message: MessageResponse;
@@ -31,14 +29,14 @@ function UserMessage({ message }: { message: MessageResponse }) {
       .join("\n");
   }
 
-  text = processMessageContent(text);
-  if (!text) return null;
+  const segments = processMessageContent(text);
+  if (segments.length === 0) return null;
 
   return (
     <div className="flex justify-end">
       <div className="max-w-[80%]">
-        <div className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white whitespace-pre-wrap">
-          {text}
+        <div className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">
+          <MessageContent segments={segments} />
         </div>
         <div className="mt-1 text-right text-xs text-gray-400">
           {formatTimestamp(message.timestamp)}
@@ -64,31 +62,9 @@ function AssistantMessage({
         <div className="rounded-lg bg-white px-4 py-2 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200">
           {content.map((block, i) => {
             if (block.type === "text" && block.text) {
-              const processed = processMessageContent(block.text);
-              if (!processed) return null;
-              return (
-                <div key={i} className="prose prose-sm max-w-none">
-                  <Markdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code({ className, children, ...props }) {
-                        const match = /language-(\w+)/.exec(className || "");
-                        const code = String(children).replace(/\n$/, "");
-                        if (match) {
-                          return <CodeBlock language={match[1]}>{code}</CodeBlock>;
-                        }
-                        return (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      },
-                    }}
-                  >
-                    {processed}
-                  </Markdown>
-                </div>
-              );
+              const segments = processMessageContent(block.text);
+              if (segments.length === 0) return null;
+              return <MessageContent key={i} segments={segments} />;
             }
             if (block.type === "thinking" && block.thinking) {
               return <ThinkingBlock key={i} thinking={block.thinking} />;
