@@ -104,6 +104,17 @@ func SessionFilePath(claudeDir, project, sessionID string) string {
 	return filepath.Join(claudeDir, "projects", encoded, sessionID+".jsonl")
 }
 
+// AddSession adds a new session from a history entry if it doesn't already exist.
+func (idx *Index) AddSession(claudeDir string, entry claude.HistoryEntry) {
+	for _, s := range idx.Sessions {
+		if s.SessionID == entry.SessionID {
+			return
+		}
+	}
+	meta := buildSessionMeta(claudeDir, entry)
+	idx.Sessions = append([]SessionMeta{meta}, idx.Sessions...)
+}
+
 // FilterByProject returns sessions whose project path contains the given substring.
 func (idx *Index) FilterByProject(query string) []SessionMeta {
 	var result []SessionMeta
