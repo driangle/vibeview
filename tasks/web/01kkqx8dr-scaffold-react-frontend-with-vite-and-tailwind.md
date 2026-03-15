@@ -1,7 +1,7 @@
 ---
 title: "Scaffold React frontend with Vite and Tailwind"
 id: "01kkqx8dr"
-status: pending
+status: completed
 priority: critical
 effort: small
 type: chore
@@ -18,14 +18,14 @@ Set up the React 19 SPA in the `web/` directory with Vite, Tailwind CSS, TypeScr
 
 ## Tasks
 
-- [ ] Initialize Vite project with React 19 and TypeScript in `web/`
-- [ ] Install and configure Tailwind CSS
-- [ ] Install and configure React Router with routes for `/` and `/session/:id`
-- [ ] Install SWR for data fetching
-- [ ] Set up directory structure: `src/components/`, `src/pages/`, `src/hooks/`, `src/types/`
-- [ ] Create placeholder page components for SessionList and SessionView
-- [ ] Configure Vite proxy to forward `/api` requests to the Go backend during development
-- [ ] Verify dev server starts and routes work
+- [x] Initialize Vite project with React 19 and TypeScript in `web/`
+- [x] Install and configure Tailwind CSS
+- [x] Install and configure React Router with routes for `/` and `/session/:id`
+- [x] Install SWR for data fetching
+- [x] Set up directory structure: `src/components/`, `src/pages/`, `src/hooks/`, `src/types/`
+- [x] Create placeholder page components for SessionList and SessionView
+- [x] Configure Vite proxy to forward `/api` requests to the Go backend during development
+- [x] Verify dev server starts and routes work
 
 ## Acceptance Criteria
 
