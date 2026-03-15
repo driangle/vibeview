@@ -67,26 +67,49 @@ function AssistantMessage({
   const content = message.message?.content;
   if (!Array.isArray(content)) return null;
 
+  // Split content into groups: consecutive non-tool blocks go in a bubble, tool blocks render standalone
+  const groups: { type: "bubble" | "tool"; blocks: { block: ContentBlock; index: number }[] }[] = [];
+  for (let i = 0; i < content.length; i++) {
+    const block = content[i];
+    const isToolUse = block.type === "tool_use";
+    const groupType = isToolUse ? "tool" : "bubble";
+    const last = groups[groups.length - 1];
+    if (last && last.type === groupType) {
+      last.blocks.push({ block, index: i });
+    } else {
+      groups.push({ type: groupType, blocks: [{ block, index: i }] });
+    }
+  }
+
   return (
     <div className="flex justify-start">
       <div className="max-w-[80%]">
-        <div className="rounded-lg bg-white px-4 py-2 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200">
-          {content.map((block, i) => {
+        {groups.map((group, gi) => {
+          if (group.type === "tool") {
+            return group.blocks.map(({ block, index }) => {
+              const result = block.id ? toolResults.get(block.id) : undefined;
+              return <ToolCallBlock key={index} block={block} result={result} />;
+            });
+          }
+          // Render non-tool blocks inside the message bubble
+          const rendered = group.blocks.map(({ block, index }) => {
             if (block.type === "text" && block.text) {
               const segments = processMessageContent(block.text);
               if (segments.length === 0) return null;
-              return <MessageContent key={i} segments={segments} rawMessage={message} />;
+              return <MessageContent key={index} segments={segments} rawMessage={message} />;
             }
             if (block.type === "thinking" && block.thinking) {
-              return <ThinkingBlock key={i} thinking={block.thinking} />;
-            }
-            if (block.type === "tool_use") {
-              const result = block.id ? toolResults.get(block.id) : undefined;
-              return <ToolCallBlock key={i} block={block} result={result} />;
+              return <ThinkingBlock key={index} thinking={block.thinking} />;
             }
             return null;
-          })}
-        </div>
+          });
+          if (rendered.every((r) => r === null)) return null;
+          return (
+            <div key={gi} className="rounded-lg bg-white px-4 py-2 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200">
+              {rendered}
+            </div>
+          );
+        })}
         <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
           <span>{formatTimestamp(message.timestamp)}</span>
           {message.message?.model && (
