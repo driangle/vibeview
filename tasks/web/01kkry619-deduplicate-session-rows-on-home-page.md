@@ -1,7 +1,7 @@
 ---
 title: "Deduplicate session rows on home page"
 id: "01kkry619"
-status: pending
+status: completed
 priority: high
 type: bug
 effort: small
@@ -19,10 +19,10 @@ The session list on the home page currently shows multiple rows for the same ses
 
 ## Tasks
 
-- [ ] Investigate whether duplication originates from the backend API or frontend rendering
-- [ ] If backend: deduplicate sessions by ID in the API response, keeping the latest entry
-- [ ] If frontend: deduplicate the session array by ID before rendering
-- [ ] Verify that the displayed row uses the latest timestamp, message count, and slug
+- [x] Investigate whether duplication originates from the backend API or frontend rendering
+- [x] If backend: deduplicate sessions by ID in the API response, keeping the latest entry
+- [ ] ~~If frontend: deduplicate the session array by ID before rendering~~ (N/A — fixed in backend)
+- [x] Verify that the displayed row uses the latest timestamp, message count, and slug
 
 ## Acceptance Criteria
 

@@ -75,14 +75,24 @@ func Discover(claudeDir string) (*Index, error) {
 		return nil, err
 	}
 
+	// Deduplicate by session ID, keeping the entry with the latest timestamp.
+	seen := make(map[string]int) // sessionID -> index in sessions slice
 	var sessions []SessionMeta
 	for _, entry := range entries {
-		sessions = append(sessions, SessionMeta{
+		meta := SessionMeta{
 			SessionID: entry.SessionID,
 			Project:   entry.Project,
 			Display:   entry.Display,
 			Timestamp: entry.Timestamp.Int64(),
-		})
+		}
+		if idx, exists := seen[entry.SessionID]; exists {
+			if meta.Timestamp > sessions[idx].Timestamp {
+				sessions[idx] = meta
+			}
+		} else {
+			seen[entry.SessionID] = len(sessions)
+			sessions = append(sessions, meta)
+		}
 	}
 
 	// Sort by timestamp descending (most recent first).
