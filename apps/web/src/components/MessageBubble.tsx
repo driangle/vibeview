@@ -150,7 +150,7 @@ function EventMessage({
       <div className="flex items-center">
         <button
           onClick={() => setShowJson(true)}
-          className={`cursor-pointer border-l-2 ${borderColor} py-0.5 pl-2 pr-2 text-xs ${labelColor} hover:opacity-70`}
+          className={`cursor-pointer border-l-2 ${borderColor} py-0.5 pl-2 pr-2 text-xs ${labelColor} hover:opacity-70 text-left break-all`}
         >
           <span className="font-medium">{label}</span>
           {detailText && (
@@ -196,7 +196,7 @@ function SystemMessage({ message }: { message: MessageResponse }) {
       borderColor="border-gray-200"
       labelColor="text-gray-400"
       detailColor="text-gray-300"
-      detailText={detail ? detail.slice(0, 80) : ""}
+      detailText={detail}
     />
   );
 }

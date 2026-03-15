@@ -1,7 +1,7 @@
 ---
 title: "Show full progress event data and left-align progress lines"
 id: "01kks4ew7"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui"]
