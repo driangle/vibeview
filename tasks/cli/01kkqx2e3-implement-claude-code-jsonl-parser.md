@@ -1,7 +1,7 @@
 ---
 title: "Implement Claude Code JSONL parser"
 id: "01kkqx2e3"
-status: pending
+status: completed
 priority: critical
 effort: medium
 type: feature
