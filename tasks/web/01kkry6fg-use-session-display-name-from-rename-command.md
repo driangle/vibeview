@@ -1,7 +1,7 @@
 ---
 title: "Use session display name from rename command"
 id: "01kkry6fg"
-status: pending
+status: completed
 priority: medium
 type: bug
 effort: small
@@ -19,10 +19,10 @@ In Claude Code, users can run `/rename` to set a custom session name. The sessio
 
 ## Tasks
 
-- [ ] Investigate how Claude Code stores the renamed session name in JSONL data
-- [ ] Ensure the backend parses and returns the display name correctly
-- [ ] Update the session list to prefer `display` over `slug` when both are available
-- [ ] Update the session detail view to show the display name as the title
+- [x] Investigate how Claude Code stores the renamed session name in JSONL data
+- [x] Ensure the backend parses and returns the display name correctly
+- [x] Update the session list to prefer `display` over `slug` when both are available
+- [x] Update the session detail view to show the display name as the title
 
 ## Acceptance Criteria
 

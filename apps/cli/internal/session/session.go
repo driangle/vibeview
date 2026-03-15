@@ -24,7 +24,7 @@ type UsageTotals struct {
 type SessionMeta struct {
 	SessionID    string      `json:"sessionId"`
 	Project      string      `json:"project"`
-	Display      string      `json:"display"`
+	CustomTitle  string      `json:"customTitle"`
 	Timestamp    int64       `json:"timestamp"` // epoch millis
 	MessageCount int         `json:"messageCount"`
 	Model        string      `json:"model"`
@@ -82,7 +82,6 @@ func Discover(claudeDir string) (*Index, error) {
 		meta := SessionMeta{
 			SessionID: entry.SessionID,
 			Project:   entry.Project,
-			Display:   entry.Display,
 			Timestamp: entry.Timestamp.Int64(),
 		}
 		if idx, exists := seen[entry.SessionID]; exists {
@@ -151,6 +150,9 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 				meta.Usage.CostUSD += u.CostUSD
 			}
 		}
+		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
+			meta.CustomTitle = msg.CustomTitle
+		}
 	}
 
 	if len(messages) > 0 {
@@ -187,7 +189,6 @@ func (idx *Index) AddSession(claudeDir string, entry claude.HistoryEntry) {
 	meta := SessionMeta{
 		SessionID: entry.SessionID,
 		Project:   entry.Project,
-		Display:   entry.Display,
 		Timestamp: entry.Timestamp.Int64(),
 	}
 	idx.Sessions = append([]SessionMeta{meta}, idx.Sessions...)

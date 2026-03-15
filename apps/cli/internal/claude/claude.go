@@ -66,6 +66,7 @@ const (
 	MessageTypeProgress            MessageType = "progress"
 	MessageTypeSystem              MessageType = "system"
 	MessageTypeFileHistorySnapshot MessageType = "file-history-snapshot"
+	MessageTypeCustomTitle         MessageType = "custom-title"
 )
 
 // Message represents a single line from a session JSONL file.
@@ -89,6 +90,9 @@ type Message struct {
 
 	// Present on file-history-snapshot messages.
 	Snapshot map[string]any `json:"snapshot,omitempty"`
+
+	// Present on custom-title messages (from /rename command).
+	CustomTitle string `json:"customTitle,omitempty"`
 
 	// Present on user tool-result messages.
 	ToolUseResult *ToolUseResult `json:"-"`

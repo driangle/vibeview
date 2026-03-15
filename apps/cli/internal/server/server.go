@@ -184,7 +184,7 @@ func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 type SessionResponse struct {
 	ID           string              `json:"id"`
 	Project      string              `json:"project"`
-	Display      string              `json:"display"`
+	CustomTitle  string              `json:"customTitle"`
 	Timestamp    string              `json:"timestamp"`
 	MessageCount int                 `json:"messageCount"`
 	Model        string              `json:"model"`
@@ -214,7 +214,7 @@ func toSessionResponse(m session.SessionMeta) SessionResponse {
 	return SessionResponse{
 		ID:           m.SessionID,
 		Project:      m.Project,
-		Display:      m.Display,
+		CustomTitle:  m.CustomTitle,
 		Timestamp:    msToISO(m.Timestamp),
 		MessageCount: m.MessageCount,
 		Model:        m.Model,

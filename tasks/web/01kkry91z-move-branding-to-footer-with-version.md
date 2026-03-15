@@ -1,7 +1,7 @@
 ---
 title: "Move branding to footer with version"
 id: "01kkry91z"
-status: pending
+status: completed
 priority: medium
 type: feature
 effort: small

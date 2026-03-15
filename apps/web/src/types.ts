@@ -9,7 +9,7 @@ export interface UsageTotals {
 export interface Session {
   id: string;
   project: string;
-  display: string;
+  customTitle: string;
   timestamp: string;
   messageCount: number;
   model: string;

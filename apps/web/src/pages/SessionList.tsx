@@ -102,7 +102,7 @@ export function SessionList() {
         (s) =>
           s.project.toLowerCase().includes(search.toLowerCase()) ||
           s.slug?.toLowerCase().includes(search.toLowerCase()) ||
-          s.display?.toLowerCase().includes(search.toLowerCase())
+          s.customTitle?.toLowerCase().includes(search.toLowerCase())
       )
     : dirFiltered;
 
@@ -168,7 +168,7 @@ export function SessionList() {
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-gray-900">
-                          {session.slug || session.display || session.id}
+                          {session.customTitle || session.slug || session.id}
                         </p>
                         <p className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
                           {session.model && (

@@ -155,7 +155,7 @@ export function SessionView() {
       <div className="mb-6">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-gray-900">
-            {session.slug || session.display || session.id}
+            {session.customTitle || session.slug || session.id}
           </h1>
           <LiveIndicator status={connectionStatus} />
         </div>

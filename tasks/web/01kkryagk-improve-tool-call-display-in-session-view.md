@@ -2,7 +2,7 @@
 title: "Strip or format raw XML tags in message rendering"
 id: "01kkryagk"
 status: pending
-priority: high
+priority: medium
 type: bug
 effort: small
 tags: ["frontend", "ui"]
