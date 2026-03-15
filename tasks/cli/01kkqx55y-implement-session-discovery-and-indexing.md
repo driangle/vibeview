@@ -1,7 +1,7 @@
 ---
 title: "Implement session discovery and indexing"
 id: "01kkqx55y"
-status: pending
+status: completed
 priority: critical
 effort: medium
 type: feature
@@ -19,14 +19,14 @@ Build the session discovery layer that reads history.jsonl, resolves session fil
 
 ## Tasks
 
-- [ ] Read and parse `~/.claude/history.jsonl` to get all session entries
-- [ ] Resolve each session's JSONL file path using project path encoding
-- [ ] Parse each session file to extract metadata: message count, model (from first assistant message), slug
-- [ ] Build an in-memory session index with all metadata
-- [ ] Support filtering sessions by project path (substring match)
-- [ ] Support sorting sessions by timestamp (most recent first)
-- [ ] Handle missing or unreadable session files gracefully
-- [ ] Write tests for session discovery logic
+- [x] Read and parse `~/.claude/history.jsonl` to get all session entries
+- [x] Resolve each session's JSONL file path using project path encoding
+- [x] Parse each session file to extract metadata: message count, model (from first assistant message), slug
+- [x] Build an in-memory session index with all metadata
+- [x] Support filtering sessions by project path (substring match)
+- [x] Support sorting sessions by timestamp (most recent first)
+- [x] Handle missing or unreadable session files gracefully
+- [x] Write tests for session discovery logic
 
 ## Acceptance Criteria
 
