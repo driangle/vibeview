@@ -1,7 +1,7 @@
 ---
 title: "Move session search to server side"
 id: "01kkry6g9"
-status: pending
+status: completed
 priority: medium
 type: feature
 effort: medium
@@ -19,11 +19,11 @@ The session search/filter is currently implemented client-side, filtering the fu
 
 ## Tasks
 
-- [ ] Add a `q` (or `search`) query parameter to the `GET /api/sessions` endpoint
-- [ ] Implement server-side filtering by project path, slug, and display name
-- [ ] Update the frontend to send search queries to the API instead of filtering locally
-- [ ] Add debouncing to the search input to avoid excessive API calls
-- [ ] Remove client-side filtering logic from SessionList
+- [x] Add a `q` (or `search`) query parameter to the `GET /api/sessions` endpoint
+- [x] Implement server-side filtering by project path, slug, and display name
+- [x] Update the frontend to send search queries to the API instead of filtering locally
+- [x] Add debouncing to the search input to avoid excessive API calls
+- [x] Remove client-side filtering logic from SessionList
 
 ## Acceptance Criteria
 

@@ -121,6 +121,48 @@ func TestListSessionsFilterByProject(t *testing.T) {
 	}
 }
 
+func TestListSessionsSearchByQuery(t *testing.T) {
+	srv := newTestServer(t)
+	// Enrich so slugs are populated from session files.
+	srv.index.Enrich(srv.claudeDir)
+
+	tests := []struct {
+		query    string
+		wantIDs  []string
+	}{
+		{"hello", []string{"sess-1"}},       // matches slug "hello world"
+		{"project-b", []string{"sess-2"}},   // matches project path
+		{"HELLO", []string{"sess-1"}},       // case-insensitive
+		{"nonexistent", nil},                // no match
+		{"session", []string{"sess-2"}},     // matches slug "second session"
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.query, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/api/sessions?q="+tt.query, nil)
+			w := httptest.NewRecorder()
+			srv.mux.ServeHTTP(w, req)
+
+			var sessions []SessionResponse
+			json.NewDecoder(w.Body).Decode(&sessions)
+
+			var gotIDs []string
+			for _, s := range sessions {
+				gotIDs = append(gotIDs, s.ID)
+			}
+
+			if len(gotIDs) != len(tt.wantIDs) {
+				t.Fatalf("q=%q: got %v, want %v", tt.query, gotIDs, tt.wantIDs)
+			}
+			for i, id := range tt.wantIDs {
+				if gotIDs[i] != id {
+					t.Errorf("q=%q: got[%d]=%s, want %s", tt.query, i, gotIDs[i], id)
+				}
+			}
+		})
+	}
+}
+
 func TestGetSession(t *testing.T) {
 	srv := newTestServer(t)
 	req := httptest.NewRequest("GET", "/api/sessions/sess-1", nil)

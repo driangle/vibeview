@@ -98,6 +98,19 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		sessions = filtered
 	}
 
+	if q := r.URL.Query().Get("q"); q != "" {
+		query := strings.ToLower(q)
+		filtered := make([]session.SessionMeta, 0)
+		for _, sm := range sessions {
+			if strings.Contains(strings.ToLower(sm.Project), query) ||
+				strings.Contains(strings.ToLower(sm.Slug), query) ||
+				strings.Contains(strings.ToLower(sm.CustomTitle), query) {
+				filtered = append(filtered, sm)
+			}
+		}
+		sessions = filtered
+	}
+
 	resp := make([]SessionResponse, 0, len(sessions))
 	for _, m := range sessions {
 		resp = append(resp, toSessionResponse(m))

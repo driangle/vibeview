@@ -1,9 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
 import type { Session } from "../types";
 import { formatTime, projectName } from "../utils";
+
+function useDebounced<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 const RECENT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -25,22 +34,39 @@ function groupByProject(sessions: Session[]): Map<string, Session[]> {
   return groups;
 }
 
+function buildSessionsUrl(project: string, q: string): string {
+  const params = new URLSearchParams();
+  if (project) params.set("project", project);
+  if (q) params.set("q", q);
+  const qs = params.toString();
+  return qs ? `/api/sessions?${qs}` : "/api/sessions";
+}
+
 export function SessionList() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
   const dirFilter = searchParams.get("dir") || "";
 
+  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch);
   const { data: sessions, error, isLoading } = useSWR<Session[]>(
+    apiUrl,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+
+  // Fetch all sessions (unfiltered) for the project dropdown.
+  const { data: allSessions } = useSWR<Session[]>(
     "/api/sessions",
     fetcher,
     { refreshInterval: 5000 }
   );
 
   const uniqueProjects = useMemo(() => {
-    if (!sessions) return [];
-    const projects = [...new Set(sessions.map((s) => s.project))];
+    if (!allSessions) return [];
+    const projects = [...new Set(allSessions.map((s) => s.project))];
     return projects.sort();
-  }, [sessions]);
+  }, [allSessions]);
 
   function setDirFilter(dir: string) {
     setSearchParams((prev) => {
@@ -73,20 +99,7 @@ export function SessionList() {
     );
   }
 
-  const dirFiltered = dirFilter
-    ? sessions.filter((s) => s.project === dirFilter)
-    : sessions;
-
-  const filtered = search
-    ? dirFiltered.filter(
-        (s) =>
-          s.project.toLowerCase().includes(search.toLowerCase()) ||
-          s.slug?.toLowerCase().includes(search.toLowerCase()) ||
-          s.customTitle?.toLowerCase().includes(search.toLowerCase())
-      )
-    : dirFiltered;
-
-  const grouped = groupByProject(filtered);
+  const grouped = groupByProject(sessions);
 
   return (
     <div className="mx-auto max-w-4xl p-8">
@@ -119,7 +132,7 @@ export function SessionList() {
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {sessions.length === 0 ? (
         <p className="text-gray-500">
           {search ? "No sessions match your filter." : "No sessions found."}
         </p>
