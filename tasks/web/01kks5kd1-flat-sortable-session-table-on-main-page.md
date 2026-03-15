@@ -1,7 +1,7 @@
 ---
 title: "Flat sortable session table on main page"
 id: "01kks5kd1"
-status: pending
+status: in-progress
 priority: medium
 type: feature
 tags: ["ui"]

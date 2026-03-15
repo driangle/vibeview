@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
+import { SessionRow } from "../components/SessionRow";
+import { SortHeader } from "../components/SortHeader";
+import type { SortColumn, SortDirection } from "../components/SortHeader";
 import type { Session } from "../types";
-import { formatTime, projectName } from "../utils";
+import { projectName } from "../utils";
 
 function useDebounced<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -14,26 +17,6 @@ function useDebounced<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-const RECENT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-
-function isRecent(timestamp: string): boolean {
-  return Date.now() - new Date(timestamp).getTime() < RECENT_THRESHOLD_MS;
-}
-
-function groupByProject(sessions: Session[]): Map<string, Session[]> {
-  const groups = new Map<string, Session[]>();
-  for (const session of sessions) {
-    const key = session.project;
-    const group = groups.get(key);
-    if (group) {
-      group.push(session);
-    } else {
-      groups.set(key, [session]);
-    }
-  }
-  return groups;
-}
-
 function buildSessionsUrl(project: string, q: string): string {
   const params = new URLSearchParams();
   if (project) params.set("project", project);
@@ -42,11 +25,27 @@ function buildSessionsUrl(project: string, q: string): string {
   return qs ? `/api/sessions?${qs}` : "/api/sessions";
 }
 
+function getSortValue(session: Session, column: SortColumn): string | number {
+  switch (column) {
+    case "date":
+      return new Date(session.timestamp).getTime();
+    case "name":
+      return (session.customTitle || session.slug || session.id).toLowerCase();
+    case "directory":
+      return session.project.toLowerCase();
+    case "messages":
+      return session.messageCount;
+  }
+}
+
 export function SessionList() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
   const dirFilter = searchParams.get("dir") || "";
+
+  const [sortColumn, setSortColumn] = useState<SortColumn>("date");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch);
   const { data: sessions, error, isLoading } = useSWR<Session[]>(
@@ -67,6 +66,27 @@ export function SessionList() {
     const projects = [...new Set(allSessions.map((s) => s.project))];
     return projects.sort();
   }, [allSessions]);
+
+  const sortedSessions = useMemo(() => {
+    if (!sessions) return [];
+    const sorted = [...sessions].sort((a, b) => {
+      const aVal = getSortValue(a, sortColumn);
+      const bVal = getSortValue(b, sortColumn);
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [sessions, sortColumn, sortDirection]);
+
+  function toggleSort(column: SortColumn) {
+    if (sortColumn === column) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(column);
+      setSortDirection(column === "date" ? "desc" : "asc");
+    }
+  }
 
   function setDirFilter(dir: string) {
     setSearchParams((prev) => {
@@ -98,8 +118,6 @@ export function SessionList() {
       </div>
     );
   }
-
-  const grouped = groupByProject(sessions);
 
   return (
     <div className="mx-auto max-w-4xl p-8">
@@ -137,52 +155,29 @@ export function SessionList() {
           {search ? "No sessions match your filter." : "No sessions found."}
         </p>
       ) : (
-        <div className="space-y-8">
-          {[...grouped.entries()].map(([project, projectSessions]) => (
-            <section key={project}>
-              <h2 className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                {projectName(project)}
-                <span className="ml-2 text-xs font-normal text-gray-400">
-                  {project}
-                </span>
-              </h2>
-              <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
-                {projectSessions.map((session) => (
-                  <li key={session.id}>
-                    <Link
-                      to={`/session/${session.id}`}
-                      className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50"
-                    >
-                      {isRecent(session.timestamp) && (
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full bg-green-500"
-                          title="Active recently"
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-gray-900">
-                          {session.customTitle || session.slug || session.id}
-                        </p>
-                        <p className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
-                          {session.model && (
-                            <span className="rounded bg-gray-100 px-1.5 py-0.5">
-                              {session.model}
-                            </span>
-                          )}
-                          <span>
-                            {session.messageCount} message{session.messageCount !== 1 ? "s" : ""}
-                          </span>
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs text-gray-400">
-                        {formatTime(session.timestamp)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <SortHeader label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
+                <SortHeader label="Session" column="name" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
+                <SortHeader label="Directory" column="directory" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
+                <SortHeader label="Messages" column="messages" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
+                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Model
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedSessions.map((session) => (
+                <SessionRow
+                  key={session.id}
+                  session={session}
+                  onDirectoryClick={setDirFilter}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
