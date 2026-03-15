@@ -1,0 +1,14 @@
+dir: ./tasks
+id:
+  strategy: ulid
+  length: 9
+phases:
+  - id: foundation
+    name: "Foundation"
+    description: "Project scaffolding and core infrastructure"
+  - id: core
+    name: "Core Features"
+    description: "Backend services, API, and frontend pages"
+  - id: polish
+    name: "Polish"
+    description: "Integration, embedding, and finishing touches"
