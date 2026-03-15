@@ -1,7 +1,7 @@
 ---
 title: "Flat sortable session table on main page"
 id: "01kks5kd1"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["ui"]
@@ -16,12 +16,12 @@ Replace the directory-grouped session listing on the main page with a flat, sort
 
 ## Tasks
 
-- [ ] Remove the directory-based grouping logic from the main page
-- [ ] Implement a flat table layout displaying all sessions
-- [ ] Add sortable column headers (at minimum: date, session name/ID, directory)
-- [ ] Default sort to date descending
-- [ ] Ensure the directory is still visible as a column so context is not lost
-- [ ] Make the directory value in each row clickable to filter the table by that directory (same behavior as the existing directory dropdown filter)
+- [x] Remove the directory-based grouping logic from the main page
+- [x] Implement a flat table layout displaying all sessions
+- [x] Add sortable column headers (at minimum: date, session name/ID, directory)
+- [x] Default sort to date descending
+- [x] Ensure the directory is still visible as a column so context is not lost
+- [x] Make the directory value in each row clickable to filter the table by that directory (same behavior as the existing directory dropdown filter)
 
 ## Acceptance Criteria
 
