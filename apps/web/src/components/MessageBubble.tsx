@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { MessageResponse, ContentBlock } from "../types";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
@@ -99,6 +100,65 @@ function AssistantMessage({
   );
 }
 
+function isHookMessage(msg: MessageResponse): boolean {
+  return msg.type === "progress" && msg.data?.type === "hook_progress";
+}
+
+function JsonModal({
+  data,
+  onClose,
+}: {
+  data: Record<string, unknown>;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[80vh] w-full max-w-xl overflow-auto rounded-lg bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">Raw Event</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            &times;
+          </button>
+        </div>
+        <pre className="overflow-auto rounded bg-gray-50 p-4 text-xs text-gray-800">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+function HookMessage({ message }: { message: MessageResponse }) {
+  const [showJson, setShowJson] = useState(false);
+  const hookName = String(message.data?.hookName ?? "unknown");
+
+  return (
+    <>
+      <div className="-ml-4 flex items-center gap-2">
+        <button
+          onClick={() => setShowJson(true)}
+          className="flex items-center gap-1.5 border-l-2 border-amber-300 py-0.5 pl-2 text-xs text-amber-600 hover:text-amber-800"
+        >
+          <span className="font-medium">Hook</span>
+          <span className="text-amber-400">{hookName}</span>
+        </button>
+      </div>
+      {showJson && message.data && (
+        <JsonModal data={message.data} onClose={() => setShowJson(false)} />
+      )}
+    </>
+  );
+}
+
 function SystemMessage({ message }: { message: MessageResponse }) {
   const label =
     message.type === "progress" ? "Progress" : "System";
@@ -108,11 +168,11 @@ function SystemMessage({ message }: { message: MessageResponse }) {
       : "";
 
   return (
-    <div className="flex justify-center">
-      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500">
+    <div className="-ml-4 flex items-center gap-2">
+      <span className="border-l-2 border-gray-200 py-0.5 pl-2 text-xs text-gray-400">
         {label}
         {detail && (
-          <span className="ml-1 text-gray-400" title={detail}>
+          <span className="ml-1" title={detail}>
             — {detail.slice(0, 80)}
           </span>
         )}
@@ -138,6 +198,9 @@ export function MessageBubble({ message, toolResults }: MessageBubbleProps) {
   }
 
   if (message.type === "system" || message.type === "progress") {
+    if (isHookMessage(message)) {
+      return <HookMessage message={message} />;
+    }
     return <SystemMessage message={message} />;
   }
 

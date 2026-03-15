@@ -23,7 +23,10 @@ This is intentionally a large task — it will be split into smaller subtasks la
 - [ ] Extract ClaudeCode-specific parsing logic into a dedicated plugin/adapter module
 - [ ] Extract ClaudeCode-specific session scanning/discovery into the plugin
 - [ ] Extract ClaudeCode-specific UX logic (message rendering, tool call display, status indicators) into the plugin
+- [ ] Structure each plugin as a single package directory containing both frontend and backend code (e.g. `plugins/claude-code/`)
 - [ ] Create a plugin registration/discovery mechanism so new agents can be added
+- [ ] Define a version compatibility scheme for plugins (e.g. `>= 1.2.0`) declaring which agent CLI versions they support
+- [ ] Implement version checking that warns or errors when the detected agent version falls outside the plugin's supported range
 - [ ] Refactor core code to depend only on the agent-agnostic interfaces
 - [ ] Ensure the ClaudeCode plugin passes all existing functionality as-is
 
@@ -33,4 +36,7 @@ This is intentionally a large task — it will be split into smaller subtasks la
 - ClaudeCode support is implemented entirely through a plugin/adapter module
 - A clear, documented interface exists for adding new agent plugins
 - Adding a new agent plugin requires no changes to core code
+- Each plugin is a single package directory co-locating its frontend and backend code
+- Each plugin declares a supported agent version range (e.g. `>= 1.2.0`) so that breaking changes in event formats or new unsupported events can be detected
+- When the detected agent version is outside the plugin's supported range, a clear warning or error is shown to the user
 - All existing ClaudeCode functionality works identically after the refactor
