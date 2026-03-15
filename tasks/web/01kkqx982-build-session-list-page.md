@@ -1,7 +1,7 @@
 ---
 title: "Build session list page"
 id: "01kkqx982"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: feature
@@ -19,15 +19,15 @@ Implement the session list page at `/` that displays all sessions grouped by pro
 
 ## Tasks
 
-- [ ] Define TypeScript types for session list API response
-- [ ] Create SWR hook for fetching sessions from `GET /api/sessions`
-- [ ] Build session card component showing: project name, slug/display text, timestamp, model, message count
-- [ ] Group sessions by project path
-- [ ] Add search/filter input for filtering by project name
-- [ ] Implement click-to-navigate to `/session/:id`
-- [ ] Configure SWR periodic revalidation (every 5s) for auto-updates
-- [ ] Add visual indicator for "live" sessions (recently updated)
-- [ ] Style with Tailwind CSS
+- [x] Define TypeScript types for session list API response
+- [x] Create SWR hook for fetching sessions from `GET /api/sessions`
+- [x] Build session card component showing: project name, slug/display text, timestamp, model, message count
+- [x] Group sessions by project path
+- [x] Add search/filter input for filtering by project name
+- [x] Implement click-to-navigate to `/session/:id`
+- [x] Configure SWR periodic revalidation (every 5s) for auto-updates
+- [x] Add visual indicator for "live" sessions (recently updated)
+- [x] Style with Tailwind CSS
 
 ## Acceptance Criteria
 
