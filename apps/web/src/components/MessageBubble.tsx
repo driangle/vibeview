@@ -4,6 +4,7 @@ import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
 import { processMessageContent } from "./processMessageContent";
 import { MessageContent } from "./MessageContent";
+import { RawJsonModal } from "./RawJsonModal";
 
 interface MessageBubbleProps {
   message: MessageResponse;
@@ -127,39 +128,6 @@ function isHookMessage(msg: MessageResponse): boolean {
   return msg.type === "progress" && msg.data?.type === "hook_progress";
 }
 
-function JsonModal({
-  data,
-  onClose,
-}: {
-  data: Record<string, unknown>;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[80vh] w-full max-w-xl overflow-auto rounded-lg bg-white p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">Raw Event</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            &times;
-          </button>
-        </div>
-        <pre className="overflow-auto rounded bg-gray-50 p-4 text-xs text-gray-800">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      </div>
-    </div>
-  );
-}
-
 function EventMessage({
   message,
   label,
@@ -191,7 +159,7 @@ function EventMessage({
         </button>
       </div>
       {showJson && message.data && (
-        <JsonModal data={message.data} onClose={() => setShowJson(false)} />
+        <RawJsonModal data={message.data} onClose={() => setShowJson(false)} />
       )}
     </>
   );

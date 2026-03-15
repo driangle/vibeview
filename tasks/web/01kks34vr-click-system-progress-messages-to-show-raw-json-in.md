@@ -1,7 +1,7 @@
 ---
 id: "01kks34vr"
 title: "Click system/progress messages to show raw JSON in modal"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["web"]
