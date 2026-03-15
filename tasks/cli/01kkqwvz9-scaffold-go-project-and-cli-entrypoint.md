@@ -1,7 +1,7 @@
 ---
 title: "Scaffold Go project and CLI entrypoint"
 id: "01kkqwvz9"
-status: pending
+status: completed
 priority: critical
 effort: small
 type: chore
@@ -18,11 +18,11 @@ Set up the Go module, directory structure, and CLI entrypoint with flag parsing.
 
 ## Tasks
 
-- [ ] Initialize Go module (`go mod init`)
-- [ ] Create directory structure: `cmd/vibeview/`, `internal/server/`, `internal/session/`, `internal/claude/`
-- [ ] Implement CLI flag parsing: `--port` (default 1337), `--claude-dir` (default ~/.claude), `--open` (default true)
-- [ ] Wire up basic main() that parses flags and prints startup info
-- [ ] Add a placeholder HTTP server start (will be implemented in a later task)
+- [x] Initialize Go module (`go mod init`)
+- [x] Create directory structure: `cmd/vibeview/`, `internal/server/`, `internal/session/`, `internal/claude/`
+- [x] Implement CLI flag parsing: `--port` (default 1337), `--claude-dir` (default ~/.claude), `--open` (default true)
+- [x] Wire up basic main() that parses flags and prints startup info
+- [x] Add a placeholder HTTP server start (will be implemented in a later task)
 
 ## Acceptance Criteria
 
