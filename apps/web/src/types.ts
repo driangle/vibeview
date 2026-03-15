@@ -1,3 +1,11 @@
+export interface UsageTotals {
+  inputTokens: number;
+  outputTokens: number;
+  cacheCreationInputTokens: number;
+  cacheReadInputTokens: number;
+  costUSD: number;
+}
+
 export interface Session {
   id: string;
   project: string;
@@ -6,6 +14,7 @@ export interface Session {
   messageCount: number;
   model: string;
   slug: string;
+  usage: UsageTotals;
 }
 
 export interface Usage {
@@ -13,6 +22,7 @@ export interface Usage {
   output_tokens: number;
   cache_creation_input_tokens: number;
   cache_read_input_tokens: number;
+  costUSD?: number;
 }
 
 export interface ContentBlock {

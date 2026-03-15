@@ -2,8 +2,14 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
-import type { SessionDetail, ContentBlock, MessageResponse } from "../types";
+import type {
+  SessionDetail,
+  ContentBlock,
+  MessageResponse,
+  UsageTotals,
+} from "../types";
 import { MessageBubble } from "../components/MessageBubble";
+import { CostDisplay } from "../components/CostDisplay";
 import { useSessionStream } from "../hooks/useSessionStream";
 
 const MESSAGES_PER_PAGE = 50;
@@ -68,6 +74,23 @@ export function SessionView() {
     () => buildToolResultMap(allMessages),
     [allMessages],
   );
+
+  // Aggregate usage: session totals + any new streamed assistant messages.
+  const liveUsage = useMemo<UsageTotals | null>(() => {
+    if (!session) return null;
+    const base = { ...session.usage };
+    for (const msg of streamedMessages) {
+      if (msg.type === "assistant" && msg.message?.usage) {
+        const u = msg.message.usage;
+        base.inputTokens += u.input_tokens;
+        base.outputTokens += u.output_tokens;
+        base.cacheCreationInputTokens += u.cache_creation_input_tokens;
+        base.cacheReadInputTokens += u.cache_read_input_tokens;
+        base.costUSD += u.costUSD ?? 0;
+      }
+    }
+    return base;
+  }, [session, streamedMessages]);
 
   // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
@@ -158,6 +181,7 @@ export function SessionView() {
           </span>
           <span>{formatDate(session.timestamp)}</span>
         </div>
+        {liveUsage && <CostDisplay usage={liveUsage} />}
       </div>
 
       {/* Pagination (top) */}

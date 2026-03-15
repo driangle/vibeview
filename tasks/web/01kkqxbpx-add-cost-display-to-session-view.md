@@ -1,7 +1,7 @@
 ---
 title: "Add cost display to session view"
 id: "01kkqxbpx"
-status: pending
+status: completed
 priority: medium
 effort: small
 type: feature
@@ -19,12 +19,12 @@ Display token usage and estimated dollar costs in the session view. Show a sideb
 
 ## Tasks
 
-- [ ] Define TypeScript types for usage/cost data from API
-- [ ] Build cost display component (sidebar or header section)
-- [ ] Show raw token counts: input, output, cache read, cache creation
-- [ ] Show estimated dollar cost based on model pricing
-- [ ] Format costs as currency with appropriate precision
-- [ ] Style with Tailwind CSS to be visually informative but not dominant
+- [x] Define TypeScript types for usage/cost data from API
+- [x] Build cost display component (sidebar or header section)
+- [x] Show raw token counts: input, output, cache read, cache creation
+- [x] Show estimated dollar cost based on model pricing
+- [x] Format costs as currency with appropriate precision
+- [x] Style with Tailwind CSS to be visually informative but not dominant
 
 ## Acceptance Criteria
 
