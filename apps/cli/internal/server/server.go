@@ -66,6 +66,7 @@ func New(cfg Config) (*Server, error) {
 
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
+	s.mux.HandleFunc("GET /api/pricing", s.handlePricing)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
@@ -98,6 +99,12 @@ func cors(next http.Handler) http.Handler {
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (s *Server) handlePricing(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(claude.GetPricingJSON())
 }
 
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {

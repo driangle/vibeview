@@ -1,34 +1,56 @@
 package claude
 
-import "strings"
+import (
+	_ "embed"
+	"encoding/json"
+	"strings"
+	"sync"
+)
 
 // ModelPricing holds per-million-token prices in USD.
 type ModelPricing struct {
-	InputPerM       float64
-	OutputPerM      float64
-	CacheReadPerM   float64
-	CacheWritePerM  float64
+	InputPerM      float64 `json:"inputPerM"`
+	OutputPerM     float64 `json:"outputPerM"`
+	CacheReadPerM  float64 `json:"cacheReadPerM"`
+	CacheWritePerM float64 `json:"cacheWritePerM"`
 }
 
-var modelPricing = map[string]ModelPricing{
-	"claude-opus-4": {
-		InputPerM: 15, OutputPerM: 75, CacheReadPerM: 1.5, CacheWritePerM: 18.75,
-	},
-	"claude-sonnet-4": {
-		InputPerM: 3, OutputPerM: 15, CacheReadPerM: 0.30, CacheWritePerM: 3.75,
-	},
-	"claude-haiku-4": {
-		InputPerM: 0.80, OutputPerM: 4, CacheReadPerM: 0.08, CacheWritePerM: 1,
-	},
+//go:embed pricing.json
+var defaultPricingData []byte
+
+var (
+	pricingOnce  sync.Once
+	modelPricing map[string]ModelPricing
+)
+
+func ensurePricingLoaded() {
+	pricingOnce.Do(func() {
+		LoadPricing(defaultPricingData)
+	})
+}
+
+// LoadPricing parses a JSON pricing table (model name -> ModelPricing).
+// This overrides the embedded default pricing, useful for tests.
+func LoadPricing(data []byte) error {
+	var m map[string]ModelPricing
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	modelPricing = m
+	return nil
+}
+
+// GetPricingJSON returns the raw embedded pricing data for serving via API.
+func GetPricingJSON() []byte {
+	return defaultPricingData
 }
 
 // lookupPricing returns pricing for a model, matching by prefix.
 func lookupPricing(model string) (ModelPricing, bool) {
-	// Try exact match first.
+	ensurePricingLoaded()
 	if p, ok := modelPricing[model]; ok {
 		return p, true
 	}
-	// Match by base model name (e.g. "claude-sonnet-4-20250514" -> "claude-sonnet-4").
 	for base, p := range modelPricing {
 		if strings.HasPrefix(model, base) {
 			return p, true

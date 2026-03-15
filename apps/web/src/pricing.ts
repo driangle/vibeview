@@ -7,21 +7,27 @@ interface ModelPricing {
   cacheWritePerM: number;
 }
 
-const MODEL_PRICING: Record<string, ModelPricing> = {
-  "claude-opus-4": {
-    inputPerM: 15, outputPerM: 75, cacheReadPerM: 1.5, cacheWritePerM: 18.75,
-  },
-  "claude-sonnet-4": {
-    inputPerM: 3, outputPerM: 15, cacheReadPerM: 0.30, cacheWritePerM: 3.75,
-  },
-  "claude-haiku-4": {
-    inputPerM: 0.80, outputPerM: 4, cacheReadPerM: 0.08, cacheWritePerM: 1,
-  },
-};
+type PricingTable = Record<string, ModelPricing>;
+
+let pricingTable: PricingTable = {};
+let loaded = false;
+
+export async function loadPricing(): Promise<void> {
+  if (loaded) return;
+  try {
+    const res = await fetch("/api/pricing");
+    if (res.ok) {
+      pricingTable = await res.json();
+      loaded = true;
+    }
+  } catch {
+    // Pricing will remain empty — costs show as $0.00.
+  }
+}
 
 function lookupPricing(model: string): ModelPricing | undefined {
-  if (model in MODEL_PRICING) return MODEL_PRICING[model];
-  for (const [base, pricing] of Object.entries(MODEL_PRICING)) {
+  if (model in pricingTable) return pricingTable[model];
+  for (const [base, pricing] of Object.entries(pricingTable)) {
     if (model.startsWith(base)) return pricing;
   }
   return undefined;

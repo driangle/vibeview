@@ -5,7 +5,18 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/driangle/vibeview/internal/claude"
 )
+
+func TestMain(m *testing.M) {
+	claude.LoadPricing([]byte(`{
+		"claude-opus-4":   {"inputPerM": 15, "outputPerM": 75, "cacheReadPerM": 1.5, "cacheWritePerM": 18.75},
+		"claude-sonnet-4": {"inputPerM": 3, "outputPerM": 15, "cacheReadPerM": 0.30, "cacheWritePerM": 3.75},
+		"claude-haiku-4":  {"inputPerM": 0.80, "outputPerM": 4, "cacheReadPerM": 0.08, "cacheWritePerM": 1}
+	}`))
+	os.Exit(m.Run())
+}
 
 // setupTestDir creates a temporary Claude dir with history.jsonl and session files.
 func setupTestDir(t *testing.T) string {
