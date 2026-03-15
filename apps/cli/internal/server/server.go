@@ -180,13 +180,14 @@ func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 
 // SessionResponse is the API representation of a session in list responses.
 type SessionResponse struct {
-	ID           string `json:"id"`
-	Project      string `json:"project"`
-	Display      string `json:"display"`
-	Timestamp    string `json:"timestamp"`
-	MessageCount int    `json:"messageCount"`
-	Model        string `json:"model"`
-	Slug         string `json:"slug"`
+	ID           string              `json:"id"`
+	Project      string              `json:"project"`
+	Display      string              `json:"display"`
+	Timestamp    string              `json:"timestamp"`
+	MessageCount int                 `json:"messageCount"`
+	Model        string              `json:"model"`
+	Slug         string              `json:"slug"`
+	Usage        session.UsageTotals `json:"usage"`
 }
 
 // SessionDetailResponse is the API representation of a single session with messages.
@@ -216,6 +217,7 @@ func toSessionResponse(m session.SessionMeta) SessionResponse {
 		MessageCount: m.MessageCount,
 		Model:        m.Model,
 		Slug:         m.Slug,
+		Usage:        m.Usage,
 	}
 }
 

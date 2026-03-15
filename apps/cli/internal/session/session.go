@@ -10,15 +10,25 @@ import (
 	"github.com/driangle/vibeview/internal/claude"
 )
 
+// UsageTotals holds aggregated token and cost data for a session.
+type UsageTotals struct {
+	InputTokens              int     `json:"inputTokens"`
+	OutputTokens             int     `json:"outputTokens"`
+	CacheCreationInputTokens int     `json:"cacheCreationInputTokens"`
+	CacheReadInputTokens     int     `json:"cacheReadInputTokens"`
+	CostUSD                  float64 `json:"costUSD"`
+}
+
 // SessionMeta holds metadata extracted from a session's history entry and JSONL file.
 type SessionMeta struct {
-	SessionID    string `json:"sessionId"`
-	Project      string `json:"project"`
-	Display      string `json:"display"`
-	Timestamp    int64  `json:"timestamp"`
-	MessageCount int    `json:"messageCount"`
-	Model        string `json:"model"`
-	Slug         string `json:"slug"`
+	SessionID    string      `json:"sessionId"`
+	Project      string      `json:"project"`
+	Display      string      `json:"display"`
+	Timestamp    int64       `json:"timestamp"`
+	MessageCount int         `json:"messageCount"`
+	Model        string      `json:"model"`
+	Slug         string      `json:"slug"`
+	Usage        UsageTotals `json:"usage"`
 }
 
 // Index holds all discovered sessions.
@@ -76,9 +86,16 @@ func buildSessionMeta(claudeDir string, entry claude.HistoryEntry) SessionMeta {
 
 	for _, msg := range messages {
 		if msg.Type == claude.MessageTypeAssistant && msg.Message != nil {
-			if msg.Message.Model != "" {
+			if meta.Model == "" && msg.Message.Model != "" {
 				meta.Model = msg.Message.Model
-				break
+			}
+			if msg.Message.Usage != nil {
+				u := msg.Message.Usage
+				meta.Usage.InputTokens += u.InputTokens
+				meta.Usage.OutputTokens += u.OutputTokens
+				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
+				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
+				meta.Usage.CostUSD += u.CostUSD
 			}
 		}
 	}

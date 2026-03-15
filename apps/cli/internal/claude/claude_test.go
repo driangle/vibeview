@@ -55,7 +55,7 @@ func TestParseMessageLine_User(t *testing.T) {
 }
 
 func TestParseMessageLine_Assistant(t *testing.T) {
-	line := `{"type":"assistant","uuid":"a1","sessionId":"s1","timestamp":1700000001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hi there"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":10,"cache_read_input_tokens":20}}}`
+	line := `{"type":"assistant","uuid":"a1","sessionId":"s1","timestamp":1700000001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hi there"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":10,"cache_read_input_tokens":20,"costUSD":0.0042}}}`
 	msg, err := ParseMessageLine([]byte(line))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -81,6 +81,9 @@ func TestParseMessageLine_Assistant(t *testing.T) {
 	}
 	if u.CacheReadInputTokens != 20 {
 		t.Errorf("CacheReadInputTokens = %d, want 20", u.CacheReadInputTokens)
+	}
+	if u.CostUSD != 0.0042 {
+		t.Errorf("CostUSD = %f, want 0.0042", u.CostUSD)
 	}
 }
 

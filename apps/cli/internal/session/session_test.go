@@ -26,16 +26,16 @@ func setupTestDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 
-	// sess-1: 2 messages, user then assistant with model.
+	// sess-1: 2 messages, user then assistant with model and usage.
 	sess1 := `{"type":"user","uuid":"u1","sessionId":"sess-1","timestamp":1000,"message":{"role":"user","content":[{"type":"text","text":"Help me build a web app"}]}}
-{"type":"assistant","uuid":"a1","sessionId":"sess-1","timestamp":1001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"Sure!"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-1","timestamp":1001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"Sure!"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":10,"cache_read_input_tokens":20,"costUSD":0.005}}}
 `
 	if err := os.WriteFile(filepath.Join(projADir, "sess-1.jsonl"), []byte(sess1), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// sess-2: 1 message, assistant only (no user message first — edge case).
-	sess2 := `{"type":"assistant","uuid":"a2","sessionId":"sess-2","timestamp":2000,"message":{"role":"assistant","model":"claude-opus-4-20250514","content":[{"type":"text","text":"Hello"}]}}
+	sess2 := `{"type":"assistant","uuid":"a2","sessionId":"sess-2","timestamp":2000,"message":{"role":"assistant","model":"claude-opus-4-20250514","content":[{"type":"text","text":"Hello"}],"usage":{"input_tokens":200,"output_tokens":100,"costUSD":0.012}}}
 `
 	if err := os.WriteFile(filepath.Join(projADir, "sess-2.jsonl"), []byte(sess2), 0644); err != nil {
 		t.Fatal(err)
@@ -94,6 +94,120 @@ func TestDiscoverMetadata(t *testing.T) {
 	}
 	if sess1.Slug != "Help me build a web app" {
 		t.Errorf("sess-1 slug: got %q, want 'Help me build a web app'", sess1.Slug)
+	}
+}
+
+func TestDiscoverUsageTotals(t *testing.T) {
+	dir := setupTestDir(t)
+
+	idx, err := Discover(dir)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+
+	// Find sess-1: one assistant message with usage.
+	var sess1 SessionMeta
+	for _, s := range idx.Sessions {
+		if s.SessionID == "sess-1" {
+			sess1 = s
+			break
+		}
+	}
+
+	if sess1.Usage.InputTokens != 100 {
+		t.Errorf("sess-1 usage.InputTokens = %d, want 100", sess1.Usage.InputTokens)
+	}
+	if sess1.Usage.OutputTokens != 50 {
+		t.Errorf("sess-1 usage.OutputTokens = %d, want 50", sess1.Usage.OutputTokens)
+	}
+	if sess1.Usage.CacheCreationInputTokens != 10 {
+		t.Errorf("sess-1 usage.CacheCreationInputTokens = %d, want 10", sess1.Usage.CacheCreationInputTokens)
+	}
+	if sess1.Usage.CacheReadInputTokens != 20 {
+		t.Errorf("sess-1 usage.CacheReadInputTokens = %d, want 20", sess1.Usage.CacheReadInputTokens)
+	}
+	if sess1.Usage.CostUSD != 0.005 {
+		t.Errorf("sess-1 usage.CostUSD = %f, want 0.005", sess1.Usage.CostUSD)
+	}
+
+	// Find sess-2: one assistant message with usage.
+	var sess2 SessionMeta
+	for _, s := range idx.Sessions {
+		if s.SessionID == "sess-2" {
+			sess2 = s
+			break
+		}
+	}
+
+	if sess2.Usage.InputTokens != 200 {
+		t.Errorf("sess-2 usage.InputTokens = %d, want 200", sess2.Usage.InputTokens)
+	}
+	if sess2.Usage.CostUSD != 0.012 {
+		t.Errorf("sess-2 usage.CostUSD = %f, want 0.012", sess2.Usage.CostUSD)
+	}
+
+	// sess-3 has no session file — usage should be zero.
+	var sess3 SessionMeta
+	for _, s := range idx.Sessions {
+		if s.SessionID == "sess-3" {
+			sess3 = s
+			break
+		}
+	}
+
+	if sess3.Usage.CostUSD != 0 {
+		t.Errorf("sess-3 usage.CostUSD = %f, want 0", sess3.Usage.CostUSD)
+	}
+}
+
+func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
+	dir := t.TempDir()
+
+	history := `{"sessionId":"sess-multi","project":"/Users/me/proj","display":"multi","timestamp":3000}
+`
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Session with multiple assistant messages to test aggregation.
+	sess := `{"type":"user","uuid":"u1","sessionId":"sess-multi","timestamp":3000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-multi","timestamp":3001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hello"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":5,"cache_read_input_tokens":10,"costUSD":0.003}}}
+{"type":"user","uuid":"u2","sessionId":"sess-multi","timestamp":3002,"message":{"role":"user","content":[{"type":"text","text":"more"}]}}
+{"type":"assistant","uuid":"a2","sessionId":"sess-multi","timestamp":3003,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"sure"}],"usage":{"input_tokens":200,"output_tokens":100,"cache_creation_input_tokens":15,"cache_read_input_tokens":30,"costUSD":0.007}}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sess-multi.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+
+	if len(idx.Sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(idx.Sessions))
+	}
+
+	u := idx.Sessions[0].Usage
+	if u.InputTokens != 300 {
+		t.Errorf("InputTokens = %d, want 300", u.InputTokens)
+	}
+	if u.OutputTokens != 150 {
+		t.Errorf("OutputTokens = %d, want 150", u.OutputTokens)
+	}
+	if u.CacheCreationInputTokens != 20 {
+		t.Errorf("CacheCreationInputTokens = %d, want 20", u.CacheCreationInputTokens)
+	}
+	if u.CacheReadInputTokens != 40 {
+		t.Errorf("CacheReadInputTokens = %d, want 40", u.CacheReadInputTokens)
+	}
+	if u.CostUSD != 0.01 {
+		t.Errorf("CostUSD = %f, want 0.01", u.CostUSD)
 	}
 }
 

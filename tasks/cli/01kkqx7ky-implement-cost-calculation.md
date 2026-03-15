@@ -1,7 +1,7 @@
 ---
 title: "Implement cost calculation"
 id: "01kkqx7ky"
-status: pending
+status: completed
 priority: medium
 effort: small
 type: feature
@@ -19,10 +19,10 @@ Parse the `costUSD` field that Claude Code already includes in its JSONL usage d
 
 ## Tasks
 
-- [ ] Add `CostUSD` field to the `Usage` struct in `claude.go`
-- [ ] Aggregate `costUSD` and token counts across all assistant messages per session
-- [ ] Expose cost data in session API responses
-- [ ] Write unit tests for cost aggregation
+- [x] Add `CostUSD` field to the `Usage` struct in `claude.go`
+- [x] Aggregate `costUSD` and token counts across all assistant messages per session
+- [x] Expose cost data in session API responses
+- [x] Write unit tests for cost aggregation
 
 ## Acceptance Criteria
 

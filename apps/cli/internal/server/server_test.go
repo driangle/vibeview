@@ -34,7 +34,7 @@ func setupTestDir(t *testing.T) string {
 	}
 
 	sess1 := `{"type":"user","uuid":"u1","sessionId":"sess-1","timestamp":1700000000000,"message":{"role":"user","content":[{"type":"text","text":"hello world"}]}}
-{"type":"assistant","uuid":"a1","sessionId":"sess-1","timestamp":1700000001000,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"Hi there!"}],"usage":{"input_tokens":10,"output_tokens":5}}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-1","timestamp":1700000001000,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"Hi there!"}],"usage":{"input_tokens":10,"output_tokens":5,"costUSD":0.003}}}
 `
 	sess2 := `{"type":"user","uuid":"u2","sessionId":"sess-2","timestamp":1700001000000,"message":{"role":"user","content":[{"type":"text","text":"second session"}]}}
 `
