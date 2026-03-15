@@ -1,7 +1,7 @@
 ---
 title: "Add toggle for auto-follow latest messages"
 id: "01kkry92f"
-status: pending
+status: completed
 priority: medium
 type: feature
 effort: small
@@ -19,11 +19,11 @@ The session view currently auto-scrolls to follow the latest messages (tail mode
 
 ## Tasks
 
-- [ ] Add a visible toggle button/control for auto-follow mode in the session view
-- [ ] When auto-follow is on, continue current behavior (scroll to bottom on new messages)
-- [ ] When auto-follow is off, do not auto-scroll; let the user browse freely
-- [ ] Auto-disable follow mode when the user scrolls up manually
-- [ ] Auto-enable follow mode when the user scrolls to the bottom
+- [x] Add a visible toggle button/control for auto-follow mode in the session view
+- [x] When auto-follow is on, continue current behavior (scroll to bottom on new messages)
+- [x] When auto-follow is off, do not auto-scroll; let the user browse freely
+- [x] Auto-disable follow mode when the user scrolls up manually
+- [x] Auto-enable follow mode when the user scrolls to the bottom
 
 ## Acceptance Criteria
 

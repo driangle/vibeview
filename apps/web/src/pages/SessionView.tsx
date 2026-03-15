@@ -44,9 +44,9 @@ function buildToolResultMap(
 export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState(0);
+  const [followMode, setFollowMode] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const wasAtBottom = useRef(true);
 
   const {
     data: session,
@@ -106,17 +106,21 @@ export function SessionView() {
     (page + 1) * MESSAGES_PER_PAGE,
   );
 
-  // Track if user is scrolled to bottom.
+  // Auto-disable follow when user scrolls up, re-enable at bottom.
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    wasAtBottom.current =
-      el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-  }, []);
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    if (atBottom && !followMode) {
+      setFollowMode(true);
+    } else if (!atBottom && followMode) {
+      setFollowMode(false);
+    }
+  }, [followMode]);
 
-  // Auto-scroll when new messages arrive and user was at bottom.
+  // Auto-scroll when new messages arrive and follow mode is on.
   useEffect(() => {
-    if (wasAtBottom.current && streamedMessages.length > 0) {
+    if (followMode && streamedMessages.length > 0) {
       // Jump to last page if new messages push beyond current page.
       const newTotalPages = Math.max(
         1,
@@ -127,7 +131,7 @@ export function SessionView() {
       }
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [streamedMessages.length, displayMessages.length, page]);
+  }, [streamedMessages.length, displayMessages.length, page, followMode]);
 
   if (error) {
     return (
@@ -204,6 +208,20 @@ export function SessionView() {
           onPageChange={setPage}
         />
       )}
+
+      {/* Auto-follow toggle */}
+      <FollowToggle
+        enabled={followMode}
+        onToggle={() => {
+          setFollowMode((prev) => {
+            if (!prev) {
+              // When enabling, scroll to bottom immediately.
+              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }
+            return !prev;
+          });
+        }}
+      />
     </div>
   );
 }
@@ -256,5 +274,39 @@ function Pagination({
         Next
       </button>
     </div>
+  );
+}
+
+function FollowToggle({
+  enabled,
+  onToggle,
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`fixed bottom-6 right-6 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg transition-colors ${
+        enabled
+          ? "bg-blue-600 text-white hover:bg-blue-700"
+          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+      }`}
+      title={enabled ? "Auto-follow is on" : "Auto-follow is off"}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="h-4 w-4"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z"
+          clipRule="evenodd"
+        />
+      </svg>
+      {enabled ? "Following" : "Follow"}
+    </button>
   );
 }
