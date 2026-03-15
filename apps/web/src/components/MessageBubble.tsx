@@ -32,12 +32,22 @@ function UserMessage({ message }: { message: MessageResponse }) {
   const segments = processMessageContent(text);
   if (segments.length === 0) return null;
 
+  const textSegments = segments.filter((s) => s.type === "text");
+  const specialSegments = segments.filter((s) => s.type !== "text");
+
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-col items-end gap-2">
       <div className="max-w-[80%]">
-        <div className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">
-          <MessageContent segments={segments} />
-        </div>
+        {textSegments.length > 0 && (
+          <div className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">
+            <MessageContent segments={textSegments} rawMessage={message} />
+          </div>
+        )}
+        {specialSegments.length > 0 && (
+          <div className="text-sm">
+            <MessageContent segments={specialSegments} rawMessage={message} />
+          </div>
+        )}
         <div className="mt-1 text-right text-xs text-gray-400">
           {formatTimestamp(message.timestamp)}
         </div>
@@ -64,7 +74,7 @@ function AssistantMessage({
             if (block.type === "text" && block.text) {
               const segments = processMessageContent(block.text);
               if (segments.length === 0) return null;
-              return <MessageContent key={i} segments={segments} />;
+              return <MessageContent key={i} segments={segments} rawMessage={message} />;
             }
             if (block.type === "thinking" && block.thinking) {
               return <ThinkingBlock key={i} thinking={block.thinking} />;

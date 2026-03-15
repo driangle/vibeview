@@ -1,7 +1,10 @@
+import { useState, useCallback } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "./CodeBlock";
+import { RawJsonModal } from "./RawJsonModal";
 import type { MessageSegment } from "./processMessageContent";
+import type { MessageResponse } from "../types";
 
 function TextSegment({ content }: { content: string }) {
   return (
@@ -29,9 +32,19 @@ function TextSegment({ content }: { content: string }) {
   );
 }
 
-function CaveatSegment({ content }: { content: string }) {
+function CaveatSegment({
+  content,
+  onClick,
+}: {
+  content: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="my-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+    <button
+      type="button"
+      onClick={onClick}
+      className="my-2 flex w-full cursor-pointer items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-800 transition-colors hover:bg-amber-100"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -45,13 +58,25 @@ function CaveatSegment({ content }: { content: string }) {
         />
       </svg>
       <span>{content}</span>
-    </div>
+    </button>
   );
 }
 
-function CommandSegment({ name, args }: { name: string; args: string }) {
+function CommandSegment({
+  name,
+  args,
+  onClick,
+}: {
+  name: string;
+  args: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="my-2 flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-xs text-gray-600">
+    <button
+      type="button"
+      onClick={onClick}
+      className="my-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-left font-mono text-xs text-gray-600 transition-colors hover:bg-gray-100"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -66,7 +91,7 @@ function CommandSegment({ name, args }: { name: string; args: string }) {
       </svg>
       <span className="font-semibold text-gray-800">{name}</span>
       {args && <span className="text-gray-500">{args}</span>}
-    </div>
+    </button>
   );
 }
 
@@ -74,25 +99,52 @@ function CommandSegment({ name, args }: { name: string; args: string }) {
 // Segment renderer registry — add new segment types here
 // ---------------------------------------------------------------------------
 
-const SEGMENT_RENDERERS: Record<
-  string,
-  (segment: MessageSegment, key: number) => React.ReactNode
-> = {
-  text: (seg, key) => <TextSegment key={key} content={(seg as { content: string }).content} />,
-  caveat: (seg, key) => <CaveatSegment key={key} content={(seg as { content: string }).content} />,
-  command: (seg, key) => {
+type SegmentRenderer = (
+  segment: MessageSegment,
+  key: number,
+  onShowRaw: () => void,
+) => React.ReactNode;
+
+const SEGMENT_RENDERERS: Record<string, SegmentRenderer> = {
+  text: (seg, key) => (
+    <TextSegment key={key} content={(seg as { content: string }).content} />
+  ),
+  caveat: (seg, key, onShowRaw) => (
+    <CaveatSegment
+      key={key}
+      content={(seg as { content: string }).content}
+      onClick={onShowRaw}
+    />
+  ),
+  command: (seg, key, onShowRaw) => {
     const s = seg as { name: string; args: string };
-    return <CommandSegment key={key} name={s.name} args={s.args} />;
+    return (
+      <CommandSegment key={key} name={s.name} args={s.args} onClick={onShowRaw} />
+    );
   },
 };
 
-export function MessageContent({ segments }: { segments: MessageSegment[] }) {
+interface MessageContentProps {
+  segments: MessageSegment[];
+  rawMessage?: MessageResponse;
+}
+
+export function MessageContent({ segments, rawMessage }: MessageContentProps) {
+  const [showModal, setShowModal] = useState(false);
+  const openModal = useCallback(() => setShowModal(true), []);
+
   return (
     <>
       {segments.map((seg, i) => {
         const render = SEGMENT_RENDERERS[seg.type];
-        return render ? render(seg, i) : null;
+        return render ? render(seg, i, openModal) : null;
       })}
+      {showModal && rawMessage && (
+        <RawJsonModal
+          data={rawMessage.message}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </>
   );
 }
