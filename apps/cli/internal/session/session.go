@@ -168,7 +168,7 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 				meta.Usage.OutputTokens += u.OutputTokens
 				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
 				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
-				meta.Usage.CostUSD += u.CostUSD
+				meta.Usage.CostUSD += claude.CalculateCost(msg.Message.Model, *u)
 			}
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
@@ -333,7 +333,7 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 				meta.Usage.OutputTokens += u.OutputTokens
 				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
 				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
-				meta.Usage.CostUSD += u.CostUSD
+				meta.Usage.CostUSD += claude.CalculateCost(msg.Message.Model, *u)
 			}
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {

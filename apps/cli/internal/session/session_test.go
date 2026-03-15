@@ -1,6 +1,7 @@
 package session
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -128,8 +129,10 @@ func TestDiscoverUsageTotals(t *testing.T) {
 	if sess1.Usage.CacheReadInputTokens != 20 {
 		t.Errorf("sess-1 usage.CacheReadInputTokens = %d, want 20", sess1.Usage.CacheReadInputTokens)
 	}
-	if sess1.Usage.CostUSD != 0.005 {
-		t.Errorf("sess-1 usage.CostUSD = %f, want 0.005", sess1.Usage.CostUSD)
+	// Cost is calculated from token counts and model pricing, not from the costUSD field in JSONL.
+	// sonnet-4: (100×3 + 50×15 + 20×0.30 + 10×3.75) / 1M = 0.0010935
+	if math.Abs(sess1.Usage.CostUSD-0.0010935) > 1e-9 {
+		t.Errorf("sess-1 usage.CostUSD = %f, want ~0.0010935", sess1.Usage.CostUSD)
 	}
 
 	// Find sess-2: one assistant message with usage.
@@ -144,8 +147,9 @@ func TestDiscoverUsageTotals(t *testing.T) {
 	if sess2.Usage.InputTokens != 200 {
 		t.Errorf("sess-2 usage.InputTokens = %d, want 200", sess2.Usage.InputTokens)
 	}
-	if sess2.Usage.CostUSD != 0.012 {
-		t.Errorf("sess-2 usage.CostUSD = %f, want 0.012", sess2.Usage.CostUSD)
+	// opus-4: (200×15 + 100×75) / 1M = 0.0105
+	if math.Abs(sess2.Usage.CostUSD-0.0105) > 1e-9 {
+		t.Errorf("sess-2 usage.CostUSD = %f, want ~0.0105", sess2.Usage.CostUSD)
 	}
 
 	// sess-3 has no session file — usage should be zero.
@@ -209,8 +213,11 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 	if u.CacheReadInputTokens != 40 {
 		t.Errorf("CacheReadInputTokens = %d, want 40", u.CacheReadInputTokens)
 	}
-	if u.CostUSD != 0.01 {
-		t.Errorf("CostUSD = %f, want 0.01", u.CostUSD)
+	// sonnet-4 msg1: (100×3 + 50×15 + 10×0.30 + 5×3.75) / 1M = 0.00107175
+	// sonnet-4 msg2: (200×3 + 100×15 + 30×0.30 + 15×3.75) / 1M = 0.00216525
+	// total = 0.003237
+	if math.Abs(u.CostUSD-0.003237) > 1e-9 {
+		t.Errorf("CostUSD = %f, want ~0.003237", u.CostUSD)
 	}
 }
 

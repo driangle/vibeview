@@ -1,4 +1,10 @@
-.PHONY: check install install-dev install-dev-full build web
+.PHONY: check install install-dev install-dev-full build web dev
+
+dev: ## Run CLI + Vite dev server with hot reload
+	@trap 'kill 0' EXIT; \
+	cd apps/cli && go run ./cmd/vibeview & \
+	cd apps/web && npm run dev & \
+	wait
 
 web: ## Build the React SPA
 	cd apps/web && npm run build

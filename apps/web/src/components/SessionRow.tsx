@@ -4,6 +4,12 @@ import { formatTime, projectName } from "../utils";
 
 const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
 
+function formatTokens(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
+  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}k`;
+  return String(count);
+}
+
 function isRecent(timestamp: string): boolean {
   return Date.now() - new Date(timestamp).getTime() < RECENT_THRESHOLD_MS;
 }
@@ -46,6 +52,12 @@ export function SessionRow({ session, onDirectoryClick }: SessionRowProps) {
       </td>
       <td className="px-4 py-3 text-xs text-gray-500 text-right">
         {session.messageCount}
+      </td>
+      <td className="px-4 py-3 text-xs text-gray-500 text-right whitespace-nowrap">
+        {formatTokens(session.usage.inputTokens + session.usage.outputTokens)}
+      </td>
+      <td className="px-4 py-3 text-xs text-gray-500 text-right whitespace-nowrap">
+        ${session.usage.costUSD.toFixed(2)}
       </td>
       <td className="px-4 py-3 text-xs">
         {session.model && (

@@ -1,4 +1,4 @@
-type SortColumn = "date" | "name" | "directory" | "messages";
+type SortColumn = "date" | "name" | "directory" | "messages" | "tokens" | "cost";
 type SortDirection = "asc" | "desc";
 
 interface SortHeaderProps {

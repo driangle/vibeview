@@ -35,6 +35,10 @@ function getSortValue(session: Session, column: SortColumn): string | number {
       return session.project.toLowerCase();
     case "messages":
       return session.messageCount;
+    case "tokens":
+      return session.usage.inputTokens + session.usage.outputTokens;
+    case "cost":
+      return session.usage.costUSD;
   }
 }
 
@@ -163,6 +167,8 @@ export function SessionList() {
                 <SortHeader label="Session" column="name" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
                 <SortHeader label="Directory" column="directory" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
                 <SortHeader label="Messages" column="messages" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
+                <SortHeader label="Tokens" column="tokens" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
+                <SortHeader label="Cost" column="cost" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
                 <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Model
                 </th>
