@@ -1,7 +1,7 @@
 ---
 title: "Preserve newlines and formatting in session view messages"
 id: "01kks0nwq"
-status: pending
+status: completed
 priority: medium
 type: bug
 tags: ["ui", "formatting"]
@@ -33,10 +33,10 @@ Newlines are stripped or collapsed, causing numbered lists and structured conten
 
 ## Tasks
 
-- [ ] Identify how message content is currently rendered in the SessionView component
-- [ ] Ensure message text is rendered with whitespace preservation (e.g. markdown rendering or `whitespace-pre-wrap`)
-- [ ] Verify numbered lists, blank lines, and indentation display correctly
-- [ ] Test with session `b25ed4e3-b27b-4b29-9bea-fe1095dbaaff` as a reference case
+- [x] Identify how message content is currently rendered in the SessionView component
+- [x] Ensure message text is rendered with whitespace preservation (e.g. markdown rendering or `whitespace-pre-wrap`)
+- [x] Verify numbered lists, blank lines, and indentation display correctly
+- [x] Test with session `b25ed4e3-b27b-4b29-9bea-fe1095dbaaff` as a reference case
 
 ## Acceptance Criteria
 

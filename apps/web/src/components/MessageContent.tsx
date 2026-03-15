@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import Markdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "./CodeBlock";
 import { RawJsonModal } from "./RawJsonModal";
@@ -8,9 +9,9 @@ import type { MessageResponse } from "../types";
 
 function TextSegment({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm max-w-none">
+    <div className="prose prose-sm max-w-none leading-relaxed">
       <Markdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || "");

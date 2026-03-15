@@ -15,6 +15,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.1",
     "react-syntax-highlighter": "^16.1.1",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "swr": "^2.4.1"
   },
