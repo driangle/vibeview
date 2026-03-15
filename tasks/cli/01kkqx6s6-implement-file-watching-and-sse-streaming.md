@@ -1,7 +1,7 @@
 ---
 title: "Implement file watching and SSE streaming"
 id: "01kkqx6s6"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: feature
@@ -19,15 +19,15 @@ Add real-time file watching using fsnotify and implement the SSE streaming endpo
 
 ## Tasks
 
-- [ ] Add `fsnotify` dependency
-- [ ] Watch `history.jsonl` for new session entries (detect appended lines)
-- [ ] Watch active session JSONL files for new messages (track file position, read new lines)
-- [ ] Implement `GET /api/sessions/:id/stream` SSE endpoint
-- [ ] Emit `message` events with parsed message JSON when new lines are appended
-- [ ] Emit `ping` events every 30s to keep connections alive
-- [ ] Handle client disconnection gracefully (clean up watchers)
-- [ ] Update session index when new sessions appear in history.jsonl
-- [ ] Write tests for file tail/watch logic
+- [x] Add `fsnotify` dependency
+- [x] Watch `history.jsonl` for new session entries (detect appended lines)
+- [x] Watch active session JSONL files for new messages (track file position, read new lines)
+- [x] Implement `GET /api/sessions/:id/stream` SSE endpoint
+- [x] Emit `message` events with parsed message JSON when new lines are appended
+- [x] Emit `ping` events every 30s to keep connections alive
+- [x] Handle client disconnection gracefully (clean up watchers)
+- [x] Update session index when new sessions appear in history.jsonl
+- [x] Write tests for file tail/watch logic
 
 ## Acceptance Criteria
 

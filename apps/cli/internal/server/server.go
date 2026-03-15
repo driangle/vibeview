@@ -10,12 +10,14 @@ import (
 
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/session"
+	"github.com/driangle/vibeview/internal/watcher"
 )
 
 // Server serves the VibeView HTTP API.
 type Server struct {
 	claudeDir string
 	index     *session.Index
+	broker    *watcher.Broker
 	mux       *http.ServeMux
 }
 
@@ -26,9 +28,15 @@ func New(claudeDir string) (*Server, error) {
 		return nil, fmt.Errorf("discover sessions: %w", err)
 	}
 
+	broker, err := watcher.NewBroker(claudeDir, idx)
+	if err != nil {
+		return nil, fmt.Errorf("start broker: %w", err)
+	}
+
 	s := &Server{
 		claudeDir: claudeDir,
 		index:     idx,
+		broker:    broker,
 		mux:       http.NewServeMux(),
 	}
 	s.routes()
@@ -38,6 +46,7 @@ func New(claudeDir string) (*Server, error) {
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
+	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
 }
 
@@ -119,6 +128,52 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		Messages:        msgResponses,
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	// Verify session exists.
+	found := false
+	for i := range s.index.Sessions {
+		if s.index.Sessions[i].SessionID == id {
+			found = true
+			break
+		}
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+		return
+	}
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	client := s.broker.Subscribe(id)
+	defer s.broker.Unsubscribe(client)
+
+	ctx := r.Context()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case event, ok := <-client.Events:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Event, event.Data)
+			flusher.Flush()
+		}
+	}
 }
 
 // --- Response Types ---

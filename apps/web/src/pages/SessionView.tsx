@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
-import type { SessionDetail, ContentBlock } from "../types";
+import type { SessionDetail, ContentBlock, MessageResponse } from "../types";
 import { MessageBubble } from "../components/MessageBubble";
+import { useSessionStream } from "../hooks/useSessionStream";
 
 const MESSAGES_PER_PAGE = 50;
 
@@ -17,9 +18,11 @@ function formatDate(timestamp: string): string {
 }
 
 /** Build a map from tool_use ID → tool_result content block for pairing. */
-function buildToolResultMap(session: SessionDetail): Map<string, ContentBlock> {
+function buildToolResultMap(
+  messages: MessageResponse[],
+): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
-  for (const msg of session.messages) {
+  for (const msg of messages) {
     if (msg.type !== "user" || !msg.message) continue;
     const content = msg.message.content;
     if (!Array.isArray(content)) continue;
@@ -35,30 +38,73 @@ function buildToolResultMap(session: SessionDetail): Map<string, ContentBlock> {
 export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wasAtBottom = useRef(true);
 
-  const { data: session, error, isLoading } = useSWR<SessionDetail>(
-    id ? `/api/sessions/${id}` : null,
-    fetcher,
-  );
+  const {
+    data: session,
+    error,
+    isLoading,
+  } = useSWR<SessionDetail>(id ? `/api/sessions/${id}` : null, fetcher);
+
+  const { streamedMessages, connectionStatus, addInitialUUIDs } =
+    useSessionStream(id);
+
+  // Register initial message UUIDs so the SSE hook deduplicates.
+  useEffect(() => {
+    if (session) {
+      addInitialUUIDs(session.messages.map((m) => m.uuid));
+    }
+  }, [session, addInitialUUIDs]);
+
+  // Combine fetched + streamed messages.
+  const allMessages = useMemo(() => {
+    if (!session) return [];
+    return [...session.messages, ...streamedMessages];
+  }, [session, streamedMessages]);
 
   const toolResults = useMemo(
-    () => (session ? buildToolResultMap(session) : new Map<string, ContentBlock>()),
-    [session],
+    () => buildToolResultMap(allMessages),
+    [allMessages],
   );
 
-  // Filter out non-renderable messages for pagination
+  // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
-    if (!session) return [];
-    return session.messages.filter(
-      (m) => m.type !== "file-history-snapshot",
-    );
-  }, [session]);
+    return allMessages.filter((m) => m.type !== "file-history-snapshot");
+  }, [allMessages]);
 
-  const totalPages = Math.max(1, Math.ceil(displayMessages.length / MESSAGES_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(displayMessages.length / MESSAGES_PER_PAGE),
+  );
   const paginatedMessages = displayMessages.slice(
     page * MESSAGES_PER_PAGE,
     (page + 1) * MESSAGES_PER_PAGE,
   );
+
+  // Track if user is scrolled to bottom.
+  const handleScroll = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    wasAtBottom.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  }, []);
+
+  // Auto-scroll when new messages arrive and user was at bottom.
+  useEffect(() => {
+    if (wasAtBottom.current && streamedMessages.length > 0) {
+      // Jump to last page if new messages push beyond current page.
+      const newTotalPages = Math.max(
+        1,
+        Math.ceil(displayMessages.length / MESSAGES_PER_PAGE),
+      );
+      if (page < newTotalPages - 1) {
+        setPage(newTotalPages - 1);
+      }
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [streamedMessages.length, displayMessages.length, page]);
 
   if (error) {
     return (
@@ -83,12 +129,19 @@ export function SessionView() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <div
+      className="mx-auto max-w-4xl p-8"
+      ref={containerRef}
+      onScroll={handleScroll}
+    >
       {/* Header */}
       <div className="mb-6">
-        <Link to="/" className="text-sm text-blue-600 hover:underline">
-          ← Back to sessions
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/" className="text-sm text-blue-600 hover:underline">
+            ← Back to sessions
+          </Link>
+          <LiveIndicator status={connectionStatus} />
+        </div>
         <h1 className="mt-2 text-xl font-bold text-gray-900">
           {session.slug || session.display || session.id}
         </h1>
@@ -99,14 +152,21 @@ export function SessionView() {
               {session.model}
             </span>
           )}
-          <span>{session.messageCount} messages</span>
+          <span>
+            {displayMessages.length} message
+            {displayMessages.length !== 1 ? "s" : ""}
+          </span>
           <span>{formatDate(session.timestamp)}</span>
         </div>
       </div>
 
       {/* Pagination (top) */}
       {totalPages > 1 && (
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Messages */}
@@ -118,13 +178,37 @@ export function SessionView() {
             toolResults={toolResults}
           />
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Pagination (bottom) */}
       {totalPages > 1 && (
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       )}
     </div>
+  );
+}
+
+function LiveIndicator({
+  status,
+}: {
+  status: "connecting" | "connected" | "disconnected";
+}) {
+  if (status === "disconnected") return null;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">
+      <span
+        className={`inline-block h-1.5 w-1.5 rounded-full ${
+          status === "connected" ? "bg-green-500 animate-pulse" : "bg-yellow-400"
+        }`}
+      />
+      {status === "connected" ? "Live" : "Connecting…"}
+    </span>
   );
 }
 

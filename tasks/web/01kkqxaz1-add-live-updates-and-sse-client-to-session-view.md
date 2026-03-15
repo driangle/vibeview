@@ -1,7 +1,7 @@
 ---
 title: "Add live updates and SSE client to session view"
 id: "01kkqxaz1"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: feature
@@ -19,14 +19,14 @@ Connect the session view page to the SSE streaming endpoint for real-time messag
 
 ## Tasks
 
-- [ ] Create custom hook for SSE connection using EventSource to `GET /api/sessions/:id/stream`
-- [ ] Parse incoming SSE `message` events and append to local message state
-- [ ] Handle SSE `ping` events (keep-alive)
-- [ ] Implement auto-reconnect on connection drop
-- [ ] Add scroll-to-bottom behavior when new messages arrive (only if already scrolled to bottom)
-- [ ] Add visual "live" indicator when SSE connection is active
-- [ ] Clean up EventSource on component unmount or navigation away
-- [ ] Handle edge case: messages received via SSE that were already fetched via initial API call
+- [x] Create custom hook for SSE connection using EventSource to `GET /api/sessions/:id/stream`
+- [x] Parse incoming SSE `message` events and append to local message state
+- [x] Handle SSE `ping` events (keep-alive)
+- [x] Implement auto-reconnect on connection drop
+- [x] Add scroll-to-bottom behavior when new messages arrive (only if already scrolled to bottom)
+- [x] Add visual "live" indicator when SSE connection is active
+- [x] Clean up EventSource on component unmount or navigation away
+- [x] Handle edge case: messages received via SSE that were already fetched via initial API call
 
 ## Acceptance Criteria
 
