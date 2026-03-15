@@ -54,6 +54,11 @@ export interface MessageResponse {
   snapshot?: Record<string, unknown>;
 }
 
+export interface PaginatedSessions {
+  sessions: Session[];
+  total: number;
+}
+
 export interface SessionDetail extends Session {
   filePath: string;
   messages: MessageResponse[];

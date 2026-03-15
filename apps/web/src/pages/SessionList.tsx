@@ -1,45 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
-import { SessionRow } from "../components/SessionRow";
-import { SortHeader } from "../components/SortHeader";
+import { Pagination } from "../components/Pagination";
+import { SessionTable } from "../components/SessionTable";
 import type { SortColumn, SortDirection } from "../components/SortHeader";
-import type { Session } from "../types";
+import { useDebounced } from "../hooks/useDebounced";
+import type { PaginatedSessions } from "../types";
 import { projectName } from "../utils";
 
-function useDebounced<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(timer);
-  }, [value, delayMs]);
-  return debounced;
-}
+const PAGE_SIZE = 100;
 
-function buildSessionsUrl(project: string, q: string): string {
+function buildSessionsUrl(project: string, q: string, page?: number): string {
   const params = new URLSearchParams();
   if (project) params.set("project", project);
   if (q) params.set("q", q);
+  if (page !== undefined) {
+    params.set("limit", String(PAGE_SIZE));
+    params.set("offset", String((page - 1) * PAGE_SIZE));
+  }
   const qs = params.toString();
   return qs ? `/api/sessions?${qs}` : "/api/sessions";
-}
-
-function getSortValue(session: Session, column: SortColumn): string | number {
-  switch (column) {
-    case "date":
-      return new Date(session.timestamp).getTime();
-    case "name":
-      return (session.customTitle || session.slug || session.id).toLowerCase();
-    case "directory":
-      return session.project.toLowerCase();
-    case "messages":
-      return session.messageCount;
-    case "tokens":
-      return session.usage.inputTokens + session.usage.outputTokens;
-    case "cost":
-      return session.usage.costUSD;
-  }
 }
 
 export function SessionList() {
@@ -47,41 +28,34 @@ export function SessionList() {
   const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
   const dirFilter = searchParams.get("dir") || "";
+  const currentPage = Number(searchParams.get("page")) || 1;
 
   const [sortColumn, setSortColumn] = useState<SortColumn>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch);
-  const { data: sessions, error, isLoading } = useSWR<Session[]>(
-    apiUrl,
-    fetcher,
-    { refreshInterval: 5000 }
-  );
+  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, currentPage);
+  const {
+    data: paginated,
+    error,
+    isLoading,
+  } = useSWR<PaginatedSessions>(apiUrl, fetcher, { refreshInterval: 5000 });
 
   // Fetch all sessions (unfiltered) for the project dropdown.
-  const { data: allSessions } = useSWR<Session[]>(
+  const { data: allPaginated } = useSWR<PaginatedSessions>(
     "/api/sessions",
     fetcher,
-    { refreshInterval: 5000 }
+    { refreshInterval: 5000 },
   );
 
-  const uniqueProjects = useMemo(() => {
-    if (!allSessions) return [];
-    const projects = [...new Set(allSessions.map((s) => s.project))];
-    return projects.sort();
-  }, [allSessions]);
+  const sessions = paginated?.sessions;
+  const total = paginated?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const sortedSessions = useMemo(() => {
-    if (!sessions) return [];
-    const sorted = [...sessions].sort((a, b) => {
-      const aVal = getSortValue(a, sortColumn);
-      const bVal = getSortValue(b, sortColumn);
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [sessions, sortColumn, sortDirection]);
+  const uniqueProjects = useMemo(() => {
+    if (!allPaginated?.sessions) return [];
+    const projects = [...new Set(allPaginated.sessions.map((s) => s.project))];
+    return projects.sort();
+  }, [allPaginated]);
 
   function toggleSort(column: SortColumn) {
     if (sortColumn === column) {
@@ -98,6 +72,18 @@ export function SessionList() {
         prev.set("dir", dir);
       } else {
         prev.delete("dir");
+      }
+      prev.delete("page");
+      return prev;
+    });
+  }
+
+  function setPage(page: number) {
+    setSearchParams((prev) => {
+      if (page <= 1) {
+        prev.delete("page");
+      } else {
+        prev.set("page", String(page));
       }
       return prev;
     });
@@ -128,7 +114,7 @@ export function SessionList() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
         <span className="text-sm text-gray-500">
-          {sessions.length} session{sessions.length !== 1 ? "s" : ""}
+          {total} session{total !== 1 ? "s" : ""}
         </span>
       </div>
 
@@ -149,7 +135,13 @@ export function SessionList() {
           type="text"
           placeholder="Filter by project or topic..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setSearchParams((prev) => {
+              prev.delete("page");
+              return prev;
+            });
+          }}
           className="min-w-0 flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </div>
@@ -159,32 +151,22 @@ export function SessionList() {
           {search ? "No sessions match your filter." : "No sessions found."}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <SortHeader label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
-                <SortHeader label="Session" column="name" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
-                <SortHeader label="Directory" column="directory" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
-                <SortHeader label="Messages" column="messages" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
-                <SortHeader label="Tokens" column="tokens" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
-                <SortHeader label="Cost" column="cost" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={toggleSort} />
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Model
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedSessions.map((session) => (
-                <SessionRow
-                  key={session.id}
-                  session={session}
-                  onDirectoryClick={setDirFilter}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <SessionTable
+            sessions={sessions}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onToggleSort={toggleSort}
+            onDirectoryClick={setDirFilter}
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            total={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </div>
   );

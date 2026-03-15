@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -132,11 +133,38 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		sessions = filtered
 	}
 
+	total := len(sessions)
+
+	// Apply limit/offset pagination.
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err == nil && limit > 0 {
+			offset := 0
+			if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+				if o, err := strconv.Atoi(offsetStr); err == nil && o > 0 {
+					offset = o
+				}
+			}
+			if offset >= len(sessions) {
+				sessions = nil
+			} else {
+				end := offset + limit
+				if end > len(sessions) {
+					end = len(sessions)
+				}
+				sessions = sessions[offset:end]
+			}
+		}
+	}
+
 	resp := make([]SessionResponse, 0, len(sessions))
 	for _, m := range sessions {
 		resp = append(resp, toSessionResponse(m))
 	}
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, http.StatusOK, PaginatedSessionsResponse{
+		Sessions: resp,
+		Total:    total,
+	})
 }
 
 func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
@@ -229,6 +257,12 @@ type SessionResponse struct {
 	Model        string              `json:"model"`
 	Slug         string              `json:"slug"`
 	Usage        session.UsageTotals `json:"usage"`
+}
+
+// PaginatedSessionsResponse wraps a page of sessions with the total count.
+type PaginatedSessionsResponse struct {
+	Sessions []SessionResponse `json:"sessions"`
+	Total    int               `json:"total"`
 }
 
 // SessionDetailResponse is the API representation of a single session with messages.

@@ -1,7 +1,7 @@
 ---
 title: "Paginate sessions on home page — show top 100 with pagination"
 id: "01kkskr2k"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: []
@@ -16,11 +16,11 @@ The home page currently loads and displays all sessions at once, which will degr
 
 ## Tasks
 
-- [ ] Add pagination support to the sessions API endpoint (limit/offset or cursor-based)
-- [ ] Update the home page to fetch only the first 100 sessions on initial load
-- [ ] Add pagination controls (next/previous or page numbers) to the sessions table
-- [ ] Show total session count so users know how many pages exist
-- [ ] Handle edge cases: empty state, last page with fewer than 100 results
+- [x] Add pagination support to the sessions API endpoint (limit/offset or cursor-based)
+- [x] Update the home page to fetch only the first 100 sessions on initial load
+- [x] Add pagination controls (next/previous or page numbers) to the sessions table
+- [x] Show total session count so users know how many pages exist
+- [x] Handle edge cases: empty state, last page with fewer than 100 results
 
 ## Acceptance Criteria
 

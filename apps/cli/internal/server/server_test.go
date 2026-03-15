@@ -85,8 +85,9 @@ func TestListSessions(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
-	var sessions []SessionResponse
-	json.NewDecoder(w.Body).Decode(&sessions)
+	var page PaginatedSessionsResponse
+	json.NewDecoder(w.Body).Decode(&page)
+	sessions := page.Sessions
 	if len(sessions) != 2 {
 		t.Fatalf("expected 2 sessions, got %d", len(sessions))
 	}
@@ -111,8 +112,9 @@ func TestListSessionsFilterByProject(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	var sessions []SessionResponse
-	json.NewDecoder(w.Body).Decode(&sessions)
+	var page PaginatedSessionsResponse
+	json.NewDecoder(w.Body).Decode(&page)
+	sessions := page.Sessions
 	if len(sessions) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(sessions))
 	}
@@ -143,11 +145,11 @@ func TestListSessionsSearchByQuery(t *testing.T) {
 			w := httptest.NewRecorder()
 			srv.mux.ServeHTTP(w, req)
 
-			var sessions []SessionResponse
-			json.NewDecoder(w.Body).Decode(&sessions)
+			var page PaginatedSessionsResponse
+			json.NewDecoder(w.Body).Decode(&page)
 
 			var gotIDs []string
-			for _, s := range sessions {
+			for _, s := range page.Sessions {
 				gotIDs = append(gotIDs, s.ID)
 			}
 
@@ -234,9 +236,11 @@ func TestSessionResponseUsesIDNotSessionID(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	// Verify raw JSON uses "id" not "sessionId".
-	var raw []map[string]any
-	json.NewDecoder(w.Body).Decode(&raw)
-	for _, s := range raw {
+	var rawPage map[string]any
+	json.NewDecoder(w.Body).Decode(&rawPage)
+	raw := rawPage["sessions"].([]any)
+	for _, item := range raw {
+		s := item.(map[string]any)
 		if _, ok := s["id"]; !ok {
 			t.Error("expected 'id' field in response")
 		}
@@ -282,13 +286,16 @@ func TestEmptySessionList(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	var sessions []SessionResponse
-	json.NewDecoder(w.Body).Decode(&sessions)
-	if sessions == nil {
+	var page PaginatedSessionsResponse
+	json.NewDecoder(w.Body).Decode(&page)
+	if page.Sessions == nil {
 		t.Error("expected empty array, got null")
 	}
-	if len(sessions) != 0 {
-		fmt.Printf("sessions: %v\n", sessions)
-		t.Errorf("expected 0 sessions, got %d", len(sessions))
+	if len(page.Sessions) != 0 {
+		fmt.Printf("sessions: %v\n", page.Sessions)
+		t.Errorf("expected 0 sessions, got %d", len(page.Sessions))
+	}
+	if page.Total != 0 {
+		t.Errorf("expected total 0, got %d", page.Total)
 	}
 }
