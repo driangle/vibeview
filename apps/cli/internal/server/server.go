@@ -162,6 +162,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 
 	resp := SessionDetailResponse{
 		SessionResponse: toSessionResponse(*meta),
+		FilePath:        path,
 		Messages:        msgResponses,
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -222,6 +223,7 @@ type SessionResponse struct {
 // SessionDetailResponse is the API representation of a single session with messages.
 type SessionDetailResponse struct {
 	SessionResponse
+	FilePath string            `json:"filePath"`
 	Messages []MessageResponse `json:"messages"`
 }
 

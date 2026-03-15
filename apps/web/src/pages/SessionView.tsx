@@ -164,6 +164,7 @@ export function SessionView() {
           <LiveIndicator status={connectionStatus} />
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+          <span className="select-all font-mono text-xs">{session.id}</span>
           <span>{projectName(session.project)}</span>
           {session.model && (
             <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
@@ -176,6 +177,11 @@ export function SessionView() {
           </span>
           <span>{formatDate(session.timestamp)}</span>
         </div>
+        {session.filePath && (
+          <div className="mt-1 select-all truncate font-mono text-xs text-gray-400">
+            {session.filePath}
+          </div>
+        )}
         {liveUsage && <CostDisplay usage={liveUsage} />}
       </div>
 

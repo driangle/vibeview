@@ -55,5 +55,6 @@ export interface MessageResponse {
 }
 
 export interface SessionDetail extends Session {
+  filePath: string;
   messages: MessageResponse[];
 }

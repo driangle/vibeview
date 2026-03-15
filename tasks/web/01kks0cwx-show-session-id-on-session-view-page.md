@@ -1,7 +1,7 @@
 ---
 title: "Show session ID on session view page"
 id: "01kks0cwx"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: []
@@ -16,9 +16,9 @@ Display the session ID on the session view page so users can quickly identify an
 
 ## Tasks
 
-- [ ] Identify where the session ID is available in the session data model
-- [ ] Add the session ID display to the session view page header/metadata area
-- [ ] Ensure the session ID is selectable/copyable
+- [x] Identify where the session ID is available in the session data model
+- [x] Add the session ID display to the session view page header/metadata area
+- [x] Ensure the session ID is selectable/copyable
 
 ## Acceptance Criteria
 
