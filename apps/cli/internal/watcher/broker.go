@@ -284,8 +284,8 @@ type messageEvent struct {
 
 func toMessageEvent(msg claude.Message) messageEvent {
 	var ts string
-	if msg.Timestamp != 0 {
-		ts = time.UnixMilli(msg.Timestamp).UTC().Format(time.RFC3339)
+	if msg.Timestamp.Int64() != 0 {
+		ts = time.UnixMilli(msg.Timestamp.Int64()).UTC().Format(time.RFC3339)
 	}
 	return messageEvent{
 		UUID:      msg.UUID,

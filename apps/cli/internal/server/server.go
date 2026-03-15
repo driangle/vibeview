@@ -229,7 +229,7 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 	return MessageResponse{
 		UUID:      msg.UUID,
 		Type:      string(msg.Type),
-		Timestamp: msToISO(msg.Timestamp),
+		Timestamp: msToISO(msg.Timestamp.Int64()),
 		Message:   msg.Message,
 		Data:      msg.Data,
 		Snapshot:  msg.Snapshot,

@@ -24,7 +24,7 @@ type SessionMeta struct {
 	SessionID    string      `json:"sessionId"`
 	Project      string      `json:"project"`
 	Display      string      `json:"display"`
-	Timestamp    int64       `json:"timestamp"`
+	Timestamp    int64       `json:"timestamp"` // epoch millis
 	MessageCount int         `json:"messageCount"`
 	Model        string      `json:"model"`
 	Slug         string      `json:"slug"`
@@ -71,7 +71,7 @@ func buildSessionMeta(claudeDir string, entry claude.HistoryEntry) SessionMeta {
 		SessionID: entry.SessionID,
 		Project:   entry.Project,
 		Display:   entry.Display,
-		Timestamp: entry.Timestamp,
+		Timestamp: entry.Timestamp.Int64(),
 	}
 
 	sessionPath := SessionFilePath(claudeDir, entry.Project, entry.SessionID)

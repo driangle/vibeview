@@ -7,15 +7,54 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
+
+// Timestamp can unmarshal from both an integer (epoch millis) and an ISO 8601 string.
+// It stores the value as epoch milliseconds.
+type Timestamp int64
+
+func (t *Timestamp) UnmarshalJSON(data []byte) error {
+	// Try integer first.
+	var n int64
+	if err := json.Unmarshal(data, &n); err == nil {
+		*t = Timestamp(n)
+		return nil
+	}
+
+	// Try string (ISO 8601 or epoch-as-string).
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("timestamp: cannot unmarshal %s", string(data))
+	}
+
+	// Try parsing as integer string.
+	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+		*t = Timestamp(n)
+		return nil
+	}
+
+	// Parse as ISO 8601.
+	parsed, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		return fmt.Errorf("timestamp: cannot parse %q: %w", s, err)
+	}
+	*t = Timestamp(parsed.UnixMilli())
+	return nil
+}
+
+func (t Timestamp) Int64() int64 {
+	return int64(t)
+}
 
 // HistoryEntry represents a single line from ~/.claude/history.jsonl.
 type HistoryEntry struct {
 	SessionID string `json:"sessionId"`
 	Project   string `json:"project"`
 	Display   string `json:"display"`
-	Timestamp int64  `json:"timestamp"`
+	Timestamp Timestamp `json:"timestamp"`
 }
 
 // MessageType identifies the kind of message in a session JSONL file.
@@ -35,7 +74,7 @@ type Message struct {
 	UUID       string         `json:"uuid"`
 	ParentUUID string         `json:"parentUuid"`
 	SessionID  string         `json:"sessionId"`
-	Timestamp  int64          `json:"timestamp"`
+	Timestamp  Timestamp      `json:"timestamp"`
 	Cwd        string         `json:"cwd"`
 	GitBranch  string         `json:"gitBranch"`
 	IsSidechain bool          `json:"isSidechain"`

@@ -1,3 +1,4 @@
+.claude/settings.local.json
 # Go binaries
 apps/cli/vibeview
 

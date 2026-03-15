@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Skill(taskmd:add-task)",
-      "Skill(taskmd:complete-task)"
-    ]
-  }
-}

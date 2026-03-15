@@ -21,8 +21,8 @@ func TestParseHistoryLine(t *testing.T) {
 		if entry.Display != "fix bug" {
 			t.Errorf("Display = %q, want %q", entry.Display, "fix bug")
 		}
-		if entry.Timestamp != 1700000000 {
-			t.Errorf("Timestamp = %d, want %d", entry.Timestamp, 1700000000)
+		if entry.Timestamp.Int64() != 1700000000 {
+			t.Errorf("Timestamp = %d, want %d", entry.Timestamp.Int64(), 1700000000)
 		}
 	})
 
@@ -32,6 +32,17 @@ func TestParseHistoryLine(t *testing.T) {
 			t.Fatal("expected error for malformed input")
 		}
 	})
+}
+
+func TestTimestamp_ISOString(t *testing.T) {
+	line := `{"type":"user","uuid":"u1","sessionId":"s1","timestamp":"2026-03-13T10:46:43.165Z","message":{"role":"user","content":[{"type":"text","text":"hello"}]}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error parsing ISO timestamp: %v", err)
+	}
+	if msg.Timestamp.Int64() == 0 {
+		t.Error("expected non-zero timestamp from ISO string")
+	}
 }
 
 func TestParseMessageLine_User(t *testing.T) {
