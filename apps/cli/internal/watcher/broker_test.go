@@ -37,7 +37,7 @@ func setupBrokerTestDir(t *testing.T) (string, *session.Index) {
 
 func TestBrokerSubscribeUnsubscribe(t *testing.T) {
 	dir, idx := setupBrokerTestDir(t)
-	broker, err := NewBroker(dir, idx)
+	broker, err := NewBroker(dir, idx, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestBrokerSubscribeUnsubscribe(t *testing.T) {
 
 func TestBrokerMultipleClients(t *testing.T) {
 	dir, idx := setupBrokerTestDir(t)
-	broker, err := NewBroker(dir, idx)
+	broker, err := NewBroker(dir, idx, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestBrokerMultipleClients(t *testing.T) {
 
 func TestBrokerHistoryWatcher(t *testing.T) {
 	dir, idx := setupBrokerTestDir(t)
-	broker, err := NewBroker(dir, idx)
+	broker, err := NewBroker(dir, idx, false)
 	if err != nil {
 		t.Fatal(err)
 	}

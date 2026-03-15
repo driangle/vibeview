@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/driangle/vibeview/internal/server"
+	"github.com/driangle/vibeview/internal/session"
 )
 
 func main() {
@@ -23,12 +24,31 @@ func main() {
 	open := flag.Bool("open", true, "open browser on startup")
 	flag.Parse()
 
-	fmt.Printf("vibeview\n")
-	fmt.Printf("  port:      %d\n", *port)
-	fmt.Printf("  claude-dir: %s\n", *claudeDir)
-	fmt.Printf("  open:      %t\n", *open)
+	paths := flag.Args()
 
-	srv, err := server.New(*claudeDir)
+	cfg := server.Config{
+		ClaudeDir: *claudeDir,
+	}
+
+	if len(paths) > 0 {
+		idx, err := session.LoadFromPaths(paths)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		cfg.Index = idx
+		cfg.Standalone = true
+		fmt.Printf("vibeview (standalone)\n")
+		fmt.Printf("  port:   %d\n", *port)
+		fmt.Printf("  files:  %v\n", paths)
+	} else {
+		fmt.Printf("vibeview\n")
+		fmt.Printf("  port:      %d\n", *port)
+		fmt.Printf("  claude-dir: %s\n", *claudeDir)
+		fmt.Printf("  open:      %t\n", *open)
+	}
+
+	srv, err := server.New(cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

@@ -29,8 +29,9 @@ type Client struct {
 
 // Broker manages file watching and distributes SSE events to connected clients.
 type Broker struct {
-	claudeDir string
-	index     *session.Index
+	claudeDir  string
+	standalone bool
+	index      *session.Index
 
 	mu      sync.Mutex
 	clients map[string]map[*Client]struct{} // sessionID -> set of clients
@@ -42,17 +43,21 @@ type Broker struct {
 }
 
 // NewBroker creates a new SSE broker that watches for file changes.
-func NewBroker(claudeDir string, index *session.Index) (*Broker, error) {
+// In standalone mode, history watching is skipped.
+func NewBroker(claudeDir string, index *session.Index, standalone bool) (*Broker, error) {
 	b := &Broker{
-		claudeDir: claudeDir,
-		index:     index,
-		clients:   make(map[string]map[*Client]struct{}),
-		tailers:   make(map[string]*Tailer),
-		done:      make(chan struct{}),
+		claudeDir:  claudeDir,
+		standalone: standalone,
+		index:      index,
+		clients:    make(map[string]map[*Client]struct{}),
+		tailers:    make(map[string]*Tailer),
+		done:       make(chan struct{}),
 	}
 
-	if err := b.startHistoryWatcher(); err != nil {
-		return nil, fmt.Errorf("start history watcher: %w", err)
+	if !standalone {
+		if err := b.startHistoryWatcher(); err != nil {
+			return nil, fmt.Errorf("start history watcher: %w", err)
+		}
 	}
 
 	go b.pingLoop()
@@ -129,7 +134,7 @@ func (b *Broker) startTailer(sessionID string) {
 		return
 	}
 
-	path := session.SessionFilePath(b.claudeDir, meta.Project, meta.SessionID)
+	path := session.ResolveFilePath(b.claudeDir, *meta)
 	tailer, err := NewTailer(path)
 	if err != nil {
 		log.Printf("failed to start tailer for %s: %v", sessionID, err)

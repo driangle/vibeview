@@ -51,7 +51,7 @@ func setupTestDir(t *testing.T) string {
 func newTestServer(t *testing.T) *Server {
 	t.Helper()
 	dir := setupTestDir(t)
-	srv, err := New(dir)
+	srv, err := New(Config{ClaudeDir: dir})
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}

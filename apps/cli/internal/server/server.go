@@ -15,37 +15,51 @@ import (
 	"github.com/driangle/vibeview/internal/watcher"
 )
 
-// Server serves the VibeView HTTP API.
-type Server struct {
-	claudeDir string
-	index     *session.Index
-	broker    *watcher.Broker
-	mux       *http.ServeMux
+// Config holds the configuration for creating a Server.
+type Config struct {
+	ClaudeDir  string
+	Index      *session.Index // Pre-built index (for standalone mode).
+	Standalone bool           // True when viewing standalone files (no ~/.claude).
 }
 
-// New creates a Server by discovering all sessions in claudeDir.
-// Session discovery is fast (reads only history.jsonl). Enrichment of
-// individual session metadata (message counts, usage, etc.) runs in the background.
-func New(claudeDir string) (*Server, error) {
-	idx, err := session.Discover(claudeDir)
-	if err != nil {
-		return nil, fmt.Errorf("discover sessions: %w", err)
+// Server serves the VibeView HTTP API.
+type Server struct {
+	claudeDir  string
+	standalone bool
+	index      *session.Index
+	broker     *watcher.Broker
+	mux        *http.ServeMux
+}
+
+// New creates a Server. In standalone mode, it uses the provided Index directly.
+// Otherwise, it discovers sessions from claudeDir and enriches them in the background.
+func New(cfg Config) (*Server, error) {
+	idx := cfg.Index
+	if idx == nil {
+		var err error
+		idx, err = session.Discover(cfg.ClaudeDir)
+		if err != nil {
+			return nil, fmt.Errorf("discover sessions: %w", err)
+		}
 	}
 
-	broker, err := watcher.NewBroker(claudeDir, idx)
+	broker, err := watcher.NewBroker(cfg.ClaudeDir, idx, cfg.Standalone)
 	if err != nil {
 		return nil, fmt.Errorf("start broker: %w", err)
 	}
 
 	s := &Server{
-		claudeDir: claudeDir,
-		index:     idx,
-		broker:    broker,
-		mux:       http.NewServeMux(),
+		claudeDir:  cfg.ClaudeDir,
+		standalone: cfg.Standalone,
+		index:      idx,
+		broker:     broker,
+		mux:        http.NewServeMux(),
 	}
 	s.routes()
 
-	go idx.Enrich(claudeDir)
+	if !cfg.Standalone {
+		go idx.Enrich(cfg.ClaudeDir)
+	}
 
 	return s, nil
 }
@@ -127,7 +141,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := session.SessionFilePath(s.claudeDir, meta.Project, meta.SessionID)
+	path := session.ResolveFilePath(s.claudeDir, *meta)
 	f, err := os.Open(path)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})

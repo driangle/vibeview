@@ -2,6 +2,7 @@
 package session
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -30,6 +31,10 @@ type SessionMeta struct {
 	Model        string      `json:"model"`
 	Slug         string      `json:"slug"`
 	Usage        UsageTotals `json:"usage"`
+
+	// FilePath is the absolute path to the JSONL file for standalone sessions.
+	// Empty for sessions discovered from ~/.claude.
+	FilePath string `json:"-"`
 }
 
 // Index holds all discovered sessions. It is safe for concurrent access.
@@ -205,6 +210,135 @@ func (idx *Index) FilterByProject(query string) []SessionMeta {
 		}
 	}
 	return result
+}
+
+// ResolveFilePath returns the absolute path for a session's JSONL file.
+// For standalone sessions (FilePath set), it returns FilePath directly.
+// For claude-dir sessions, it computes the path from claudeDir + project + sessionID.
+func ResolveFilePath(claudeDir string, meta SessionMeta) string {
+	if meta.FilePath != "" {
+		return meta.FilePath
+	}
+	return SessionFilePath(claudeDir, meta.Project, meta.SessionID)
+}
+
+// LoadFromPaths builds an Index from explicit file and directory paths.
+// Directories are walked recursively for *.jsonl files. Files that fail
+// to parse are skipped with a warning on stderr.
+func LoadFromPaths(paths []string) (*Index, error) {
+	var files []string
+	for _, p := range paths {
+		abs, err := filepath.Abs(p)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: cannot resolve path %q: %v\n", p, err)
+			continue
+		}
+		info, err := os.Stat(abs)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: cannot stat %q: %v\n", abs, err)
+			continue
+		}
+		if info.IsDir() {
+			filepath.WalkDir(abs, func(path string, d os.DirEntry, err error) error {
+				if err != nil {
+					return nil
+				}
+				if !d.IsDir() && strings.HasSuffix(d.Name(), ".jsonl") {
+					files = append(files, path)
+				}
+				return nil
+			})
+		} else {
+			files = append(files, abs)
+		}
+	}
+
+	var sessions []SessionMeta
+	for _, f := range files {
+		meta, err := loadSessionFromFile(f)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: skipping %q: %v\n", f, err)
+			continue
+		}
+		sessions = append(sessions, meta)
+	}
+
+	sort.Slice(sessions, func(i, j int) bool {
+		return sessions[i].Timestamp > sessions[j].Timestamp
+	})
+
+	return &Index{Sessions: sessions}, nil
+}
+
+// loadSessionFromFile parses a single JSONL file and synthesizes a SessionMeta.
+func loadSessionFromFile(path string) (SessionMeta, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return SessionMeta{}, err
+	}
+	defer f.Close()
+
+	messages, err := claude.ParseSessionFile(f)
+	if err != nil {
+		return SessionMeta{}, err
+	}
+	if len(messages) == 0 {
+		return SessionMeta{}, fmt.Errorf("no messages found")
+	}
+
+	// Derive session ID from the sessionId field in messages, falling back to filename.
+	sessionID := strings.TrimSuffix(filepath.Base(path), ".jsonl")
+	for _, msg := range messages {
+		if msg.SessionID != "" {
+			sessionID = msg.SessionID
+			break
+		}
+	}
+
+	meta := SessionMeta{
+		SessionID:    sessionID,
+		FilePath:     path,
+		MessageCount: len(messages),
+	}
+
+	// Extract timestamp from first message.
+	if ts := messages[0].Timestamp.Int64(); ts != 0 {
+		meta.Timestamp = ts
+	}
+
+	for _, msg := range messages {
+		if msg.Type == claude.MessageTypeAssistant && msg.Message != nil {
+			if meta.Model == "" && msg.Message.Model != "" {
+				meta.Model = msg.Message.Model
+			}
+			if msg.Message.Usage != nil {
+				u := msg.Message.Usage
+				meta.Usage.InputTokens += u.InputTokens
+				meta.Usage.OutputTokens += u.OutputTokens
+				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
+				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
+				meta.Usage.CostUSD += u.CostUSD
+			}
+		}
+		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
+			meta.CustomTitle = msg.CustomTitle
+		}
+	}
+
+	// Derive slug from first user message.
+	for _, msg := range messages {
+		if msg.Type == claude.MessageTypeUser && msg.Message != nil {
+			for _, block := range msg.Message.Content {
+				if block.Type == "text" && block.Text != "" {
+					meta.Slug = truncateSlug(block.Text, 80)
+					break
+				}
+			}
+			break
+		}
+	}
+
+	return meta, nil
 }
 
 // truncateSlug shortens text to maxLen, breaking at a word boundary.
