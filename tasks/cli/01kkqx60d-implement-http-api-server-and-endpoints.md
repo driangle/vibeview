@@ -1,7 +1,7 @@
 ---
 title: "Implement HTTP API server and endpoints"
 id: "01kkqx60d"
-status: pending
+status: completed
 priority: critical
 effort: medium
 type: feature

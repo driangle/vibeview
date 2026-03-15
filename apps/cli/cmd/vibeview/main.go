@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/driangle/vibeview/internal/server"
 )
 
 func main() {
@@ -23,5 +25,18 @@ func main() {
 	fmt.Printf("  port:      %d\n", *port)
 	fmt.Printf("  claude-dir: %s\n", *claudeDir)
 	fmt.Printf("  open:      %t\n", *open)
-	fmt.Println("starting server...")
+
+	_ = *open // TODO: wire up browser open
+
+	srv, err := server.New(*claudeDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("listening on http://localhost:%d\n", *port)
+	if err := srv.ListenAndServe(*port); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 }
