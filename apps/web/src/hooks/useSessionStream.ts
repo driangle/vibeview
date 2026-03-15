@@ -9,51 +9,59 @@ export function useSessionStream(sessionId: string | undefined) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const seenUUIDs = useRef(new Set<string>());
-  const retryCount = useRef(0);
-  const eventSourceRef = useRef<EventSource | null>(null);
-
-  const connect = useCallback(() => {
-    if (!sessionId) return;
-
-    setStatus("connecting");
-    const es = new EventSource(`/api/sessions/${sessionId}/stream`);
-    eventSourceRef.current = es;
-
-    es.onopen = () => {
-      setStatus("connected");
-      retryCount.current = 0;
-    };
-
-    es.addEventListener("message", (e) => {
-      const msg: MessageResponse = JSON.parse(e.data);
-      if (seenUUIDs.current.has(msg.uuid)) return;
-      seenUUIDs.current.add(msg.uuid);
-      setMessages((prev) => [...prev, msg]);
-    });
-
-    es.addEventListener("ping", () => {
-      // Keep-alive; no action needed.
-    });
-
-    es.onerror = () => {
-      es.close();
-      setStatus("disconnected");
-      const delay =
-        RECONNECT_DELAYS[
-          Math.min(retryCount.current, RECONNECT_DELAYS.length - 1)
-        ];
-      retryCount.current++;
-      setTimeout(connect, delay);
-    };
-  }, [sessionId]);
 
   useEffect(() => {
+    if (!sessionId) return;
+
+    let disposed = false;
+    const retryCount = { current: 0 };
+    let eventSource: EventSource | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function connect() {
+      if (disposed) return;
+
+      setStatus("connecting");
+      const es = new EventSource(`/api/sessions/${sessionId}/stream`);
+      eventSource = es;
+
+      es.onopen = () => {
+        setStatus("connected");
+        retryCount.current = 0;
+      };
+
+      es.addEventListener("message", (e) => {
+        const msg: MessageResponse = JSON.parse(e.data);
+        if (seenUUIDs.current.has(msg.uuid)) return;
+        seenUUIDs.current.add(msg.uuid);
+        setMessages((prev) => [...prev, msg]);
+      });
+
+      es.addEventListener("ping", () => {
+        // Keep-alive; no action needed.
+      });
+
+      es.onerror = () => {
+        es.close();
+        setStatus("disconnected");
+        const delay =
+          RECONNECT_DELAYS[
+            Math.min(retryCount.current, RECONNECT_DELAYS.length - 1)
+          ];
+        retryCount.current++;
+        retryTimer = setTimeout(connect, delay);
+      };
+    }
+
     connect();
+
     return () => {
-      eventSourceRef.current?.close();
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      eventSource?.close();
       setStatus("disconnected");
     };
-  }, [connect]);
+  }, [sessionId]);
 
   const addInitialUUIDs = useCallback((uuids: string[]) => {
     for (const uuid of uuids) {

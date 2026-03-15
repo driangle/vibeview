@@ -1,7 +1,7 @@
 ---
 title: "Add ESLint 9 to the web project with max file line count rule"
 id: "01kks39gg"
-status: pending
+status: completed
 priority: medium
 type: chore
 tags: ["linting", "dx"]
@@ -16,13 +16,13 @@ Set up ESLint 9 in the web project using the new flat config format. Include a r
 
 ## Tasks
 
-- [ ] Install `eslint` v9 and any necessary plugins/parsers for the web project (TypeScript, React, etc.)
-- [ ] Create `eslint.config.js` (flat config format) in the web project root
-- [ ] Configure recommended rules for TypeScript and React
-- [ ] Add `max-lines` rule set to `{ "max": 200 }` with a warning or error severity
-- [ ] Add `lint` script to the web project's `package.json`
-- [ ] Run ESLint across the codebase and fix or suppress any initial violations
-- [ ] Verify the max-lines rule flags files exceeding 200 lines
+- [x] Install `eslint` v9 and any necessary plugins/parsers for the web project (TypeScript, React, etc.)
+- [x] Create `eslint.config.js` (flat config format) in the web project root
+- [x] Configure recommended rules for TypeScript and React
+- [x] Add `max-lines` rule set to `{ "max": 200 }` with a warning or error severity
+- [x] Add `lint` script to the web project's `package.json`
+- [x] Run ESLint across the codebase and fix or suppress any initial violations
+- [x] Verify the max-lines rule flags files exceeding 200 lines
 
 ## Acceptance Criteria
 

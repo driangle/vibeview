@@ -66,7 +66,7 @@ const LEFTOVER_UNWRAP =
   /<\/?(command-name|command-message|command-args|local-command-stdout|invoke|parameter|antml_invoke|antml_parameter)(?:\s[^>]*)?\/?>/g;
 
 const HTML_TAGS =
-  /^<\/?(a|b|i|u|em|strong|br|hr|p|div|span|img|table|tr|td|th|thead|tbody|ul|ol|li|h[1-6]|pre|code|blockquote|details|summary|sup|sub|del|ins|mark|small|big|s|strike|abbr|cite|dfn|kbd|q|samp|var|wbr|dl|dt|dd|figure|figcaption|picture|source|video|audio|iframe|svg|path|rect|circle|line)[\s>\/]/i;
+  /^<\/?(a|b|i|u|em|strong|br|hr|p|div|span|img|table|tr|td|th|thead|tbody|ul|ol|li|h[1-6]|pre|code|blockquote|details|summary|sup|sub|del|ins|mark|small|big|s|strike|abbr|cite|dfn|kbd|q|samp|var|wbr|dl|dt|dd|figure|figcaption|picture|source|video|audio|iframe|svg|path|rect|circle|line)[\s>/]/i;
 
 function cleanTextSegment(text: string): string {
   let out = text;
