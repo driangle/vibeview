@@ -10,6 +10,7 @@ import (
 
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/session"
+	"github.com/driangle/vibeview/internal/spa"
 	"github.com/driangle/vibeview/internal/watcher"
 )
 
@@ -48,6 +49,9 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
+
+	// Serve embedded SPA for all other routes.
+	s.mux.Handle("/", spa.Handler())
 }
 
 // ListenAndServe starts the HTTP server on the given port.

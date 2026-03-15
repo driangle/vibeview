@@ -1,2 +1,6 @@
 # Go binaries
 apps/cli/vibeview
+
+# Embedded SPA dist (copied during build, keep placeholder index.html)
+apps/cli/internal/spa/dist/*
+!apps/cli/internal/spa/dist/index.html

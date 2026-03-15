@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/driangle/vibeview/internal/server"
 )
@@ -26,17 +28,36 @@ func main() {
 	fmt.Printf("  claude-dir: %s\n", *claudeDir)
 	fmt.Printf("  open:      %t\n", *open)
 
-	_ = *open // TODO: wire up browser open
-
 	srv, err := server.New(*claudeDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("listening on http://localhost:%d\n", *port)
+	url := fmt.Sprintf("http://localhost:%d", *port)
+	fmt.Printf("listening on %s\n", url)
+
+	if *open {
+		go openBrowser(url)
+	}
+
 	if err := srv.ListenAndServe(*port); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func openBrowser(url string) {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", url)
+	case "linux":
+		cmd = exec.Command("xdg-open", url)
+	case "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	default:
+		return
+	}
+	cmd.Run()
 }
