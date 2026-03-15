@@ -137,19 +137,34 @@ function JsonModal({
   );
 }
 
-function HookMessage({ message }: { message: MessageResponse }) {
+function EventMessage({
+  message,
+  label,
+  borderColor,
+  labelColor,
+  detailColor,
+  detailText,
+}: {
+  message: MessageResponse;
+  label: string;
+  borderColor: string;
+  labelColor: string;
+  detailColor: string;
+  detailText: string;
+}) {
   const [showJson, setShowJson] = useState(false);
-  const hookName = String(message.data?.hookName ?? "unknown");
 
   return (
     <>
-      <div className="-ml-4 flex items-center gap-2">
+      <div className="flex items-center">
         <button
           onClick={() => setShowJson(true)}
-          className="flex items-center gap-1.5 border-l-2 border-amber-300 py-0.5 pl-2 text-xs text-amber-600 hover:text-amber-800"
+          className={`cursor-pointer border-l-2 ${borderColor} py-0.5 pl-2 pr-2 text-xs ${labelColor} hover:opacity-70`}
         >
-          <span className="font-medium">Hook</span>
-          <span className="text-amber-400">{hookName}</span>
+          <span className="font-medium">{label}</span>
+          {detailText && (
+            <span className={`ml-1.5 ${detailColor}`}>{detailText}</span>
+          )}
         </button>
       </div>
       {showJson && message.data && (
@@ -159,25 +174,39 @@ function HookMessage({ message }: { message: MessageResponse }) {
   );
 }
 
+function HookMessage({ message }: { message: MessageResponse }) {
+  const hookName = String(message.data?.hookName ?? "unknown");
+  const command = message.data?.command ? String(message.data.command) : "";
+  const detailText = command ? `${hookName} → ${command}` : hookName;
+
+  return (
+    <EventMessage
+      message={message}
+      label="Hook"
+      borderColor="border-stone-300"
+      labelColor="text-stone-500"
+      detailColor="text-stone-400"
+      detailText={detailText}
+    />
+  );
+}
+
 function SystemMessage({ message }: { message: MessageResponse }) {
-  const label =
-    message.type === "progress" ? "Progress" : "System";
+  const label = message.type === "progress" ? "Progress" : "System";
   const detail =
     message.data && typeof message.data === "object"
       ? JSON.stringify(message.data)
       : "";
 
   return (
-    <div className="-ml-4 flex items-center gap-2">
-      <span className="border-l-2 border-gray-200 py-0.5 pl-2 text-xs text-gray-400">
-        {label}
-        {detail && (
-          <span className="ml-1" title={detail}>
-            — {detail.slice(0, 80)}
-          </span>
-        )}
-      </span>
-    </div>
+    <EventMessage
+      message={message}
+      label={label}
+      borderColor="border-gray-200"
+      labelColor="text-gray-400"
+      detailColor="text-gray-300"
+      detailText={detail ? detail.slice(0, 80) : ""}
+    />
   );
 }
 
