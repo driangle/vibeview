@@ -1,6 +1,7 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { MessageResponse, ContentBlock } from "../types";
+import { CodeBlock } from "./CodeBlock";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
 
@@ -63,7 +64,25 @@ function AssistantMessage({
             if (block.type === "text" && block.text) {
               return (
                 <div key={i} className="prose prose-sm max-w-none">
-                  <Markdown remarkPlugins={[remarkGfm]}>{block.text}</Markdown>
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || "");
+                        const code = String(children).replace(/\n$/, "");
+                        if (match) {
+                          return <CodeBlock language={match[1]}>{code}</CodeBlock>;
+                        }
+                        return (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {block.text}
+                  </Markdown>
                 </div>
               );
             }

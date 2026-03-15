@@ -1,7 +1,7 @@
 ---
 title: "Build session view page with message rendering"
 id: "01kkqxa68"
-status: pending
+status: completed
 priority: high
 effort: large
 type: feature
@@ -19,17 +19,17 @@ Implement the session view page at `/session/:id` with a chat-style read-only la
 
 ## Tasks
 
-- [ ] Define TypeScript types for session detail API response and all content block types
-- [ ] Create SWR hook for fetching session detail from `GET /api/sessions/:id`
-- [ ] Build chat-style message layout (user right-aligned, assistant left-aligned)
-- [ ] Render user messages with plain text or tool result content
-- [ ] Render assistant text blocks with markdown (react-markdown + remark-gfm)
-- [ ] Render tool_use blocks as collapsible sections showing tool name, input, and paired tool_result
-- [ ] Render thinking blocks as collapsible, visually distinct sections (muted/italic)
-- [ ] Render system/progress messages as small muted inline indicators
-- [ ] Add syntax highlighting for code blocks (shiki or highlight.js)
-- [ ] Implement message pagination (50 messages per page) for large sessions
-- [ ] Style with Tailwind CSS
+- [x] Define TypeScript types for session detail API response and all content block types
+- [x] Create SWR hook for fetching session detail from `GET /api/sessions/:id`
+- [x] Build chat-style message layout (user right-aligned, assistant left-aligned)
+- [x] Render user messages with plain text or tool result content
+- [x] Render assistant text blocks with markdown (react-markdown + remark-gfm)
+- [x] Render tool_use blocks as collapsible sections showing tool name, input, and paired tool_result
+- [x] Render thinking blocks as collapsible, visually distinct sections (muted/italic)
+- [x] Render system/progress messages as small muted inline indicators
+- [x] Add syntax highlighting for code blocks (react-syntax-highlighter + Prism)
+- [x] Implement message pagination (50 messages per page) for large sessions
+- [x] Style with Tailwind CSS
 
 ## Acceptance Criteria
 
