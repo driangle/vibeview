@@ -3,32 +3,12 @@ import { Link, useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
 import type { Session } from "../types";
+import { formatTime, projectName } from "../utils";
 
 const RECENT_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 function isRecent(timestamp: string): boolean {
   return Date.now() - new Date(timestamp).getTime() < RECENT_THRESHOLD_MS;
-}
-
-function formatTime(timestamp: string): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHr = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
-
-function projectName(project: string): string {
-  // Show the last path segment as the project name
-  const parts = project.split("/").filter(Boolean);
-  return parts[parts.length - 1] || project;
 }
 
 function groupByProject(sessions: Session[]): Map<string, Session[]> {

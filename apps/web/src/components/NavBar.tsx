@@ -18,6 +18,18 @@ export function NavBar() {
         >
           Sessions
         </NavLink>
+        <NavLink
+          to="/directories"
+          className={({ isActive }) =>
+            `text-sm font-medium transition-colors ${
+              isActive
+                ? "text-blue-600 border-b-2 border-blue-600 pb-[13px] pt-[15px]"
+                : "text-gray-500 hover:text-gray-900"
+            }`
+          }
+        >
+          Directories
+        </NavLink>
       </div>
     </nav>
   );

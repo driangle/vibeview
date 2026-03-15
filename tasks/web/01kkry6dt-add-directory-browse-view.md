@@ -1,7 +1,7 @@
 ---
 title: "Add directory browse view"
 id: "01kkry6dt"
-status: pending
+status: completed
 priority: medium
 type: feature
 effort: medium
