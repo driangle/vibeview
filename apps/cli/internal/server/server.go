@@ -188,7 +188,11 @@ func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	client := s.broker.Subscribe(id)
+	client, err := s.broker.Subscribe(id)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})
+		return
+	}
 	defer s.broker.Unsubscribe(client)
 
 	ctx := r.Context()

@@ -43,7 +43,10 @@ func TestBrokerSubscribeUnsubscribe(t *testing.T) {
 	}
 	defer broker.Close()
 
-	client := broker.Subscribe("sess-1")
+	client, err := broker.Subscribe("sess-1")
+	if err != nil {
+		t.Fatal(err)
+	}
 	broker.Unsubscribe(client)
 
 	// After unsubscribe, tailer should be cleaned up.
@@ -68,8 +71,14 @@ func TestBrokerMultipleClients(t *testing.T) {
 	}
 	defer broker.Close()
 
-	c1 := broker.Subscribe("sess-1")
-	c2 := broker.Subscribe("sess-1")
+	c1, err := broker.Subscribe("sess-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c2, err := broker.Subscribe("sess-1")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Append a new message to trigger events.
 	sessPath := filepath.Join(dir, "projects", "-users-me-proj", "sess-1.jsonl")

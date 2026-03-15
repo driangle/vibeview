@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -66,7 +65,8 @@ func NewBroker(claudeDir string, index *session.Index, standalone bool) (*Broker
 }
 
 // Subscribe registers a client to receive events for the given session.
-func (b *Broker) Subscribe(sessionID string) *Client {
+// Returns an error if the session file cannot be found or watched.
+func (b *Broker) Subscribe(sessionID string) (*Client, error) {
 	c := &Client{
 		SessionID: sessionID,
 		Events:    make(chan SSEEvent, 64),
@@ -78,14 +78,18 @@ func (b *Broker) Subscribe(sessionID string) *Client {
 	if b.clients[sessionID] == nil {
 		b.clients[sessionID] = make(map[*Client]struct{})
 	}
-	b.clients[sessionID][c] = struct{}{}
 
 	// Start a tailer for this session if one isn't running.
 	if _, ok := b.tailers[sessionID]; !ok {
-		b.startTailer(sessionID)
+		if err := b.startTailer(sessionID); err != nil {
+			delete(b.clients, sessionID)
+			return nil, err
+		}
 	}
 
-	return c
+	b.clients[sessionID][c] = struct{}{}
+
+	return c, nil
 }
 
 // Unsubscribe removes a client and cleans up resources if no clients remain.
@@ -128,17 +132,16 @@ func (b *Broker) Close() error {
 	return nil
 }
 
-func (b *Broker) startTailer(sessionID string) {
+func (b *Broker) startTailer(sessionID string) error {
 	meta := b.index.FindSession(sessionID)
 	if meta == nil {
-		return
+		return fmt.Errorf("session %s not found in index", sessionID)
 	}
 
 	path := session.ResolveFilePath(b.claudeDir, *meta)
 	tailer, err := NewTailer(path)
 	if err != nil {
-		log.Printf("failed to start tailer for %s: %v", sessionID, err)
-		return
+		return fmt.Errorf("start tailer for %s: %w", sessionID, err)
 	}
 
 	b.tailers[sessionID] = tailer
@@ -162,6 +165,8 @@ func (b *Broker) startTailer(sessionID string) {
 			b.mu.Unlock()
 		}
 	}()
+
+	return nil
 }
 
 func (b *Broker) startHistoryWatcher() error {

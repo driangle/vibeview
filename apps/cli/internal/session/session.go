@@ -3,6 +3,7 @@ package session
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -108,25 +109,40 @@ func Discover(claudeDir string) (*Index, error) {
 }
 
 // Enrich reads each session's JSONL file to populate messageCount, model, usage, and slug.
+// Sessions whose JSONL files no longer exist on disk are removed from the index.
 // It updates sessions in-place and is safe to call concurrently with readers.
 func (idx *Index) Enrich(claudeDir string) {
 	idx.mu.RLock()
-	count := len(idx.Sessions)
+	snapshot := make([]SessionMeta, len(idx.Sessions))
+	copy(snapshot, idx.Sessions)
 	idx.mu.RUnlock()
 
-	for i := 0; i < count; i++ {
-		idx.mu.RLock()
-		meta := idx.Sessions[i]
-		idx.mu.RUnlock()
-
-		enriched := enrichSession(claudeDir, meta)
-
-		idx.mu.Lock()
-		if i < len(idx.Sessions) && idx.Sessions[i].SessionID == meta.SessionID {
-			idx.Sessions[i] = enriched
-		}
-		idx.mu.Unlock()
+	type result struct {
+		meta    SessionMeta
+		exists  bool
 	}
+	results := make([]result, len(snapshot))
+
+	for i, meta := range snapshot {
+		sessionPath := ResolveFilePath(claudeDir, meta)
+		if _, err := os.Stat(sessionPath); err != nil {
+			// Some history entries (e.g. /usage commands) never produce a JSONL file.
+			log.Printf("warning: session %s has no JSONL file at %s (removing from index)", meta.SessionID, sessionPath)
+			results[i] = result{meta: meta, exists: false}
+			continue
+		}
+		results[i] = result{meta: enrichSession(claudeDir, meta), exists: true}
+	}
+
+	idx.mu.Lock()
+	filtered := make([]SessionMeta, 0, len(results))
+	for _, r := range results {
+		if r.exists {
+			filtered = append(filtered, r.meta)
+		}
+	}
+	idx.Sessions = filtered
+	idx.mu.Unlock()
 }
 
 // enrichSession reads a session's JSONL file and populates derived fields.
