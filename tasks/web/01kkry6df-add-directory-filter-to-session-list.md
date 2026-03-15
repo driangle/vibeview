@@ -1,7 +1,7 @@
 ---
 title: "Add directory filter to session list"
 id: "01kkry6df"
-status: pending
+status: completed
 priority: high
 type: feature
 effort: small
@@ -19,10 +19,10 @@ Add the ability to filter the session list by directory (project path). Users sh
 
 ## Tasks
 
-- [ ] Add a directory dropdown/selector populated from available projects in the session data
-- [ ] Filter displayed sessions when a directory is selected
-- [ ] Show an "All directories" option to clear the filter
-- [ ] Persist the selected filter in URL query params so it survives page reloads
+- [x] Add a directory dropdown/selector populated from available projects in the session data
+- [x] Filter displayed sessions when a directory is selected
+- [x] Show an "All directories" option to clear the filter
+- [x] Persist the selected filter in URL query params so it survives page reloads
 
 ## Acceptance Criteria
 

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
 import type { Session } from "../types";
@@ -47,12 +47,31 @@ function groupByProject(sessions: Session[]): Map<string, Session[]> {
 
 export function SessionList() {
   const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dirFilter = searchParams.get("dir") || "";
 
   const { data: sessions, error, isLoading } = useSWR<Session[]>(
     "/api/sessions",
     fetcher,
     { refreshInterval: 5000 }
   );
+
+  const uniqueProjects = useMemo(() => {
+    if (!sessions) return [];
+    const projects = [...new Set(sessions.map((s) => s.project))];
+    return projects.sort();
+  }, [sessions]);
+
+  function setDirFilter(dir: string) {
+    setSearchParams((prev) => {
+      if (dir) {
+        prev.set("dir", dir);
+      } else {
+        prev.delete("dir");
+      }
+      return prev;
+    });
+  }
 
   if (error) {
     return (
@@ -74,14 +93,18 @@ export function SessionList() {
     );
   }
 
+  const dirFiltered = dirFilter
+    ? sessions.filter((s) => s.project === dirFilter)
+    : sessions;
+
   const filtered = search
-    ? sessions.filter(
+    ? dirFiltered.filter(
         (s) =>
           s.project.toLowerCase().includes(search.toLowerCase()) ||
           s.slug?.toLowerCase().includes(search.toLowerCase()) ||
           s.display?.toLowerCase().includes(search.toLowerCase())
       )
-    : sessions;
+    : dirFiltered;
 
   const grouped = groupByProject(filtered);
 
@@ -94,13 +117,27 @@ export function SessionList() {
         </span>
       </div>
 
-      <input
-        type="text"
-        placeholder="Filter by project or topic..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-6 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-      />
+      <div className="mb-6 flex gap-3">
+        <select
+          value={dirFilter}
+          onChange={(e) => setDirFilter(e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="">All directories</option>
+          {uniqueProjects.map((project) => (
+            <option key={project} value={project}>
+              {projectName(project)}
+            </option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Filter by project or topic..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-0 flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        />
+      </div>
 
       {filtered.length === 0 ? (
         <p className="text-gray-500">
