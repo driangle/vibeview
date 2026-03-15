@@ -72,7 +72,7 @@ export function DirectoryList() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Directories</h1>
         <span className="text-sm text-gray-500">
-          {directories.length} project{directories.length !== 1 ? "s" : ""}
+          {directories.length} director{directories.length !== 1 ? "ies" : "y"}
         </span>
       </div>
 
