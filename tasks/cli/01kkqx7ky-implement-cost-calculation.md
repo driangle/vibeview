@@ -15,21 +15,17 @@ created: "2026-03-15"
 
 ## Objective
 
-Implement token cost calculation logic with hardcoded per-model pricing. Calculate both raw token counts and estimated dollar costs for sessions, including cache read and cache creation token pricing.
+Parse the `costUSD` field that Claude Code already includes in its JSONL usage data, and aggregate costs per session. No need for hardcoded pricing tables — use the source-of-truth cost directly from Claude Code's output.
 
 ## Tasks
 
-- [ ] Define pricing config struct with per-model rates (input, output per 1M tokens)
-- [ ] Add hardcoded pricing: claude-opus-4-6 ($15/$75), claude-sonnet-4-6 ($3/$15), claude-haiku-4-5 ($0.80/$4)
-- [ ] Implement cache pricing: cache read at 10% of input, cache creation at 25% of input
-- [ ] Calculate per-session totals: sum input_tokens, output_tokens, cache_read, cache_creation across all assistant messages
-- [ ] Convert token counts to dollar costs
+- [ ] Add `CostUSD` field to the `Usage` struct in `claude.go`
+- [ ] Aggregate `costUSD` and token counts across all assistant messages per session
 - [ ] Expose cost data in session API responses
-- [ ] Write unit tests for cost calculations
+- [ ] Write unit tests for cost aggregation
 
 ## Acceptance Criteria
 
-- Costs calculated correctly for all three model tiers
-- Cache read and creation tokens priced at correct ratios
-- Session total aggregates all assistant message usage data
-- API responses include both raw token counts and dollar cost estimates
+- `costUSD` parsed from Claude Code JSONL usage data
+- Session total aggregates all assistant message usage and cost data
+- API responses include both raw token counts and dollar cost totals
