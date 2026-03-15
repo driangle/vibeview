@@ -1,7 +1,7 @@
 ---
 title: "Add persistent navigation bar"
 id: "01kkry6en"
-status: pending
+status: completed
 priority: high
 type: feature
 effort: small
@@ -19,11 +19,11 @@ Add a permanent top navigation bar that appears on all pages. Initially it shoul
 
 ## Tasks
 
-- [ ] Create a NavBar component with app title/logo and navigation links
-- [ ] Add a "Sessions" link that navigates to the home page
-- [ ] Highlight the active tab based on current route
-- [ ] Integrate the NavBar into the app layout so it renders on all pages
-- [ ] Ensure the session view page's back link integrates with the nav bar
+- [x] Create a NavBar component with app title/logo and navigation links
+- [x] Add a "Sessions" link that navigates to the home page
+- [x] Highlight the active tab based on current route
+- [x] Integrate the NavBar into the app layout so it renders on all pages
+- [x] Ensure the session view page's back link integrates with the nav bar
 
 ## Acceptance Criteria
 

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
 import type {
@@ -132,10 +132,7 @@ export function SessionView() {
   if (error) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <Link to="/" className="text-sm text-blue-600 hover:underline">
-          ← Back to sessions
-        </Link>
-        <p className="mt-4 text-red-600">Failed to load session.</p>
+        <p className="text-red-600">Failed to load session.</p>
       </div>
     );
   }
@@ -143,10 +140,7 @@ export function SessionView() {
   if (isLoading || !session) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <Link to="/" className="text-sm text-blue-600 hover:underline">
-          ← Back to sessions
-        </Link>
-        <p className="mt-4 text-gray-500">Loading session…</p>
+        <p className="text-gray-500">Loading session…</p>
       </div>
     );
   }
@@ -160,14 +154,11 @@ export function SessionView() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-sm text-blue-600 hover:underline">
-            ← Back to sessions
-          </Link>
+          <h1 className="text-xl font-bold text-gray-900">
+            {session.slug || session.display || session.id}
+          </h1>
           <LiveIndicator status={connectionStatus} />
         </div>
-        <h1 className="mt-2 text-xl font-bold text-gray-900">
-          {session.slug || session.display || session.id}
-        </h1>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
           <span>{projectName(session.project)}</span>
           {session.model && (
