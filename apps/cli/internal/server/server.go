@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
@@ -23,6 +24,8 @@ type Server struct {
 }
 
 // New creates a Server by discovering all sessions in claudeDir.
+// Session discovery is fast (reads only history.jsonl). Enrichment of
+// individual session metadata (message counts, usage, etc.) runs in the background.
 func New(claudeDir string) (*Server, error) {
 	idx, err := session.Discover(claudeDir)
 	if err != nil {
@@ -41,6 +44,9 @@ func New(claudeDir string) (*Server, error) {
 		mux:       http.NewServeMux(),
 	}
 	s.routes()
+
+	go idx.Enrich(claudeDir)
+
 	return s, nil
 }
 
@@ -81,9 +87,15 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
-	sessions := s.index.Sessions
+	sessions := s.index.GetSessions()
 	if project := r.URL.Query().Get("project"); project != "" {
-		sessions = s.index.FilterByProject(project)
+		filtered := make([]session.SessionMeta, 0)
+		for _, sm := range sessions {
+			if strings.Contains(sm.Project, project) {
+				filtered = append(filtered, sm)
+			}
+		}
+		sessions = filtered
 	}
 
 	resp := make([]SessionResponse, 0, len(sessions))
@@ -96,13 +108,7 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	var meta *session.SessionMeta
-	for i := range s.index.Sessions {
-		if s.index.Sessions[i].SessionID == id {
-			meta = &s.index.Sessions[i]
-			break
-		}
-	}
+	meta := s.index.FindSession(id)
 	if meta == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
 		return
@@ -137,15 +143,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	// Verify session exists.
-	found := false
-	for i := range s.index.Sessions {
-		if s.index.Sessions[i].SessionID == id {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if s.index.FindSession(id) == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
 		return
 	}

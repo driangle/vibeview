@@ -247,6 +247,52 @@ func TestParseSessionFile(t *testing.T) {
 	}
 }
 
+func TestAPIMessage_ContentAsString(t *testing.T) {
+	line := `{"type":"user","uuid":"u1","sessionId":"s1","timestamp":1700000000,"message":{"role":"user","content":"give me the top 3 tasks"}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Message == nil {
+		t.Fatal("Message is nil")
+	}
+	if len(msg.Message.Content) != 1 {
+		t.Fatalf("got %d content blocks, want 1", len(msg.Message.Content))
+	}
+	cb := msg.Message.Content[0]
+	if cb.Type != "text" {
+		t.Errorf("Type = %q, want %q", cb.Type, "text")
+	}
+	if cb.Text != "give me the top 3 tasks" {
+		t.Errorf("Text = %q, want %q", cb.Text, "give me the top 3 tasks")
+	}
+}
+
+func TestToolUseResult_AsString(t *testing.T) {
+	line := `{"type":"user","uuid":"u1","sessionId":"s1","timestamp":1700000000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]},"toolUseResult":"Error: Execute skill: taskmd:do-task"}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.ToolUseResult != nil {
+		t.Error("expected ToolUseResult to be nil for string value")
+	}
+}
+
+func TestToolUseResult_AsObject(t *testing.T) {
+	line := `{"type":"user","uuid":"u1","sessionId":"s1","timestamp":1700000000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]},"toolUseResult":{"durationMs":200,"filenames":["a.go"],"numFiles":1,"truncated":false}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.ToolUseResult == nil {
+		t.Fatal("expected ToolUseResult to be non-nil")
+	}
+	if msg.ToolUseResult.DurationMs != 200 {
+		t.Errorf("DurationMs = %d, want 200", msg.ToolUseResult.DurationMs)
+	}
+}
+
 func TestEncodeProjectPath(t *testing.T) {
 	got := EncodeProjectPath("/Users/foo/myproject")
 	want := "-Users-foo-myproject"

@@ -124,14 +124,7 @@ func (b *Broker) Close() error {
 }
 
 func (b *Broker) startTailer(sessionID string) {
-	// Find the session to get the project path.
-	var meta *session.SessionMeta
-	for i := range b.index.Sessions {
-		if b.index.Sessions[i].SessionID == sessionID {
-			meta = &b.index.Sessions[i]
-			break
-		}
-	}
+	meta := b.index.FindSession(sessionID)
 	if meta == nil {
 		return
 	}
@@ -236,9 +229,7 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 			continue
 		}
 
-		b.mu.Lock()
 		b.index.AddSession(b.claudeDir, entry)
-		b.mu.Unlock()
 	}
 
 	pos, err := f.Seek(0, 1)

@@ -91,7 +91,38 @@ type Message struct {
 	Snapshot map[string]any `json:"snapshot,omitempty"`
 
 	// Present on user tool-result messages.
-	ToolUseResult *ToolUseResult `json:"toolUseResult,omitempty"`
+	ToolUseResult *ToolUseResult `json:"-"`
+}
+
+// UnmarshalJSON handles toolUseResult being either a ToolUseResult object or a plain string.
+func (m *Message) UnmarshalJSON(data []byte) error {
+	// Use an alias to avoid infinite recursion.
+	type messageAlias Message
+	type messageRaw struct {
+		messageAlias
+		ToolUseResultRaw json.RawMessage `json:"toolUseResult,omitempty"`
+	}
+	var raw messageRaw
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	*m = Message(raw.messageAlias)
+
+	if len(raw.ToolUseResultRaw) == 0 || string(raw.ToolUseResultRaw) == "null" {
+		return nil
+	}
+
+	// If it's a string (error message), skip it.
+	if raw.ToolUseResultRaw[0] == '"' {
+		return nil
+	}
+
+	var result ToolUseResult
+	if err := json.Unmarshal(raw.ToolUseResultRaw, &result); err != nil {
+		return nil // gracefully skip unparseable toolUseResult
+	}
+	m.ToolUseResult = &result
+	return nil
 }
 
 // APIMessage represents the inner message field on user/assistant messages.
@@ -100,6 +131,40 @@ type APIMessage struct {
 	Model   string         `json:"model,omitempty"`
 	Content []ContentBlock `json:"content"`
 	Usage   *Usage         `json:"usage,omitempty"`
+}
+
+// UnmarshalJSON handles content being either a []ContentBlock or a plain string.
+func (m *APIMessage) UnmarshalJSON(data []byte) error {
+	// Use an alias to avoid infinite recursion.
+	type apiMessageRaw struct {
+		Role    string          `json:"role"`
+		Model   string          `json:"model,omitempty"`
+		Content json.RawMessage `json:"content"`
+		Usage   *Usage          `json:"usage,omitempty"`
+	}
+	var raw apiMessageRaw
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	m.Role = raw.Role
+	m.Model = raw.Model
+	m.Usage = raw.Usage
+
+	if len(raw.Content) == 0 {
+		return nil
+	}
+
+	// If content is a string, wrap it as a single text block.
+	if raw.Content[0] == '"' {
+		var s string
+		if err := json.Unmarshal(raw.Content, &s); err != nil {
+			return err
+		}
+		m.Content = []ContentBlock{{Type: "text", Text: s}}
+		return nil
+	}
+
+	return json.Unmarshal(raw.Content, &m.Content)
 }
 
 // ContentBlock is a discriminated union of content block types.

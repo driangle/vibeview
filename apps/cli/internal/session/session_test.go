@@ -76,6 +76,7 @@ func TestDiscoverMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
+	idx.Enrich(dir)
 
 	// Find sess-1.
 	var sess1 SessionMeta
@@ -104,6 +105,7 @@ func TestDiscoverUsageTotals(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
+	idx.Enrich(dir)
 
 	// Find sess-1: one assistant message with usage.
 	var sess1 SessionMeta
@@ -188,6 +190,7 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
+	idx.Enrich(dir)
 
 	if len(idx.Sessions) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(idx.Sessions))

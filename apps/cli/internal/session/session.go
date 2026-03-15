@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/driangle/vibeview/internal/claude"
 )
@@ -31,13 +32,36 @@ type SessionMeta struct {
 	Usage        UsageTotals `json:"usage"`
 }
 
-// Index holds all discovered sessions.
+// Index holds all discovered sessions. It is safe for concurrent access.
 type Index struct {
+	mu       sync.RWMutex
 	Sessions []SessionMeta
 }
 
-// Discover reads history.jsonl and builds an index of all sessions with metadata.
-// Missing or unreadable session files are skipped.
+// GetSessions returns a snapshot of all sessions.
+func (idx *Index) GetSessions() []SessionMeta {
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+	out := make([]SessionMeta, len(idx.Sessions))
+	copy(out, idx.Sessions)
+	return out
+}
+
+// FindSession returns a pointer to the session with the given ID, or nil.
+func (idx *Index) FindSession(id string) *SessionMeta {
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+	for i := range idx.Sessions {
+		if idx.Sessions[i].SessionID == id {
+			s := idx.Sessions[i]
+			return &s
+		}
+	}
+	return nil
+}
+
+// Discover reads history.jsonl and builds an index with basic metadata.
+// This is fast — it only reads the small history file, not individual session files.
 func Discover(claudeDir string) (*Index, error) {
 	historyPath := filepath.Join(claudeDir, "history.jsonl")
 	f, err := os.Open(historyPath)
@@ -53,8 +77,12 @@ func Discover(claudeDir string) (*Index, error) {
 
 	var sessions []SessionMeta
 	for _, entry := range entries {
-		meta := buildSessionMeta(claudeDir, entry)
-		sessions = append(sessions, meta)
+		sessions = append(sessions, SessionMeta{
+			SessionID: entry.SessionID,
+			Project:   entry.Project,
+			Display:   entry.Display,
+			Timestamp: entry.Timestamp.Int64(),
+		})
 	}
 
 	// Sort by timestamp descending (most recent first).
@@ -65,16 +93,31 @@ func Discover(claudeDir string) (*Index, error) {
 	return &Index{Sessions: sessions}, nil
 }
 
-// buildSessionMeta resolves a session's JSONL file and extracts metadata.
-func buildSessionMeta(claudeDir string, entry claude.HistoryEntry) SessionMeta {
-	meta := SessionMeta{
-		SessionID: entry.SessionID,
-		Project:   entry.Project,
-		Display:   entry.Display,
-		Timestamp: entry.Timestamp.Int64(),
-	}
+// Enrich reads each session's JSONL file to populate messageCount, model, usage, and slug.
+// It updates sessions in-place and is safe to call concurrently with readers.
+func (idx *Index) Enrich(claudeDir string) {
+	idx.mu.RLock()
+	count := len(idx.Sessions)
+	idx.mu.RUnlock()
 
-	sessionPath := SessionFilePath(claudeDir, entry.Project, entry.SessionID)
+	for i := 0; i < count; i++ {
+		idx.mu.RLock()
+		meta := idx.Sessions[i]
+		idx.mu.RUnlock()
+
+		enriched := enrichSession(claudeDir, meta)
+
+		idx.mu.Lock()
+		if i < len(idx.Sessions) && idx.Sessions[i].SessionID == meta.SessionID {
+			idx.Sessions[i] = enriched
+		}
+		idx.mu.Unlock()
+	}
+}
+
+// enrichSession reads a session's JSONL file and populates derived fields.
+func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
+	sessionPath := SessionFilePath(claudeDir, meta.Project, meta.SessionID)
 	f, err := os.Open(sessionPath)
 	if err != nil {
 		return meta
@@ -123,17 +166,27 @@ func SessionFilePath(claudeDir, project, sessionID string) string {
 
 // AddSession adds a new session from a history entry if it doesn't already exist.
 func (idx *Index) AddSession(claudeDir string, entry claude.HistoryEntry) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+
 	for _, s := range idx.Sessions {
 		if s.SessionID == entry.SessionID {
 			return
 		}
 	}
-	meta := buildSessionMeta(claudeDir, entry)
+	meta := SessionMeta{
+		SessionID: entry.SessionID,
+		Project:   entry.Project,
+		Display:   entry.Display,
+		Timestamp: entry.Timestamp.Int64(),
+	}
 	idx.Sessions = append([]SessionMeta{meta}, idx.Sessions...)
 }
 
 // FilterByProject returns sessions whose project path contains the given substring.
 func (idx *Index) FilterByProject(query string) []SessionMeta {
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
 	var result []SessionMeta
 	for _, s := range idx.Sessions {
 		if strings.Contains(s.Project, query) {
