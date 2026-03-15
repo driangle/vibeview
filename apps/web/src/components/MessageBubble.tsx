@@ -4,6 +4,7 @@ import type { MessageResponse, ContentBlock } from "../types";
 import { CodeBlock } from "./CodeBlock";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
+import { processMessageContent } from "./processMessageContent";
 
 interface MessageBubbleProps {
   message: MessageResponse;
@@ -30,6 +31,7 @@ function UserMessage({ message }: { message: MessageResponse }) {
       .join("\n");
   }
 
+  text = processMessageContent(text);
   if (!text) return null;
 
   return (
@@ -62,6 +64,8 @@ function AssistantMessage({
         <div className="rounded-lg bg-white px-4 py-2 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200">
           {content.map((block, i) => {
             if (block.type === "text" && block.text) {
+              const processed = processMessageContent(block.text);
+              if (!processed) return null;
               return (
                 <div key={i} className="prose prose-sm max-w-none">
                   <Markdown
@@ -81,7 +85,7 @@ function AssistantMessage({
                       },
                     }}
                   >
-                    {block.text}
+                    {processed}
                   </Markdown>
                 </div>
               );
