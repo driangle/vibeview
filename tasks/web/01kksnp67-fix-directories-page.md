@@ -1,7 +1,7 @@
 ---
 title: "Fix broken directories page"
 id: "01kksnp67"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["ui", "directories"]
@@ -29,8 +29,8 @@ The page is broken. Needs investigation — possible causes include:
 
 ## Tasks
 
-- [ ] Reproduce the issue and identify the root cause
-- [ ] Fix the underlying bug
+- [x] Reproduce the issue and identify the root cause
+- [x] Fix the underlying bug
 - [ ] Verify the directories page loads and displays all directories correctly
 - [ ] Verify clicking a directory navigates to the session list filtered to that directory
 

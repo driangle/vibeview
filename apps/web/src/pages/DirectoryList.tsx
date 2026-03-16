@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
-import type { Session } from "../types";
+import type { PaginatedSessions, Session } from "../types";
 import { formatTime, projectName } from "../utils";
 
 interface DirectorySummary {
@@ -36,11 +36,13 @@ function summarizeDirectories(sessions: Session[]): DirectorySummary[] {
 }
 
 export function DirectoryList() {
-  const { data: sessions, error, isLoading } = useSWR<Session[]>(
+  const { data: paginated, error, isLoading } = useSWR<PaginatedSessions>(
     "/api/sessions",
     fetcher,
     { refreshInterval: 5000 }
   );
+
+  const sessions = paginated?.sessions;
 
   const directories = useMemo(
     () => (sessions ? summarizeDirectories(sessions) : []),
