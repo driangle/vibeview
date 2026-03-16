@@ -36,7 +36,7 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
     <div className="my-2 rounded border border-amber-200 bg-amber-50">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100"
+        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100"
       >
         <span className={`transition-transform ${expanded ? "rotate-90" : ""}`}>
           ▶

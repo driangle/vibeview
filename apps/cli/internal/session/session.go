@@ -176,15 +176,15 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 		}
 	}
 
-	if len(messages) > 0 {
-		first := messages[0]
-		if first.Type == claude.MessageTypeUser && first.Message != nil {
-			for _, block := range first.Message.Content {
+	for _, msg := range messages {
+		if msg.Type == claude.MessageTypeUser && msg.Message != nil {
+			for _, block := range msg.Message.Content {
 				if block.Type == "text" && block.Text != "" {
 					meta.Slug = truncateSlug(block.Text, 80)
 					break
 				}
 			}
+			break
 		}
 	}
 

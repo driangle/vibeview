@@ -318,6 +318,44 @@ func TestSessionFilePath(t *testing.T) {
 	}
 }
 
+func TestSlugExtractedWhenNonUserMessagesFirst(t *testing.T) {
+	dir := t.TempDir()
+
+	history := `{"sessionId":"sess-q","project":"/Users/me/proj","display":"queue test","timestamp":3000}
+`
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Session starts with queue-operation messages before the first user message.
+	sessData := `{"type":"queue-operation","operation":"enqueue","timestamp":"2026-03-13T10:46:43.165Z","sessionId":"sess-q"}
+{"type":"queue-operation","operation":"dequeue","timestamp":"2026-03-13T10:46:43.166Z","sessionId":"sess-q"}
+{"type":"user","uuid":"u1","sessionId":"sess-q","timestamp":3000,"message":{"role":"user","content":[{"type":"text","text":"Fix the login bug"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-q","timestamp":3001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"On it."}],"usage":{"input_tokens":10,"output_tokens":5}}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sess-q.jsonl"), []byte(sessData), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+	idx.Enrich(dir)
+
+	if len(idx.Sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(idx.Sessions))
+	}
+	if idx.Sessions[0].Slug != "Fix the login bug" {
+		t.Errorf("slug: got %q, want %q", idx.Sessions[0].Slug, "Fix the login bug")
+	}
+}
+
 func TestTruncateSlug(t *testing.T) {
 	tests := []struct {
 		input  string

@@ -28,10 +28,10 @@ Most sessions show the raw session ID (UUID) instead of meaningful names, even w
 
 ## Tasks
 
-- [ ] Investigate why `slug` and `customTitle` are not being used as the display name in the session table
-- [ ] Update the session name display logic in `SessionRow.tsx` to prefer `customTitle` > `slug` > `id`
-- [ ] Verify that `slug` is being correctly populated during session indexing (first user message text)
-- [ ] Verify that `customTitle` from `custom-title` JSONL messages is being parsed and stored
+- [x] Investigate why `slug` and `customTitle` are not being used as the display name in the session table
+- [x] Update the session name display logic in `SessionRow.tsx` to prefer `customTitle` > `slug` > `id`
+- [x] Verify that `slug` is being correctly populated during session indexing (first user message text)
+- [x] Verify that `customTitle` from `custom-title` JSONL messages is being parsed and stored
 
 ## Acceptance Criteria
 
