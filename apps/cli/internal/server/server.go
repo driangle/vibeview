@@ -145,6 +145,29 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		sessions = filtered
 	}
 
+	if fromStr := r.URL.Query().Get("from"); fromStr != "" {
+		if fromMs, err := strconv.ParseInt(fromStr, 10, 64); err == nil {
+			filtered := make([]session.SessionMeta, 0)
+			for _, sm := range sessions {
+				if sm.Timestamp >= fromMs {
+					filtered = append(filtered, sm)
+				}
+			}
+			sessions = filtered
+		}
+	}
+	if toStr := r.URL.Query().Get("to"); toStr != "" {
+		if toMs, err := strconv.ParseInt(toStr, 10, 64); err == nil {
+			filtered := make([]session.SessionMeta, 0)
+			for _, sm := range sessions {
+				if sm.Timestamp <= toMs {
+					filtered = append(filtered, sm)
+				}
+			}
+			sessions = filtered
+		}
+	}
+
 	total := len(sessions)
 
 	// Apply limit/offset pagination.

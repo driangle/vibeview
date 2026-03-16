@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
+import { DateRangeFilter } from "../components/DateRangeFilter";
 import { Pagination } from "../components/Pagination";
 import { SessionTable } from "../components/SessionTable";
 import type { SortColumn, SortDirection } from "../components/SortHeader";
@@ -11,10 +12,18 @@ import { projectName } from "../utils";
 
 const PAGE_SIZE = 100;
 
-function buildSessionsUrl(project: string, q: string, page?: number): string {
+function buildSessionsUrl(
+  project: string,
+  q: string,
+  from: string,
+  to: string,
+  page?: number,
+): string {
   const params = new URLSearchParams();
   if (project) params.set("project", project);
   if (q) params.set("q", q);
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
   if (page !== undefined) {
     params.set("limit", String(PAGE_SIZE));
     params.set("offset", String((page - 1) * PAGE_SIZE));
@@ -28,12 +37,14 @@ export function SessionList() {
   const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
   const dirFilter = searchParams.get("dir") || "";
+  const fromFilter = searchParams.get("from") || "";
+  const toFilter = searchParams.get("to") || "";
   const currentPage = Number(searchParams.get("page")) || 1;
 
   const [sortColumn, setSortColumn] = useState<SortColumn>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, currentPage);
+  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, fromFilter, toFilter, currentPage);
   const {
     data: paginated,
     error,
@@ -64,6 +75,23 @@ export function SessionList() {
       setSortColumn(column);
       setSortDirection(column === "date" ? "desc" : "asc");
     }
+  }
+
+  function setDateRange(from: string, to: string) {
+    setSearchParams((prev) => {
+      if (from) {
+        prev.set("from", from);
+      } else {
+        prev.delete("from");
+      }
+      if (to) {
+        prev.set("to", to);
+      } else {
+        prev.delete("to");
+      }
+      prev.delete("page");
+      return prev;
+    });
   }
 
   function setDirFilter(dir: string) {
@@ -118,7 +146,7 @@ export function SessionList() {
         </span>
       </div>
 
-      <div className="mb-6 flex gap-3">
+      <div className="mb-6 flex flex-wrap gap-3">
         <select
           value={dirFilter}
           onChange={(e) => setDirFilter(e.target.value)}
@@ -131,6 +159,7 @@ export function SessionList() {
             </option>
           ))}
         </select>
+        <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
         <input
           type="text"
           placeholder="Filter by project or topic..."
