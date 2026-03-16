@@ -1,7 +1,7 @@
 ---
 title: "Add dark mode support with toggle"
 id: "01kksn7dz"
-status: pending
+status: completed
 priority: low
 type: feature
 tags: ["ui", "theming"]
@@ -16,12 +16,12 @@ Add dark mode support to the web app with a simple toggle button in the top-righ
 
 ## Tasks
 
-- [ ] Define dark mode CSS variables (background, text, borders, accents) alongside existing light theme values
-- [ ] Add a theme toggle button (sun/moon icon) to the top-right of the page header/layout
-- [ ] Implement theme state management — toggle between light/dark and persist choice in localStorage
-- [ ] Default to the user's OS preference via `prefers-color-scheme` media query when no saved preference exists
-- [ ] Apply dark mode styles to all existing components (session table, pagination, filters, badges)
-- [ ] Prevent flash of wrong theme on page load (read preference before render)
+- [x] Define dark mode CSS variables (background, text, borders, accents) alongside existing light theme values
+- [x] Add a theme toggle button (sun/moon icon) to the top-right of the page header/layout
+- [x] Implement theme state management — toggle between light/dark and persist choice in localStorage
+- [x] Default to the user's OS preference via `prefers-color-scheme` media query when no saved preference exists
+- [x] Apply dark mode styles to all existing components (session table, pagination, filters, badges)
+- [x] Prevent flash of wrong theme on page load (read preference before render)
 
 ## Acceptance Criteria
 

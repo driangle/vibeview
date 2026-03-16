@@ -48,9 +48,9 @@ export function HookMessage({ message }: { message: MessageResponse }) {
     <EventMessage
       message={message}
       label="Hook"
-      borderColor="border-stone-300"
-      labelColor="text-stone-500"
-      detailColor="text-stone-400"
+      borderColor="border-stone-300 dark:border-stone-600"
+      labelColor="text-stone-500 dark:text-stone-400"
+      detailColor="text-stone-400 dark:text-stone-500"
       detailText={detailText}
     />
   );
@@ -67,9 +67,9 @@ export function SystemMessage({ message }: { message: MessageResponse }) {
     <EventMessage
       message={message}
       label={label}
-      borderColor="border-gray-200"
-      labelColor="text-gray-400"
-      detailColor="text-gray-300"
+      borderColor="border-gray-200 dark:border-gray-700"
+      labelColor="text-gray-400 dark:text-gray-500"
+      detailColor="text-gray-300 dark:text-gray-600"
       detailText={detail}
     />
   );

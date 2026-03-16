@@ -52,8 +52,8 @@ export function DirectoryList() {
   if (error) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-900">Directories</h1>
-        <p className="mt-4 text-red-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Directories</h1>
+        <p className="mt-4 text-red-600 dark:text-red-400">
           Failed to load sessions. Is the server running?
         </p>
       </div>
@@ -63,8 +63,8 @@ export function DirectoryList() {
   if (isLoading || !sessions) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-900">Directories</h1>
-        <p className="mt-4 text-gray-500">Loading directories...</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Directories</h1>
+        <p className="mt-4 text-gray-500 dark:text-gray-400">Loading directories...</p>
       </div>
     );
   }
@@ -72,34 +72,34 @@ export function DirectoryList() {
   return (
     <div className="mx-auto max-w-4xl p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Directories</h1>
-        <span className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Directories</h1>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {directories.length} director{directories.length !== 1 ? "ies" : "y"}
         </span>
       </div>
 
       {directories.length === 0 ? (
-        <p className="text-gray-500">No directories found.</p>
+        <p className="text-gray-500 dark:text-gray-400">No directories found.</p>
       ) : (
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+        <ul className="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           {directories.map((dir) => (
             <li key={dir.project}>
               <Link
                 to={`/?dir=${encodeURIComponent(dir.project)}`}
-                className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50"
+                className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                     {projectName(dir.project)}
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-500 truncate">
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">
                     {dir.project}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs text-gray-500">
+                <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
                   {dir.sessionCount} session{dir.sessionCount !== 1 ? "s" : ""}
                 </span>
-                <span className="shrink-0 text-xs text-gray-400">
+                <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
                   {formatTime(dir.lastActivity)}
                 </span>
               </Link>

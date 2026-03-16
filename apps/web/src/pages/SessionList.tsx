@@ -92,8 +92,8 @@ export function SessionList() {
   if (error) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
-        <p className="mt-4 text-red-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Sessions</h1>
+        <p className="mt-4 text-red-600 dark:text-red-400">
           Failed to load sessions. Is the server running?
         </p>
       </div>
@@ -103,8 +103,8 @@ export function SessionList() {
   if (isLoading || !sessions) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
-        <p className="mt-4 text-gray-500">Loading sessions...</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Sessions</h1>
+        <p className="mt-4 text-gray-500 dark:text-gray-400">Loading sessions...</p>
       </div>
     );
   }
@@ -112,8 +112,8 @@ export function SessionList() {
   return (
     <div className="mx-auto max-w-4xl p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
-        <span className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Sessions</h1>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {total} session{total !== 1 ? "s" : ""}
         </span>
       </div>
@@ -122,7 +122,7 @@ export function SessionList() {
         <select
           value={dirFilter}
           onChange={(e) => setDirFilter(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm dark:text-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         >
           <option value="">All directories</option>
           {uniqueProjects.map((project) => (
@@ -142,12 +142,12 @@ export function SessionList() {
               return prev;
             });
           }}
-          className="min-w-0 flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="min-w-0 flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </div>
 
       {sessions.length === 0 ? (
-        <p className="text-gray-500">
+        <p className="text-gray-500 dark:text-gray-400">
           {search ? "No sessions match your filter." : "No sessions found."}
         </p>
       ) : (

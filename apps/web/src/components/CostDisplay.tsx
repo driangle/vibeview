@@ -28,16 +28,16 @@ export function CostDisplay({ usage }: CostDisplayProps) {
   if (totalTokens === 0) return null;
 
   return (
-    <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+    <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm">
-        <span className="font-medium text-gray-900">
+        <span className="font-medium text-gray-900 dark:text-gray-100">
           {formatCost(usage.costUSD)}
         </span>
-        <span className="text-gray-500">
+        <span className="text-gray-500 dark:text-gray-400">
           {formatTokenCount(totalTokens)} tokens
         </span>
       </div>
-      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
+      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
         <span>In: {formatTokenCount(usage.inputTokens)}</span>
         <span>Out: {formatTokenCount(usage.outputTokens)}</span>
         {usage.cacheReadInputTokens > 0 && (

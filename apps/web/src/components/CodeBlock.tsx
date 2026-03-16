@@ -1,5 +1,6 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useTheme } from "../hooks/useTheme";
 
 interface CodeBlockProps {
   language: string | undefined;
@@ -7,9 +8,11 @@ interface CodeBlockProps {
 }
 
 export function CodeBlock({ language, children }: CodeBlockProps) {
+  const { theme } = useTheme();
+
   return (
     <SyntaxHighlighter
-      style={oneLight}
+      style={theme === "dark" ? oneDark : oneLight}
       language={language}
       PreTag="div"
       customStyle={{ margin: 0, borderRadius: "0.375rem", fontSize: "0.75rem" }}

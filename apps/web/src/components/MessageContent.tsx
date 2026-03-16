@@ -9,7 +9,7 @@ import type { MessageResponse } from "../types";
 
 function TextSegment({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm max-w-none leading-relaxed">
+    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
       <Markdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
@@ -44,7 +44,7 @@ function CaveatSegment({
     <button
       type="button"
       onClick={onClick}
-      className="my-2 flex w-full cursor-pointer items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-800 transition-colors hover:bg-amber-100"
+      className="my-2 flex w-full cursor-pointer items-start gap-2 rounded-md border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-left text-xs text-amber-800 dark:text-amber-300 transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/50"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -76,13 +76,13 @@ function CommandSegment({
     <button
       type="button"
       onClick={onClick}
-      className="my-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-left font-mono text-xs text-gray-600 transition-colors hover:bg-gray-100"
+      className="my-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 text-left font-mono text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
         fill="currentColor"
-        className="h-3.5 w-3.5 shrink-0 text-gray-400"
+        className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500"
       >
         <path
           fillRule="evenodd"
@@ -90,8 +90,8 @@ function CommandSegment({
           clipRule="evenodd"
         />
       </svg>
-      <span className="font-semibold text-gray-800">{name}</span>
-      {args && <span className="text-gray-500">{args}</span>}
+      <span className="font-semibold text-gray-800 dark:text-gray-200">{name}</span>
+      {args && <span className="text-gray-500 dark:text-gray-400">{args}</span>}
     </button>
   );
 }

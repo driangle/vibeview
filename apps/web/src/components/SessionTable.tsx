@@ -48,17 +48,17 @@ export function SessionTable({
   }, [sessions, sortColumn, sortDirection]);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200 bg-gray-50">
+          <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <SortHeader label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} />
             <SortHeader label="Session" column="name" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} />
             <SortHeader label="Directory" column="directory" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} />
             <SortHeader label="Messages" column="messages" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} />
             <SortHeader label="Tokens" column="tokens" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} />
             <SortHeader label="Cost" column="cost" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} />
-            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Model
             </th>
           </tr>

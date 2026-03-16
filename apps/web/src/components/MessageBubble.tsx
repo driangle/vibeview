@@ -53,7 +53,7 @@ function UserMessage({ message }: { message: MessageResponse }) {
             <MessageContent segments={specialSegments} rawMessage={message} />
           </div>
         )}
-        <div className="mt-1 text-right text-xs text-gray-400">
+        <div className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
           {formatTimestamp(message.timestamp)}
         </div>
       </div>
@@ -109,15 +109,15 @@ function AssistantMessage({
           });
           if (rendered.every((r) => r === null)) return null;
           return (
-            <div key={gi} className="rounded-lg bg-white px-4 py-2 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200">
+            <div key={gi} className="rounded-lg bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
               {rendered}
             </div>
           );
         })}
-        <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+        <div className="mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
           <span>{formatTimestamp(message.timestamp)}</span>
           {message.message?.model && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-500">
+            <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">
               {message.message.model}
             </span>
           )}

@@ -78,7 +78,7 @@ export function SessionView() {
   if (error) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <p className="text-red-600">Failed to load session.</p>
+        <p className="text-red-600 dark:text-red-400">Failed to load session.</p>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export function SessionView() {
   if (isLoading || !session) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <p className="text-gray-500">Loading session…</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading session…</p>
       </div>
     );
   }
@@ -100,16 +100,16 @@ export function SessionView() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {session.customTitle || session.slug || session.id}
           </h1>
           <LiveIndicator status={connectionStatus} />
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
           <span className="select-all font-mono text-xs">{session.id}</span>
           <span>{projectName(session.project)}</span>
           {session.model && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+            <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-xs">
               {session.model}
             </span>
           )}
@@ -120,7 +120,7 @@ export function SessionView() {
           <span>{formatDate(session.timestamp)}</span>
         </div>
         {session.filePath && (
-          <div className="mt-1 select-all truncate font-mono text-xs text-gray-400">
+          <div className="mt-1 select-all truncate font-mono text-xs text-gray-400 dark:text-gray-500">
             {session.filePath}
           </div>
         )}

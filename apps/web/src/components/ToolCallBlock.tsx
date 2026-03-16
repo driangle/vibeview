@@ -33,35 +33,35 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
   const previewLine = summary.split("\n")[0].slice(0, 100);
 
   return (
-    <div className="my-2 rounded border border-amber-200 bg-amber-50">
+    <div className="my-2 rounded border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100"
+        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50"
       >
         <span className={`transition-transform ${expanded ? "rotate-90" : ""}`}>
           ▶
         </span>
-        <span className="rounded bg-amber-200 px-1.5 py-0.5 font-mono font-medium text-amber-800">
+        <span className="rounded bg-amber-200 dark:bg-amber-800 px-1.5 py-0.5 font-mono font-medium text-amber-800 dark:text-amber-200">
           {toolName}
         </span>
         {!expanded && (
-          <span className="truncate text-gray-600">{previewLine}</span>
+          <span className="truncate text-gray-600 dark:text-gray-400">{previewLine}</span>
         )}
       </button>
       {expanded && (
-        <div className="border-t border-amber-200">
+        <div className="border-t border-amber-200 dark:border-amber-700">
           <div className="px-3 py-2">
-            <div className="mb-1 text-xs font-medium text-gray-500">Input</div>
-            <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-white p-2 text-xs text-gray-800">
+            <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Input</div>
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-white dark:bg-gray-900 p-2 text-xs text-gray-800 dark:text-gray-300">
               {summary}
             </pre>
           </div>
           {result && (
-            <div className="border-t border-amber-200 px-3 py-2">
-              <div className="mb-1 text-xs font-medium text-gray-500">
+            <div className="border-t border-amber-200 dark:border-amber-700 px-3 py-2">
+              <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                 Result {result.is_error && <span className="text-red-500">(error)</span>}
               </div>
-              <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-white p-2 text-xs text-gray-800">
+              <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-white dark:bg-gray-900 p-2 text-xs text-gray-800 dark:text-gray-300">
                 {formatResult(result.content)}
               </pre>
             </div>

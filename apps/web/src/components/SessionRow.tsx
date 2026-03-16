@@ -21,8 +21,8 @@ interface SessionRowProps {
 
 export function SessionRow({ session, onDirectoryClick }: SessionRowProps) {
   return (
-    <tr className="border-t border-gray-100 transition-colors hover:bg-gray-50">
-      <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+    <tr className="border-t border-gray-100 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
           {isRecent(session.timestamp) && (
             <span
@@ -36,7 +36,7 @@ export function SessionRow({ session, onDirectoryClick }: SessionRowProps) {
       <td className="px-4 py-3 text-sm">
         <Link
           to={`/session/${session.id}`}
-          className="font-medium text-gray-900 hover:text-blue-600"
+          className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
         >
           {session.customTitle || session.slug || session.id}
         </Link>
@@ -45,23 +45,23 @@ export function SessionRow({ session, onDirectoryClick }: SessionRowProps) {
         <button
           type="button"
           onClick={() => onDirectoryClick(session.project)}
-          className="cursor-pointer text-gray-500 hover:text-blue-600 hover:underline"
+          className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:underline"
         >
           {projectName(session.project)}
         </button>
       </td>
-      <td className="px-4 py-3 text-xs text-gray-500 text-right">
+      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 text-right">
         {session.messageCount}
       </td>
-      <td className="px-4 py-3 text-xs text-gray-500 text-right whitespace-nowrap">
+      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
         {formatTokens(session.usage.inputTokens + session.usage.outputTokens)}
       </td>
-      <td className="px-4 py-3 text-xs text-gray-500 text-right whitespace-nowrap">
+      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">
         ${session.usage.costUSD.toFixed(2)}
       </td>
       <td className="px-4 py-3 text-xs">
         {session.model && (
-          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">
+          <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-gray-600 dark:text-gray-400">
             {session.model}
           </span>
         )}
