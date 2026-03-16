@@ -1,7 +1,7 @@
 ---
 title: "Persist Follow toggle selection in LocalStorage"
 id: "01kks2p7q"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "persistence"]
@@ -16,9 +16,9 @@ Persist the "Follow" toggle state in `localStorage` so the user's preference sur
 
 ## Tasks
 
-- [ ] Read initial `followMode` value from `localStorage` (fallback to `true`)
-- [ ] Write to `localStorage` whenever the user explicitly toggles follow mode via the `FollowToggle` button
-- [ ] Ensure scroll-based auto-enable/disable does NOT persist (only explicit user toggles)
+- [x] Read initial `followMode` value from `localStorage` (fallback to `true`)
+- [x] Write to `localStorage` whenever the user explicitly toggles follow mode via the `FollowToggle` button
+- [x] Ensure scroll-based auto-enable/disable does NOT persist (only explicit user toggles)
 
 ## Acceptance Criteria
 

@@ -4,6 +4,7 @@ import { MessageBubble } from "../components/MessageBubble";
 import { CostDisplay } from "../components/CostDisplay";
 import { LiveIndicator, Pagination, FollowToggle } from "../components/SessionControls";
 import { useSessionData } from "../hooks/useSessionData";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const MESSAGES_PER_PAGE = 50;
 
@@ -19,7 +20,8 @@ function formatDate(timestamp: string): string {
 export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const [userPage, setUserPage] = useState<number | null>(null);
-  const [followMode, setFollowMode] = useState(true);
+  const [savedFollowMode, setSavedFollowMode] = useLocalStorage("followMode", true);
+  const [followMode, setFollowMode] = useState(savedFollowMode);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -165,6 +167,7 @@ export function SessionView() {
             }
             return !prev;
           });
+          setSavedFollowMode((prev) => !prev);
         }}
       />
     </div>
