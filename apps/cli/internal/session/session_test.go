@@ -366,6 +366,9 @@ func TestTruncateSlug(t *testing.T) {
 		{"hello world this is a test", 15, "hello world..."},
 		{"nospaces", 4, "nosp..."},
 		{"  extra   whitespace  ", 80, "extra whitespace"},
+		{"<command-message>release</command-message>", 80, "release"},
+		{"<local-command-caveat>Caveat: messages below</local-command-caveat>text after", 80, "Caveat: messages belowtext after"},
+		{"<system-reminder>hidden</system-reminder>visible text", 80, "hiddenvisible text"},
 	}
 	for _, tt := range tests {
 		got := truncateSlug(tt.input, tt.maxLen)

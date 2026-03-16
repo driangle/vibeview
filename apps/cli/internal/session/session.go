@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -363,8 +364,12 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 	return meta, nil
 }
 
+var xmlTagPattern = regexp.MustCompile(`<[^>]+>`)
+
 // truncateSlug shortens text to maxLen, breaking at a word boundary.
+// It strips XML/HTML tags before truncating.
 func truncateSlug(text string, maxLen int) string {
+	text = xmlTagPattern.ReplaceAllString(text, "")
 	text = strings.Join(strings.Fields(text), " ")
 	if len(text) <= maxLen {
 		return text

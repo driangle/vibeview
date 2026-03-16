@@ -1,7 +1,8 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import type { PaginatedSessions, Session } from "../types";
 import { formatTime, projectName } from "../utils";
 
@@ -36,6 +37,7 @@ function summarizeDirectories(sessions: Session[]): DirectorySummary[] {
 }
 
 export function DirectoryList() {
+  const navigate = useNavigate();
   const { data: paginated, error, isLoading } = useSWR<PaginatedSessions>(
     "/api/sessions",
     fetcher,
@@ -48,6 +50,20 @@ export function DirectoryList() {
     () => (sessions ? summarizeDirectories(sessions) : []),
     [sessions]
   );
+
+  const onSelect = useCallback(
+    (index: number) => {
+      const dir = directories[index];
+      if (dir) navigate(`/?dir=${encodeURIComponent(dir.project)}`);
+    },
+    [directories, navigate],
+  );
+
+  const { selectedIndex } = useKeyboardNavigation({
+    itemCount: directories.length,
+    onSelect,
+    enabled: !isLoading && directories.length > 0,
+  });
 
   if (error) {
     return (
@@ -82,11 +98,13 @@ export function DirectoryList() {
         <p className="text-gray-500 dark:text-gray-400">No directories found.</p>
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          {directories.map((dir) => (
-            <li key={dir.project}>
+          {directories.map((dir, index) => (
+            <li key={dir.project} data-row-index={index}>
               <Link
                 to={`/?dir=${encodeURIComponent(dir.project)}`}
-                className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50${
+                  index === selectedIndex ? " bg-blue-50 dark:bg-blue-900/30" : ""
+                }`}
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">

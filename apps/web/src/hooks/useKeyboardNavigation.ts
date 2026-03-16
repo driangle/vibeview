@@ -81,9 +81,9 @@ export function useKeyboardNavigation({
         }
         case "Escape":
         case "ArrowLeft": {
-          if (!active) return;
+          if (!onBack) return;
           e.preventDefault();
-          onBack?.();
+          onBack();
           break;
         }
       }

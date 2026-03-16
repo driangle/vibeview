@@ -7,7 +7,7 @@ import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useSessionData } from "../hooks/useSessionData";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
-const MESSAGES_PER_PAGE = 50;
+const MESSAGES_PER_PAGE = 100;
 
 function projectName(project: string): string {
   const parts = project.split("/").filter(Boolean);
