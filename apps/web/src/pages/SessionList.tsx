@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
 import { DateRangeFilter } from "../components/DateRangeFilter";
@@ -7,7 +7,8 @@ import { Pagination } from "../components/Pagination";
 import { SessionTable } from "../components/SessionTable";
 import type { SortColumn, SortDirection } from "../components/SortHeader";
 import { useDebounced } from "../hooks/useDebounced";
-import type { PaginatedSessions } from "../types";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+import type { PaginatedSessions, Session } from "../types";
 import { projectName } from "../utils";
 
 const PAGE_SIZE = 100;
@@ -32,7 +33,25 @@ function buildSessionsUrl(
   return qs ? `/api/sessions?${qs}` : "/api/sessions";
 }
 
+function getSortValue(session: Session, column: SortColumn): string | number {
+  switch (column) {
+    case "date":
+      return new Date(session.timestamp).getTime();
+    case "name":
+      return (session.customTitle || session.slug || session.id).toLowerCase();
+    case "directory":
+      return session.project.toLowerCase();
+    case "messages":
+      return session.messageCount;
+    case "tokens":
+      return session.usage.inputTokens + session.usage.outputTokens;
+    case "cost":
+      return session.usage.costUSD;
+  }
+}
+
 export function SessionList() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,6 +80,31 @@ export function SessionList() {
   const sessions = paginated?.sessions;
   const total = paginated?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const sortedSessions = useMemo(() => {
+    if (!sessions) return [];
+    return [...sessions].sort((a, b) => {
+      const aVal = getSortValue(a, sortColumn);
+      const bVal = getSortValue(b, sortColumn);
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [sessions, sortColumn, sortDirection]);
+
+  const onSelect = useCallback(
+    (index: number) => {
+      const session = sortedSessions[index];
+      if (session) navigate(`/session/${session.id}`);
+    },
+    [sortedSessions, navigate],
+  );
+
+  const { selectedIndex } = useKeyboardNavigation({
+    itemCount: sortedSessions.length,
+    onSelect,
+    enabled: !isLoading && sortedSessions.length > 0,
+  });
 
   const uniqueProjects = useMemo(() => {
     if (!allPaginated?.sessions) return [];
@@ -175,18 +219,19 @@ export function SessionList() {
         />
       </div>
 
-      {sessions.length === 0 ? (
+      {sortedSessions.length === 0 ? (
         <p className="text-gray-500 dark:text-gray-400">
           {search ? "No sessions match your filter." : "No sessions found."}
         </p>
       ) : (
         <>
           <SessionTable
-            sessions={sessions}
+            sessions={sortedSessions}
             sortColumn={sortColumn}
             sortDirection={sortDirection}
             onToggleSort={toggleSort}
             onDirectoryClick={setDirFilter}
+            selectedIndex={selectedIndex}
           />
           <Pagination
             currentPage={currentPage}

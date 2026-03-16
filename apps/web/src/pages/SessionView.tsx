@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { MessageBubble } from "../components/MessageBubble";
 import { CostDisplay } from "../components/CostDisplay";
 import { LiveIndicator, Pagination, FollowToggle } from "../components/SessionControls";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useSessionData } from "../hooks/useSessionData";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
@@ -19,6 +20,7 @@ function formatDate(timestamp: string): string {
 
 export function SessionView() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [userPage, setUserPage] = useState<number | null>(null);
   const [savedFollowMode, setSavedFollowMode] = useLocalStorage("followMode", true);
   const [followMode, setFollowMode] = useState(savedFollowMode);
@@ -48,6 +50,16 @@ export function SessionView() {
     page * MESSAGES_PER_PAGE,
     (page + 1) * MESSAGES_PER_PAGE,
   );
+
+  const onBack = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
+  const { selectedIndex } = useKeyboardNavigation({
+    itemCount: paginatedMessages.length,
+    onBack,
+    enabled: !isLoading && paginatedMessages.length > 0,
+  });
 
   const setPage = useCallback((p: number) => {
     setUserPage(p);
@@ -138,12 +150,17 @@ export function SessionView() {
 
       {/* Messages */}
       <div className="space-y-4 py-4">
-        {paginatedMessages.map((msg) => (
-          <MessageBubble
+        {paginatedMessages.map((msg, index) => (
+          <div
             key={msg.uuid}
-            message={msg}
-            toolResults={toolResults}
-          />
+            data-row-index={index}
+            className={`rounded-lg transition-colors ${selectedIndex === index ? "ring-2 ring-blue-500" : ""}`}
+          >
+            <MessageBubble
+              message={msg}
+              toolResults={toolResults}
+            />
+          </div>
         ))}
         <div ref={messagesEndRef} />
       </div>

@@ -1,7 +1,7 @@
 ---
 title: "Add keyboard navigation support for web UI"
 id: "01kktfh9m"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "accessibility", "navigation"]
@@ -16,13 +16,13 @@ Add keyboard navigation to the web UI so users can navigate the site without a m
 
 ## Tasks
 
-- [ ] Implement up/down arrow key navigation to move between rows in the session table
-- [ ] Implement Enter or right arrow to open/enter a selected row (navigate into session detail)
-- [ ] Implement left arrow or Escape to go back (e.g., from session detail to session list)
-- [ ] Add visible focus indicator to highlight the currently selected row/item
-- [ ] Implement up/down navigation within the session detail view to iterate over messages
-- [ ] Ensure keyboard navigation works alongside existing mouse/click interactions
-- [ ] Handle edge cases: top/bottom of list bounds, empty states, loading states
+- [x]Implement up/down arrow key navigation to move between rows in the session table
+- [x]Implement Enter or right arrow to open/enter a selected row (navigate into session detail)
+- [x]Implement left arrow or Escape to go back (e.g., from session detail to session list)
+- [x]Add visible focus indicator to highlight the currently selected row/item
+- [x]Implement up/down navigation within the session detail view to iterate over messages
+- [x]Ensure keyboard navigation works alongside existing mouse/click interactions
+- [x]Handle edge cases: top/bottom of list bounds, empty states, loading states
 
 ## Acceptance Criteria
 

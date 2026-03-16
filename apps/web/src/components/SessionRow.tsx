@@ -17,11 +17,16 @@ function isRecent(timestamp: string): boolean {
 interface SessionRowProps {
   session: Session;
   onDirectoryClick: (dir: string) => void;
+  isSelected?: boolean;
+  rowIndex?: number;
 }
 
-export function SessionRow({ session, onDirectoryClick }: SessionRowProps) {
+export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: SessionRowProps) {
   return (
-    <tr className="border-t border-gray-100 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
+    <tr
+      data-row-index={rowIndex}
+      className={`border-t border-gray-100 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" : ""}`}
+    >
       <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
           {isRecent(session.timestamp) && (

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { SessionRow } from "./SessionRow";
 import { SortHeader } from "./SortHeader";
 import type { SortColumn, SortDirection } from "./SortHeader";
@@ -10,23 +9,7 @@ interface SessionTableProps {
   sortDirection: SortDirection;
   onToggleSort: (column: SortColumn) => void;
   onDirectoryClick: (dir: string) => void;
-}
-
-function getSortValue(session: Session, column: SortColumn): string | number {
-  switch (column) {
-    case "date":
-      return new Date(session.timestamp).getTime();
-    case "name":
-      return (session.customTitle || session.slug || session.id).toLowerCase();
-    case "directory":
-      return session.project.toLowerCase();
-    case "messages":
-      return session.messageCount;
-    case "tokens":
-      return session.usage.inputTokens + session.usage.outputTokens;
-    case "cost":
-      return session.usage.costUSD;
-  }
+  selectedIndex?: number;
 }
 
 export function SessionTable({
@@ -35,18 +18,8 @@ export function SessionTable({
   sortDirection,
   onToggleSort,
   onDirectoryClick,
+  selectedIndex,
 }: SessionTableProps) {
-  const sortedSessions = useMemo(() => {
-    const sorted = [...sessions].sort((a, b) => {
-      const aVal = getSortValue(a, sortColumn);
-      const bVal = getSortValue(b, sortColumn);
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [sessions, sortColumn, sortDirection]);
-
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <table className="w-full">
@@ -64,11 +37,13 @@ export function SessionTable({
           </tr>
         </thead>
         <tbody>
-          {sortedSessions.map((session) => (
+          {sessions.map((session, index) => (
             <SessionRow
               key={session.id}
               session={session}
               onDirectoryClick={onDirectoryClick}
+              isSelected={selectedIndex === index}
+              rowIndex={index}
             />
           ))}
         </tbody>
