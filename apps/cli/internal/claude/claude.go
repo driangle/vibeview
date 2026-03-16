@@ -285,9 +285,11 @@ func ParseSessionFile(r io.Reader) ([]Message, error) {
 }
 
 // EncodeProjectPath converts a filesystem path to Claude's directory encoding.
-// e.g., "/Users/foo/myproject" → "-Users-foo-myproject"
+// Claude Code replaces both "/" and "." with "-".
+// e.g., "/Users/foo.bar/myproject" → "-Users-foo-bar-myproject"
 func EncodeProjectPath(path string) string {
-	return strings.ReplaceAll(path, "/", "-")
+	s := strings.ReplaceAll(path, "/", "-")
+	return strings.ReplaceAll(s, ".", "-")
 }
 
 // DecodeProjectPath converts a Claude directory name back to a filesystem path.

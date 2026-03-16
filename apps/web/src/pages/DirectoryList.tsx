@@ -67,7 +67,7 @@ export function DirectoryList() {
 
   if (error) {
     return (
-      <div className="p-8">
+      <div className="mx-auto max-w-4xl p-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Directories</h1>
         <p className="mt-4 text-red-600 dark:text-red-400">
           Failed to load sessions. Is the server running?
@@ -78,7 +78,7 @@ export function DirectoryList() {
 
   if (isLoading || !sessions) {
     return (
-      <div className="p-8">
+      <div className="mx-auto max-w-4xl p-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Directories</h1>
         <p className="mt-4 text-gray-500 dark:text-gray-400">Loading directories...</p>
       </div>

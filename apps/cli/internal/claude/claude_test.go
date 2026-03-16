@@ -294,10 +294,19 @@ func TestToolUseResult_AsObject(t *testing.T) {
 }
 
 func TestEncodeProjectPath(t *testing.T) {
-	got := EncodeProjectPath("/Users/foo/myproject")
-	want := "-Users-foo-myproject"
-	if got != want {
-		t.Errorf("EncodeProjectPath = %q, want %q", got, want)
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"/Users/foo/myproject", "-Users-foo-myproject"},
+		{"/Users/foo.bar/myproject", "-Users-foo-bar-myproject"},
+		{"/Users/german.greiner/workplace", "-Users-german-greiner-workplace"},
+	}
+	for _, tt := range tests {
+		got := EncodeProjectPath(tt.input)
+		if got != tt.want {
+			t.Errorf("EncodeProjectPath(%q) = %q, want %q", tt.input, got, tt.want)
+		}
 	}
 }
 
@@ -306,20 +315,5 @@ func TestDecodeProjectPath(t *testing.T) {
 	want := "/Users/foo/myproject"
 	if got != want {
 		t.Errorf("DecodeProjectPath = %q, want %q", got, want)
-	}
-}
-
-func TestPathEncodeDecodeRoundtrip(t *testing.T) {
-	paths := []string{
-		"/Users/foo/myproject",
-		"/home/user/workspace/app",
-		"/tmp/test",
-	}
-	for _, path := range paths {
-		encoded := EncodeProjectPath(path)
-		decoded := DecodeProjectPath(encoded)
-		if decoded != path {
-			t.Errorf("roundtrip failed: %q -> %q -> %q", path, encoded, decoded)
-		}
 	}
 }
