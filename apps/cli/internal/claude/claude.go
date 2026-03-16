@@ -67,6 +67,7 @@ const (
 	MessageTypeSystem              MessageType = "system"
 	MessageTypeFileHistorySnapshot MessageType = "file-history-snapshot"
 	MessageTypeCustomTitle         MessageType = "custom-title"
+	MessageTypeResult              MessageType = "result"
 )
 
 // Message represents a single line from a session JSONL file.
@@ -96,6 +97,9 @@ type Message struct {
 
 	// Present on user tool-result messages.
 	ToolUseResult *ToolUseResult `json:"-"`
+
+	// Present on result messages (session summary).
+	TotalCostUSD float64 `json:"total_cost_usd,omitempty"`
 }
 
 // UnmarshalJSON handles toolUseResult being either a ToolUseResult object or a plain string.

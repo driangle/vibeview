@@ -174,6 +174,9 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
 			meta.CustomTitle = msg.CustomTitle
 		}
+		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
+			meta.Usage.CostUSD = msg.TotalCostUSD
+		}
 	}
 
 	for _, msg := range messages {
@@ -338,6 +341,9 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
 			meta.CustomTitle = msg.CustomTitle
+		}
+		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
+			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
 	}
 
