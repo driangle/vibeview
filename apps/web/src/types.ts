@@ -1,3 +1,9 @@
+export interface AppConfig {
+  claudeDir: string;
+  standalone: boolean;
+  paths?: string[];
+}
+
 export interface UsageTotals {
   inputTokens: number;
   outputTokens: number;

@@ -21,12 +21,14 @@ type Config struct {
 	ClaudeDir  string
 	Index      *session.Index // Pre-built index (for standalone mode).
 	Standalone bool           // True when viewing standalone files (no ~/.claude).
+	Paths      []string       // Explicit file/directory paths (standalone mode).
 }
 
 // Server serves the VibeView HTTP API.
 type Server struct {
 	claudeDir  string
 	standalone bool
+	paths      []string
 	index      *session.Index
 	broker     *watcher.Broker
 	mux        *http.ServeMux
@@ -52,6 +54,7 @@ func New(cfg Config) (*Server, error) {
 	s := &Server{
 		claudeDir:  cfg.ClaudeDir,
 		standalone: cfg.Standalone,
+		paths:      cfg.Paths,
 		index:      idx,
 		broker:     broker,
 		mux:        http.NewServeMux(),
@@ -66,6 +69,7 @@ func New(cfg Config) (*Server, error) {
 }
 
 func (s *Server) routes() {
+	s.mux.HandleFunc("GET /api/config", s.handleConfig)
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
 	s.mux.HandleFunc("GET /api/pricing", s.handlePricing)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
@@ -97,6 +101,14 @@ func cors(next http.Handler) http.Handler {
 }
 
 // --- Handlers ---
+
+func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, ConfigResponse{
+		ClaudeDir:  s.claudeDir,
+		Standalone: s.standalone,
+		Paths:      s.paths,
+	})
+}
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -246,6 +258,13 @@ func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 }
 
 // --- Response Types ---
+
+// ConfigResponse is the API representation of the server configuration.
+type ConfigResponse struct {
+	ClaudeDir  string   `json:"claudeDir"`
+	Standalone bool     `json:"standalone"`
+	Paths      []string `json:"paths,omitempty"`
+}
 
 // SessionResponse is the API representation of a session in list responses.
 type SessionResponse struct {

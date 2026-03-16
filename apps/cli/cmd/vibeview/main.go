@@ -38,6 +38,7 @@ func main() {
 		}
 		cfg.Index = idx
 		cfg.Standalone = true
+		cfg.Paths = paths
 		fmt.Printf("vibeview (standalone)\n")
 		fmt.Printf("  port:   %d\n", *port)
 		fmt.Printf("  files:  %v\n", paths)
