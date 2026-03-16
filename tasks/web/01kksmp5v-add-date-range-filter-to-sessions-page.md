@@ -1,7 +1,7 @@
 ---
 title: "Add date range filter to sessions page"
 id: "01kksmp5v"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "filtering"]
