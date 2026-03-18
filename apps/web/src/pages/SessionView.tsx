@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { MessageBubble } from "../components/MessageBubble";
 import { ModelBadge } from "../components/ModelBadge";
 import { CostDisplay } from "../components/CostDisplay";
+import { CopyableText } from "../components/CopyableText";
 import { LiveIndicator, Pagination, FollowToggle } from "../components/SessionControls";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useSessionData } from "../hooks/useSessionData";
@@ -119,7 +120,7 @@ export function SessionView() {
           <LiveIndicator status={connectionStatus} />
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-          <span className="select-all font-mono text-xs">{session.id}</span>
+          <CopyableText text={session.id} className="select-all font-mono text-xs" />
           <Link
             to={`/?dir=${encodeURIComponent(session.project)}`}
             className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline"
@@ -136,8 +137,8 @@ export function SessionView() {
           <span>{formatDate(session.timestamp)}</span>
         </div>
         {session.filePath && (
-          <div className="mt-1 select-all truncate font-mono text-xs text-gray-400 dark:text-gray-500">
-            {session.filePath}
+          <div className="mt-1">
+            <CopyableText text={session.filePath} className="select-all truncate font-mono text-xs text-gray-400 dark:text-gray-500" />
           </div>
         )}
         {liveUsage && <CostDisplay usage={liveUsage} />}

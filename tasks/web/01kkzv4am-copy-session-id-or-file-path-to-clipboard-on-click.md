@@ -1,7 +1,7 @@
 ---
 title: "Copy session ID or file path to clipboard on click in Session View"
 id: "01kkzv4am"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui"]
@@ -16,10 +16,10 @@ Make the session ID and file path in the Session View header automatically copy 
 
 ## Tasks
 
-- [ ] Add click-to-copy behavior on the session ID `<span>` in `SessionView.tsx`
-- [ ] Add click-to-copy behavior on the file path `<div>` in `SessionView.tsx`
-- [ ] Show brief visual feedback (e.g. tooltip or text change to "Copied!") after copying
-- [ ] Style with a pointer cursor and subtle hover state to indicate clickability
+- [x] Add click-to-copy behavior on the session ID `<span>` in `SessionView.tsx`
+- [x] Add click-to-copy behavior on the file path `<div>` in `SessionView.tsx`
+- [x] Show brief visual feedback (e.g. tooltip or text change to "Copied!") after copying
+- [x] Style with a pointer cursor and subtle hover state to indicate clickability
 
 ## Acceptance Criteria
 
