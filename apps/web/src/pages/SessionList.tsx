@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetcher } from "../api";
@@ -8,6 +8,7 @@ import { SessionTable } from "../components/SessionTable";
 import type { SortColumn, SortDirection } from "../components/SortHeader";
 import { useDebounced } from "../hooks/useDebounced";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import type { PaginatedSessions, Session } from "../types";
 import { projectName } from "../utils";
 
@@ -52,16 +53,50 @@ function getSortValue(session: Session, column: SortColumn): string | number {
 
 export function SessionList() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useLocalStorage("filter:search", "");
   const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Persisted filter defaults — used when URL params are absent
+  const [storedDir, setStoredDir] = useLocalStorage("filter:dir", "");
+  const [storedFrom, setStoredFrom] = useLocalStorage("filter:from", "");
+  const [storedTo, setStoredTo] = useLocalStorage("filter:to", "");
+
+  // On mount, seed URL params from localStorage if no filter params are present
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    const hasUrlFilters =
+      searchParams.has("dir") || searchParams.has("from") || searchParams.has("to");
+    if (hasUrlFilters) return;
+    const needsUpdate = storedDir || storedFrom || storedTo;
+    if (!needsUpdate) return;
+    setSearchParams(
+      (prev) => {
+        if (storedDir) prev.set("dir", storedDir);
+        if (storedFrom) prev.set("from", storedFrom);
+        if (storedTo) prev.set("to", storedTo);
+        return prev;
+      },
+      { replace: true },
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const dirFilter = searchParams.get("dir") || "";
   const fromFilter = searchParams.get("from") || "";
   const toFilter = searchParams.get("to") || "";
   const currentPage = Number(searchParams.get("page")) || 1;
 
-  const [sortColumn, setSortColumn] = useState<SortColumn>("date");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  // Sync URL param changes to localStorage
+  useEffect(() => {
+    setStoredDir(dirFilter);
+    setStoredFrom(fromFilter);
+    setStoredTo(toFilter);
+  }, [dirFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>("filter:sortColumn", "date");
+  const [sortDirection, setSortDirection] = useLocalStorage<SortDirection>("filter:sortDirection", "desc");
 
   const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, fromFilter, toFilter, currentPage);
   const {

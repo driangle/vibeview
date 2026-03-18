@@ -1,7 +1,7 @@
 ---
 title: "Persist session table filters in local storage"
 id: "01kkzr65x"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "persistence"]
@@ -16,12 +16,12 @@ Remember the user's session table filter selections (directory, date range, sear
 
 ## Tasks
 
-- [ ] Store directory filter (`dir`) selection in local storage via `useLocalStorage` hook
-- [ ] Store date range filter (`from`/`to`) selection in local storage
-- [ ] Store search query in local storage
-- [ ] Store sort column and sort direction in local storage
-- [ ] Sync local storage values with URL search params (URL params take precedence when present)
-- [ ] Ensure clearing a filter also clears it from local storage
+- [x] Store directory filter (`dir`) selection in local storage via `useLocalStorage` hook
+- [x] Store date range filter (`from`/`to`) selection in local storage
+- [x] Store search query in local storage
+- [x] Store sort column and sort direction in local storage
+- [x] Sync local storage values with URL search params (URL params take precedence when present)
+- [x] Ensure clearing a filter also clears it from local storage
 
 ## Acceptance Criteria
 
