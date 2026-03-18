@@ -51,9 +51,9 @@ func (t Timestamp) Int64() int64 {
 
 // HistoryEntry represents a single line from ~/.claude/history.jsonl.
 type HistoryEntry struct {
-	SessionID string `json:"sessionId"`
-	Project   string `json:"project"`
-	Display   string `json:"display"`
+	SessionID string    `json:"sessionId"`
+	Project   string    `json:"project"`
+	Display   string    `json:"display"`
 	Timestamp Timestamp `json:"timestamp"`
 }
 
@@ -72,16 +72,16 @@ const (
 
 // Message represents a single line from a session JSONL file.
 type Message struct {
-	Type       MessageType    `json:"type"`
-	UUID       string         `json:"uuid"`
-	ParentUUID string         `json:"parentUuid"`
-	SessionID  string         `json:"sessionId"`
-	Timestamp  Timestamp      `json:"timestamp"`
-	Cwd        string         `json:"cwd"`
-	GitBranch  string         `json:"gitBranch"`
-	IsSidechain bool          `json:"isSidechain"`
-	IsMeta      bool          `json:"isMeta"`
-	Version    string         `json:"version"`
+	Type        MessageType `json:"type"`
+	UUID        string      `json:"uuid"`
+	ParentUUID  string      `json:"parentUuid"`
+	SessionID   string      `json:"sessionId"`
+	Timestamp   Timestamp   `json:"timestamp"`
+	Cwd         string      `json:"cwd"`
+	GitBranch   string      `json:"gitBranch"`
+	IsSidechain bool        `json:"isSidechain"`
+	IsMeta      bool        `json:"isMeta"`
+	Version     string      `json:"version"`
 
 	// Present on user/assistant messages.
 	Message *APIMessage `json:"message,omitempty"`

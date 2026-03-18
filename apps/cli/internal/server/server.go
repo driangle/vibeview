@@ -329,12 +329,12 @@ type SessionDetailResponse struct {
 
 // MessageResponse is the API representation of a single message.
 type MessageResponse struct {
-	UUID      string              `json:"uuid"`
-	Type      string              `json:"type"`
-	Timestamp string              `json:"timestamp"`
-	Message   *claude.APIMessage  `json:"message,omitempty"`
-	Data      map[string]any      `json:"data,omitempty"`
-	Snapshot  map[string]any      `json:"snapshot,omitempty"`
+	UUID      string             `json:"uuid"`
+	Type      string             `json:"type"`
+	Timestamp string             `json:"timestamp"`
+	Message   *claude.APIMessage `json:"message,omitempty"`
+	Data      map[string]any     `json:"data,omitempty"`
+	Snapshot  map[string]any     `json:"snapshot,omitempty"`
 }
 
 // --- Helpers ---

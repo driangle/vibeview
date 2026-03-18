@@ -129,14 +129,14 @@ func TestListSessionsSearchByQuery(t *testing.T) {
 	srv.index.Enrich(srv.claudeDir)
 
 	tests := []struct {
-		query    string
-		wantIDs  []string
+		query   string
+		wantIDs []string
 	}{
-		{"hello", []string{"sess-1"}},       // matches slug "hello world"
-		{"project-b", []string{"sess-2"}},   // matches project path
-		{"HELLO", []string{"sess-1"}},       // case-insensitive
-		{"nonexistent", nil},                // no match
-		{"session", []string{"sess-2"}},     // matches slug "second session"
+		{"hello", []string{"sess-1"}},     // matches slug "hello world"
+		{"project-b", []string{"sess-2"}}, // matches project path
+		{"HELLO", []string{"sess-1"}},     // case-insensitive
+		{"nonexistent", nil},              // no match
+		{"session", []string{"sess-2"}},   // matches slug "second session"
 	}
 
 	for _, tt := range tests {
