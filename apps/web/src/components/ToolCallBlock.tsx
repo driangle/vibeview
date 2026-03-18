@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ContentBlock } from "../types";
+import { RawJsonModal } from "./RawJsonModal";
 
 interface ToolCallBlockProps {
   block: ContentBlock;
@@ -26,6 +27,7 @@ function formatResult(content: unknown): string {
 
 export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
   const [expanded, setExpanded] = useState(false);
+  const [showRawJson, setShowRawJson] = useState(false);
 
   const toolName = block.name || "Tool";
   const input = block.input || {};
@@ -66,7 +68,21 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
               </pre>
             </div>
           )}
+          <div className="border-t border-amber-200 dark:border-amber-700 px-3 py-2">
+            <button
+              onClick={() => setShowRawJson(true)}
+              className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              View raw JSON
+            </button>
+          </div>
         </div>
+      )}
+      {showRawJson && (
+        <RawJsonModal
+          data={result ? { tool_use: block, tool_result: result } : block}
+          onClose={() => setShowRawJson(false)}
+        />
       )}
     </div>
   );
