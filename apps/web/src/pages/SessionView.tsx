@@ -38,6 +38,8 @@ export function SessionView() {
     toolResults,
     liveUsage,
     displayMessages,
+    agentGroups,
+    agentGroupFirstIds,
   } = useSessionData(id);
 
   const totalPages = Math.max(
@@ -175,6 +177,8 @@ export function SessionView() {
             <MessageBubble
               message={msg}
               toolResults={toolResults}
+              agentGroups={agentGroups}
+              agentGroupFirstIds={agentGroupFirstIds}
             />
           </div>
         ))}

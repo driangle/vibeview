@@ -72,6 +72,25 @@ export function useSessionData(id: string | undefined) {
     return base;
   }, [session, streamedMessages]);
 
+  // Group agent_progress messages by agentId.
+  const { agentGroups, agentGroupFirstIds } = useMemo(() => {
+    const groups = new Map<string, MessageResponse[]>();
+    const firstIds = new Set<string>();
+    for (const msg of allMessages) {
+      if (msg.type !== "progress" || msg.data?.type !== "agent_progress") continue;
+      const agentId = String(msg.data.agentId ?? "");
+      if (!agentId) continue;
+      const existing = groups.get(agentId);
+      if (existing) {
+        existing.push(msg);
+      } else {
+        groups.set(agentId, [msg]);
+        firstIds.add(msg.uuid);
+      }
+    }
+    return { agentGroups: groups, agentGroupFirstIds: firstIds };
+  }, [allMessages]);
+
   // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
     return allMessages.filter((m) => m.type !== "file-history-snapshot");
@@ -87,5 +106,7 @@ export function useSessionData(id: string | undefined) {
     toolResults,
     liveUsage,
     displayMessages,
+    agentGroups,
+    agentGroupFirstIds,
   };
 }

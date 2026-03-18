@@ -1,6 +1,7 @@
 import type { MessageResponse, ContentBlock } from "../types";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
+import { AgentProgressWidget } from "./AgentProgressWidget";
 import { processMessageContent } from "./processMessageContent";
 import { MessageContent } from "./MessageContent";
 import { HookMessage, SystemMessage } from "./EventMessages";
@@ -9,9 +10,15 @@ function isHookMessage(msg: MessageResponse): boolean {
   return msg.type === "progress" && msg.data?.type === "hook_progress";
 }
 
+function isAgentProgressMessage(msg: MessageResponse): boolean {
+  return msg.type === "progress" && msg.data?.type === "agent_progress";
+}
+
 interface MessageBubbleProps {
   message: MessageResponse;
   toolResults: Map<string, ContentBlock>;
+  agentGroups: Map<string, MessageResponse[]>;
+  agentGroupFirstIds: Set<string>;
 }
 
 function formatTimestamp(ts: string): string {
@@ -127,7 +134,7 @@ function AssistantMessage({
   );
 }
 
-export function MessageBubble({ message, toolResults }: MessageBubbleProps) {
+export function MessageBubble({ message, toolResults, agentGroups, agentGroupFirstIds }: MessageBubbleProps) {
   if (message.type === "file-history-snapshot") return null;
 
   if (message.type === "user" && message.message) {
@@ -141,6 +148,15 @@ export function MessageBubble({ message, toolResults }: MessageBubbleProps) {
 
   if (message.type === "assistant" && message.message) {
     return <AssistantMessage message={message} toolResults={toolResults} />;
+  }
+
+  if (isAgentProgressMessage(message)) {
+    // Only render the widget on the first message of each agent group.
+    if (!agentGroupFirstIds.has(message.uuid)) return null;
+    const agentId = String(message.data?.agentId ?? "");
+    const group = agentGroups.get(agentId);
+    if (!group || group.length === 0) return null;
+    return <AgentProgressWidget messages={group} />;
   }
 
   if (message.type === "system" || message.type === "progress") {
