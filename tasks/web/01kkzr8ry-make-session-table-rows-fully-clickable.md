@@ -1,7 +1,7 @@
 ---
 title: "Make session table rows fully clickable"
 id: "01kkzr8ry"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "ux"]
@@ -16,10 +16,10 @@ Make the entire session table row clickable to navigate to the session view page
 
 ## Tasks
 
-- [ ] Add an `onClick` handler to the `<tr>` in `SessionRow` that navigates to the session view
-- [ ] Add `cursor-pointer` styling to rows
-- [ ] Ensure the directory filter button still works without triggering row navigation (stop propagation)
-- [ ] Preserve the existing session name link for accessibility (right-click, open in new tab)
+- [x] Add an `onClick` handler to the `<tr>` in `SessionRow` that navigates to the session view
+- [x] Add `cursor-pointer` styling to rows
+- [x] Ensure the directory filter button still works without triggering row navigation (stop propagation)
+- [x] Preserve the existing session name link for accessibility (right-click, open in new tab)
 
 ## Acceptance Criteria
 

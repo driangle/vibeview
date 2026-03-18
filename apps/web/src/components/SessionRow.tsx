@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { Session } from "../types";
 import { formatTime, projectName } from "../utils";
 
@@ -22,10 +22,13 @@ interface SessionRowProps {
 }
 
 export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: SessionRowProps) {
+  const navigate = useNavigate();
+
   return (
     <tr
       data-row-index={rowIndex}
-      className={`border-t border-gray-100 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" : ""}`}
+      onClick={() => navigate(`/session/${session.id}`)}
+      className={`border-t border-gray-100 dark:border-gray-700 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer ${isSelected ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" : ""}`}
     >
       <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
@@ -41,6 +44,7 @@ export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: 
       <td className="px-4 py-3 text-sm truncate">
         <Link
           to={`/session/${session.id}`}
+          onClick={(e) => e.stopPropagation()}
           className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
         >
           {session.customTitle || session.slug || session.id}
@@ -49,7 +53,7 @@ export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: 
       <td className="px-4 py-3 text-xs truncate">
         <button
           type="button"
-          onClick={() => onDirectoryClick(session.project)}
+          onClick={(e) => { e.stopPropagation(); onDirectoryClick(session.project); }}
           className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:underline"
         >
           {projectName(session.project)}
