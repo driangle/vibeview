@@ -1,7 +1,7 @@
 ---
 title: "Show first page of conversation by default with manual navigation to last page"
 id: "01kkzrf9t"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "session"]
@@ -16,10 +16,10 @@ On the Session view page, change the default behavior so that the first page of 
 
 ## Tasks
 
-- [ ] Change the Session view to load and display the first page of conversation messages by default
-- [ ] Add pagination controls (e.g., previous/next page, jump to first/last) to the Session view
-- [ ] Ensure the "go to last page" action scrolls to and loads the most recent messages
-- [ ] Preserve any existing scroll-to-bottom behavior as a manual user action rather than automatic
+- [x] Change the Session view to load and display the first page of conversation messages by default
+- [x] Add pagination controls (e.g., previous/next page, jump to first/last) to the Session view
+- [x] Ensure the "go to last page" action scrolls to and loads the most recent messages
+- [x] Preserve any existing scroll-to-bottom behavior as a manual user action rather than automatic
 
 ## Acceptance Criteria
 

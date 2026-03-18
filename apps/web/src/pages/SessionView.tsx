@@ -134,6 +134,17 @@ export function SessionView() {
             {displayMessages.length} message
             {displayMessages.length !== 1 ? "s" : ""}
           </span>
+          {totalPages > 1 && page < totalPages - 1 && (
+            <button
+              onClick={() => {
+                setPage(totalPages - 1);
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="rounded px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+            >
+              Jump to latest &darr;
+            </button>
+          )}
           <span>{formatDate(session.timestamp)}</span>
         </div>
         {session.filePath && (

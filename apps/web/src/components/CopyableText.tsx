@@ -28,14 +28,13 @@ export function CopyableText({ text, className = "", children }: CopyableTextPro
           handleCopy();
         }
       }}
-      className={`cursor-pointer rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 ${className}`}
+      className={`relative cursor-pointer rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 ${className}`}
       title="Click to copy"
     >
-      {copied ? (
-        <span className="text-green-600 dark:text-green-400">Copied!</span>
-      ) : (
-        children ?? text
+      {copied && (
+        <span className="absolute right-full mr-1.5 text-green-600 dark:text-green-400">Copied!</span>
       )}
+      {children ?? text}
     </span>
   );
 }
