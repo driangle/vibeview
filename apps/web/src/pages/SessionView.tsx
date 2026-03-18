@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { MessageBubble } from "../components/MessageBubble";
 import { ModelBadge } from "../components/ModelBadge";
 import { CostDisplay } from "../components/CostDisplay";
@@ -120,7 +120,12 @@ export function SessionView() {
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
           <span className="select-all font-mono text-xs">{session.id}</span>
-          <span>{projectName(session.project)}</span>
+          <Link
+            to={`/?dir=${encodeURIComponent(session.project)}`}
+            className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline"
+          >
+            {projectName(session.project)}
+          </Link>
           {session.model && (
             <ModelBadge model={session.model} />
           )}

@@ -1,7 +1,7 @@
 ---
 title: "Make directory clickable on Session View page"
 id: "01kkzv2az"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui"]
@@ -16,8 +16,8 @@ Make the directory name in the Session View header clickable so it navigates bac
 
 ## Tasks
 
-- [ ] Replace the plain `<span>` for `projectName(session.project)` in `SessionView.tsx` header with a `<Link>` to `/?dir=<project>`
-- [ ] Style consistently with the directory button in `SessionRow` (hover underline, blue hover color)
+- [x] Replace the plain `<span>` for `projectName(session.project)` in `SessionView.tsx` header with a `<Link>` to `/?dir=<project>`
+- [x] Style consistently with the directory button in `SessionRow` (hover underline, blue hover color)
 
 ## Acceptance Criteria
 
