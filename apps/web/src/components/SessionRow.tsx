@@ -38,7 +38,7 @@ export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: 
           {formatTime(session.timestamp)}
         </span>
       </td>
-      <td className="px-4 py-3 text-sm">
+      <td className="px-4 py-3 text-sm truncate">
         <Link
           to={`/session/${session.id}`}
           className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
@@ -46,7 +46,7 @@ export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: 
           {session.customTitle || session.slug || session.id}
         </Link>
       </td>
-      <td className="px-4 py-3 text-xs">
+      <td className="px-4 py-3 text-xs truncate">
         <button
           type="button"
           onClick={() => onDirectoryClick(session.project)}

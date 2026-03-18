@@ -20,7 +20,7 @@ function applyTheme(theme: Theme) {
 
 export function useTheme(): { theme: Theme; toggle: () => void } {
   const [stored, setStored] = useLocalStorage<StoredTheme>("theme", null);
-  const theme: Theme = stored ?? getSystemTheme();
+  const theme: Theme = stored ?? "light";
 
   useEffect(() => {
     applyTheme(theme);

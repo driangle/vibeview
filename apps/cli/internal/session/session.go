@@ -67,6 +67,18 @@ func (idx *Index) FindSession(id string) *SessionMeta {
 	return nil
 }
 
+// SetCustomTitle updates the custom title for a session in the index.
+func (idx *Index) SetCustomTitle(id, title string) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	for i := range idx.Sessions {
+		if idx.Sessions[i].SessionID == id {
+			idx.Sessions[i].CustomTitle = title
+			return
+		}
+	}
+}
+
 // Discover reads history.jsonl and builds an index with basic metadata.
 // This is fast — it only reads the small history file, not individual session files.
 func Discover(claudeDir string) (*Index, error) {

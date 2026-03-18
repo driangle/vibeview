@@ -2,8 +2,8 @@
 
 dev: ## Run CLI + Vite dev server with hot reload
 	@trap 'kill 0' EXIT; \
-	cd apps/cli && go run ./cmd/vibeview & \
-	cd apps/web && npm run dev & \
+	cd apps/cli && go run ./cmd/vibeview --open=false & \
+	cd apps/web && npm run dev -- --open & \
 	wait
 
 web: ## Build the React SPA

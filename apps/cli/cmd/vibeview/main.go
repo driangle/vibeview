@@ -19,7 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	port := flag.Int("port", 1337, "port to listen on")
+	port := flag.Int("port", 4880, "port to listen on")
 	claudeDir := flag.String("claude-dir", filepath.Join(home, ".claude"), "path to claude data directory")
 	open := flag.Bool("open", true, "open browser on startup")
 	flag.Parse()

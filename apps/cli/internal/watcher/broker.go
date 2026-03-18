@@ -148,6 +148,11 @@ func (b *Broker) startTailer(sessionID string) error {
 
 	go func() {
 		for msg := range tailer.Messages() {
+			// Update the index when a session is renamed.
+			if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
+				b.index.SetCustomTitle(sessionID, msg.CustomTitle)
+			}
+
 			data, err := json.Marshal(toMessageEvent(msg))
 			if err != nil {
 				continue
