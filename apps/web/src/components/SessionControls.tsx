@@ -26,25 +26,46 @@ export function Pagination({
   totalPages: number;
   onPageChange: (page: number) => void;
 }) {
+  const buttonClass =
+    "rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40";
+
   return (
     <div className="flex items-center justify-between py-3">
-      <button
-        onClick={() => onPageChange(page - 1)}
-        disabled={page === 0}
-        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        Previous
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => onPageChange(0)}
+          disabled={page === 0}
+          className={buttonClass}
+        >
+          First
+        </button>
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 0}
+          className={buttonClass}
+        >
+          Previous
+        </button>
+      </div>
       <span className="text-sm text-gray-500 dark:text-gray-400">
         Page {page + 1} of {totalPages}
       </span>
-      <button
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages - 1}
-        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        Next
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages - 1}
+          className={buttonClass}
+        >
+          Next
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages - 1)}
+          disabled={page >= totalPages - 1}
+          className={buttonClass}
+        >
+          Last
+        </button>
+      </div>
     </div>
   );
 }

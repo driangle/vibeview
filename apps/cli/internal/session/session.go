@@ -277,6 +277,23 @@ func SessionFilePath(claudeDir, project, sessionID string) string {
 	return filepath.Join(claudeDir, "projects", encoded, sessionID+".jsonl")
 }
 
+// EnrichSession enriches a single session by ID.
+// Returns true if the session was enriched (slug is non-empty), false otherwise.
+func (idx *Index) EnrichSession(claudeDir string, sessionID string) bool {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+
+	for i := range idx.Sessions {
+		if idx.Sessions[i].SessionID != sessionID {
+			continue
+		}
+		enriched := enrichSession(claudeDir, idx.Sessions[i])
+		idx.Sessions[i] = enriched
+		return enriched.Slug != ""
+	}
+	return false
+}
+
 // AddSession adds a new session from a history entry if it doesn't already exist.
 func (idx *Index) AddSession(claudeDir string, entry claude.HistoryEntry) {
 	idx.mu.Lock()

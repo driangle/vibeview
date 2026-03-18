@@ -1,7 +1,7 @@
 ---
 title: "Show first page of conversation by default with manual navigation to last page"
 id: "01kkzrf9t"
-status: pending
+status: in-progress
 priority: medium
 type: feature
 tags: ["ui", "session"]

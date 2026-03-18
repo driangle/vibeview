@@ -245,6 +245,7 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		}
 
 		b.index.AddSession(b.claudeDir, entry)
+		go b.enrichNewSession(entry.SessionID)
 	}
 
 	pos, err := f.Seek(0, 1)
@@ -252,6 +253,20 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		return pos
 	}
 	return offset
+}
+
+func (b *Broker) enrichNewSession(sessionID string) {
+	delays := []time.Duration{500 * time.Millisecond, 1 * time.Second, 2 * time.Second, 4 * time.Second}
+	for _, delay := range delays {
+		select {
+		case <-b.done:
+			return
+		case <-time.After(delay):
+		}
+		if b.index.EnrichSession(b.claudeDir, sessionID) {
+			return
+		}
+	}
 }
 
 func (b *Broker) pingLoop() {

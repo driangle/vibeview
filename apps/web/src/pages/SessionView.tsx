@@ -23,8 +23,8 @@ export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [userPage, setUserPage] = useState<number | null>(null);
-  const [savedFollowMode, setSavedFollowMode] = useLocalStorage("followMode", true);
-  const [followMode, setFollowMode] = useState(savedFollowMode);
+  const [, setSavedFollowMode] = useLocalStorage("followMode", true);
+  const [followMode, setFollowMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
