@@ -1,7 +1,7 @@
 ---
 title: "Add dedicated widget to display agent_progress messages"
 id: "01km04pra"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["session-view", "agent"]
