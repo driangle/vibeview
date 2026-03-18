@@ -10,7 +10,7 @@ function ConfigLabel({ config }: { config: AppConfig }) {
 
   if (!config.standalone) {
     return (
-      <span className="rounded bg-gray-100 dark:bg-gray-700 px-2 py-0.5 font-mono text-xs text-gray-600 dark:text-gray-400">
+      <span className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-secondary-fg">
         {config.claudeDir}
       </span>
     );
@@ -25,9 +25,9 @@ function ConfigLabel({ config }: { config: AppConfig }) {
         onClick={() => {
           if (paths.length > 1) setShowModal(true);
         }}
-        className={`rounded bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 font-mono text-xs text-amber-800 dark:text-amber-300 ${
+        className={`rounded bg-warning/15 px-2 py-0.5 font-mono text-xs text-warning ${
           paths.length > 1
-            ? "cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors"
+            ? "cursor-pointer hover:bg-warning/25 transition-colors"
             : "cursor-default"
         }`}
       >
@@ -40,16 +40,16 @@ function ConfigLabel({ config }: { config: AppConfig }) {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="mx-4 max-h-[80vh] w-full max-w-lg overflow-auto rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl"
+            className="mx-4 max-h-[80vh] w-full max-w-lg overflow-auto rounded-lg bg-card p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-sm font-semibold text-fg">
                 Source Paths ({paths.length})
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted-fg hover:text-fg"
               >
                 &times;
               </button>
@@ -58,7 +58,7 @@ function ConfigLabel({ config }: { config: AppConfig }) {
               {paths.map((p) => (
                 <li
                   key={p}
-                  className="rounded bg-gray-50 dark:bg-gray-700 px-3 py-2 font-mono text-xs text-gray-700 dark:text-gray-300"
+                  className="rounded bg-secondary px-3 py-2 font-mono text-xs text-secondary-fg"
                 >
                   {p}
                 </li>
@@ -77,7 +77,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="cursor-pointer rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition-colors"
+      className="cursor-pointer rounded p-1.5 text-muted-fg hover:bg-secondary hover:text-fg transition-colors"
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
       {theme === "dark" ? (
@@ -97,10 +97,10 @@ export function NavBar() {
   const { data: config } = useSWR<AppConfig>("/api/config", fetcher);
 
   return (
-    <nav className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-      <div className="mx-auto flex h-12 max-w-4xl items-center gap-6 px-8">
-        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 font-mono">
-          [vibeview]
+    <nav className="border-b border-border bg-card">
+      <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-8">
+        <span className="text-sm font-semibold text-fg font-mono">
+          vibeview
         </span>
         <NavLink
           to="/"
@@ -108,8 +108,8 @@ export function NavBar() {
           className={({ isActive }) =>
             `text-sm font-medium transition-colors ${
               isActive
-                ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-[13px] pt-[15px]"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                ? "text-primary border-b-2 border-primary pb-[13px] pt-[15px]"
+                : "text-muted-fg hover:text-fg"
             }`
           }
         >
@@ -120,8 +120,8 @@ export function NavBar() {
           className={({ isActive }) =>
             `text-sm font-medium transition-colors ${
               isActive
-                ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-[13px] pt-[15px]"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                ? "text-primary border-b-2 border-primary pb-[13px] pt-[15px]"
+                : "text-muted-fg hover:text-fg"
             }`
           }
         >

@@ -23,19 +23,26 @@ export function SessionTable({
   selectedIndex,
 }: SessionTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <div className="overflow-x-auto rounded-lg border border-border bg-card">
       <table className="w-full table-fixed">
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <SortHeader label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[12%]" />
-            <SortHeader label="Session" column="name" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[35%]" />
-            <SortHeader label="Directory" column="directory" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[15%]" />
-            <SortHeader label="Messages" column="messages" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[8%]" />
-            <SortHeader label="Tokens" column="tokens" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[10%]" />
-            <SortHeader label="Cost" column="cost" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[8%]" />
-            <th className="w-[12%] px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Model
+          <tr className="border-b border-border">
+            <SortHeader label="Session" column="name" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[25%]" />
+            <SortHeader label="Directory" column="directory" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[15%]" icon="folder" />
+            <SortHeader label="Time" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[15%]" icon="clock" />
+            <SortHeader label="Messages" column="messages" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[10%]" />
+            <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-muted-fg uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="12" y1="4" x2="12" y2="20" />
+                </svg>
+                Model
+              </span>
             </th>
+            <SortHeader label="Tokens" column="tokens" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[13%]" />
+            <SortHeader label="Cost" column="cost" sortColumn={sortColumn} sortDirection={sortDirection} onToggle={onToggleSort} className="w-[10%]" icon="dollar" />
           </tr>
         </thead>
         <tbody>

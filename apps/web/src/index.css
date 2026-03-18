@@ -1,8 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-card: var(--card);
+  --color-card-fg: var(--card-fg);
+  --color-popover: var(--popover);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-secondary: var(--secondary);
+  --color-secondary-fg: var(--secondary-fg);
+  --color-muted: var(--muted);
+  --color-muted-fg: var(--muted-fg);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border-color);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+}
+
+/* Light theme */
+:root {
+  --bg: hsl(210 20% 98%);
+  --fg: hsl(220 20% 10%);
+  --card: hsl(0 0% 100%);
+  --card-fg: hsl(220 20% 10%);
+  --popover: hsl(0 0% 100%);
+  --primary: hsl(142 60% 40%);
+  --primary-fg: hsl(0 0% 100%);
+  --secondary: hsl(220 14% 93%);
+  --secondary-fg: hsl(220 16% 36%);
+  --muted: hsl(220 14% 95%);
+  --muted-fg: hsl(215 15% 46%);
+  --accent: hsl(35 90% 50%);
+  --accent-fg: hsl(0 0% 100%);
+  --destructive: hsl(0 70% 50%);
+  --border-color: hsl(220 14% 88%);
+  --input: hsl(220 14% 88%);
+  --ring: hsl(142 60% 40%);
+  --success: hsl(142 60% 40%);
+  --warning: hsl(35 90% 50%);
+  --info: hsl(200 80% 45%);
+}
+
+/* Dark theme */
+.dark {
+  --bg: hsl(220 20% 7%);
+  --fg: hsl(210 20% 90%);
+  --card: hsl(220 18% 10%);
+  --card-fg: hsl(210 20% 90%);
+  --popover: hsl(220 18% 12%);
+  --primary: hsl(142 60% 50%);
+  --primary-fg: hsl(220 20% 7%);
+  --secondary: hsl(220 16% 16%);
+  --secondary-fg: hsl(210 20% 80%);
+  --muted: hsl(220 14% 14%);
+  --muted-fg: hsl(215 15% 50%);
+  --accent: hsl(35 90% 55%);
+  --accent-fg: hsl(220 20% 7%);
+  --destructive: hsl(0 70% 55%);
+  --border-color: hsl(220 14% 18%);
+  --input: hsl(220 14% 18%);
+  --ring: hsl(142 60% 50%);
+  --success: hsl(142 60% 50%);
+  --warning: hsl(35 90% 55%);
+  --info: hsl(200 80% 55%);
+}
+
 @layer base {
-  html.dark {
-    background-color: #111827;
+  html {
+    background-color: var(--bg);
+  }
+
+  body {
+    font-family: var(--font-mono);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    border-color: var(--border-color);
   }
 }

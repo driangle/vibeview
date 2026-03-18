@@ -17,7 +17,7 @@ export function Pagination({
 
   return (
     <div className="mt-4 flex items-center justify-between">
-      <span className="text-sm text-gray-500 dark:text-gray-400">
+      <span className="text-sm text-muted-fg">
         Showing {(currentPage - 1) * pageSize + 1}–
         {Math.min(currentPage * pageSize, total)} of {total}
       </span>
@@ -25,13 +25,13 @@ export function Pagination({
         <button
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="cursor-pointer rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm dark:text-gray-300 enabled:hover:bg-gray-50 dark:enabled:hover:bg-gray-700 disabled:cursor-default disabled:opacity-40"
+          className="cursor-pointer rounded border border-border px-3 py-1 text-sm text-fg enabled:hover:bg-secondary disabled:cursor-default disabled:opacity-40"
         >
           Previous
         </button>
         {pageNumbers(currentPage, totalPages).map((p, i) =>
           p === null ? (
-            <span key={`gap-${i}`} className="px-2 py-1 text-sm text-gray-400 dark:text-gray-500">
+            <span key={`gap-${i}`} className="px-2 py-1 text-sm text-muted-fg">
               ...
             </span>
           ) : (
@@ -40,8 +40,8 @@ export function Pagination({
               onClick={() => onPageChange(p)}
               className={`cursor-pointer rounded border px-3 py-1 text-sm ${
                 p === currentPage
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 font-medium text-blue-700 dark:text-blue-400"
-                  : "border-gray-300 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  ? "border-primary bg-primary/10 font-medium text-primary"
+                  : "border-border text-fg hover:bg-secondary"
               }`}
             >
               {p}
@@ -51,7 +51,7 @@ export function Pagination({
         <button
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="cursor-pointer rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm dark:text-gray-300 enabled:hover:bg-gray-50 dark:enabled:hover:bg-gray-700 disabled:cursor-default disabled:opacity-40"
+          className="cursor-pointer rounded border border-border px-3 py-1 text-sm text-fg enabled:hover:bg-secondary disabled:cursor-default disabled:opacity-40"
         >
           Next
         </button>
