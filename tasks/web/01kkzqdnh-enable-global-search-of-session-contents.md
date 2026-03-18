@@ -23,6 +23,39 @@ Allow users to search across all sessions by querying session contents (conversa
 - [ ] Support incremental / debounced search as the user types
 - [ ] Handle empty results state with helpful messaging
 
+## Implementation Notes
+
+### Architecture: Streaming Parallel File Scan
+
+Do NOT build an in-memory index of all session contents. Instead, scan JSONL files on-demand with a bounded worker pool.
+
+#### Backend — `GET /api/search?q=...&limit=20`
+
+1. **Pre-filter with metadata** — Use the existing in-memory Index to skip sessions outside date range, wrong project, etc. before touching disk
+2. **Fan out to bounded worker pool** (8–16 goroutines) — Each worker streams one JSONL file line-by-line with `bufio.Scanner`
+3. **Selective parsing** — Only parse `"type":"user"` or `"type":"assistant"` lines (cheap string pre-check before JSON unmarshal). Skip `progress`, `file-history-snapshot`, `tool_result` content blocks (huge, noisy)
+4. **Partial JSON parsing** — Extract only `content[].text` fields, not full `Message` struct
+5. **Early termination** — Per file: stop at first match, capture ~120 char snippet. Globally: cancel all workers via `context.WithCancel` once `limit` results collected
+6. **Newest-first scan order** — Sort sessions by timestamp descending before scanning so `limit`-based cutoff skips old sessions
+
+#### Memory Budget
+
+- 16 workers × ~1MB scanner buffer = **~16MB peak**
+- Results: `limit` sessions × ~500 bytes = negligible
+- Drops to ~0 after response completes
+
+#### What NOT to do
+
+- Don't build an inverted index in memory — 10K+ sessions at 100KB–50MB each could consume GBs
+- Don't add SQLite/Bleve — unnecessary dependency for a local tool; streaming scan is fast enough
+- Don't search `tool_result` content blocks — raw file contents and command outputs bloat scan time and produce noisy matches
+
+#### Frontend
+
+- Reuse existing search input; add a toggle or mode for "search content" vs metadata search (or upgrade `?q=` to hit the new endpoint when needed)
+- Display results with session metadata + match snippet (highlighted)
+- Debounce at 500ms (slightly longer than current 300ms since content search is heavier)
+
 ## Acceptance Criteria
 
 - Users can type a query and see sessions whose contents match the search term
