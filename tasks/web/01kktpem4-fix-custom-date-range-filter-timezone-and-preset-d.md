@@ -2,7 +2,7 @@
 title: "Fix custom date range filter timezone and preset detection bugs"
 id: "01kktpem4"
 status: pending
-priority: high
+priority: low
 type: bug
 tags: ["ui", "filters"]
 created: "2026-03-16"

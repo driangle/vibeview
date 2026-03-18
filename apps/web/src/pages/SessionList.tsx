@@ -174,67 +174,57 @@ export function SessionList() {
         )}
       </div>
 
-      {error ? (
+      {error && (
         <p className="mt-4 text-red-600 dark:text-red-400">
           Failed to load sessions. Is the server running?
         </p>
-      ) : !loaded ? (
-        <p className="mt-4 text-gray-500 dark:text-gray-400">Loading sessions...</p>
-      ) : (
-        <>
-          <div className="mb-6 flex flex-wrap gap-3">
-            <select
-              value={dirFilter}
-              onChange={(e) => setDirFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm dark:text-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            >
-              <option value="">All directories</option>
-              {uniqueProjects.map((project) => (
-                <option key={project} value={project}>
-                  {projectName(project)}
-                </option>
-              ))}
-            </select>
-            <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
-            <input
-              type="text"
-              placeholder="Filter by project or topic..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setSearchParams((prev) => {
-                  prev.delete("page");
-                  return prev;
-                });
-              }}
-              className="min-w-0 flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
+      )}
 
-          {sortedSessions.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">
-              {search ? "No sessions match your filter." : "No sessions found."}
-            </p>
-          ) : (
-            <>
-              <SessionTable
-                sessions={sortedSessions}
-                sortColumn={sortColumn}
-                sortDirection={sortDirection}
-                onToggleSort={toggleSort}
-                onDirectoryClick={setDirFilter}
-                selectedIndex={selectedIndex}
-              />
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                total={total}
-                pageSize={PAGE_SIZE}
-                onPageChange={setPage}
-              />
-            </>
-          )}
-        </>
+      <div className="mb-6 flex flex-wrap gap-3">
+        <select
+          value={dirFilter}
+          onChange={(e) => setDirFilter(e.target.value)}
+          className="w-[12rem] truncate rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm dark:text-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="">All directories</option>
+          {uniqueProjects.map((project) => (
+            <option key={project} value={project}>
+              {projectName(project, uniqueProjects)}
+            </option>
+          ))}
+        </select>
+        <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
+        <input
+          type="text"
+          placeholder="Filter by project or topic..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setSearchParams((prev) => {
+              prev.delete("page");
+              return prev;
+            });
+          }}
+          className="min-w-0 flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        />
+      </div>
+
+      <SessionTable
+        sessions={loaded ? sortedSessions : []}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        onToggleSort={toggleSort}
+        onDirectoryClick={setDirFilter}
+        selectedIndex={selectedIndex}
+      />
+      {loaded && sortedSessions.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          total={total}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

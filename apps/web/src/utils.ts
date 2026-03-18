@@ -13,7 +13,18 @@ export function formatTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export function projectName(project: string): string {
+export function projectName(project: string, allProjects?: string[]): string {
   const parts = project.split("/").filter(Boolean);
-  return parts[parts.length - 1] || project;
+  const name = parts[parts.length - 1] || project;
+
+  if (allProjects) {
+    const duplicates = allProjects.filter(
+      (p) => p !== project && (p.split("/").filter(Boolean).pop() || p) === name,
+    );
+    if (duplicates.length > 0 && parts.length >= 2) {
+      return `${parts[parts.length - 2]}/${name}`;
+    }
+  }
+
+  return name;
 }

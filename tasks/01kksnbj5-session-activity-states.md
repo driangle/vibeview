@@ -2,7 +2,7 @@
 title: "Detect session activity states"
 id: "01kksnbj5"
 status: pending
-priority: high
+priority: medium
 type: feature
 tags: ["sessions", "state-detection"]
 created: "2026-03-15"

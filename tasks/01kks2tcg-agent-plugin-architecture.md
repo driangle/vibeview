@@ -2,7 +2,7 @@
 title: "Modularize ClaudeCode-specific code into a plugin architecture"
 id: "01kks2tcg"
 status: pending
-priority: high
+priority: low
 type: feature
 tags: ["architecture", "extensibility"]
 created: "2026-03-15"

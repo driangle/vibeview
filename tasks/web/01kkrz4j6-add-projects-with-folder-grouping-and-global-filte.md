@@ -2,7 +2,7 @@
 title: "Add projects with folder grouping and global filter"
 id: "01kkrz4j6"
 status: pending
-priority: high
+priority: medium
 type: feature
 tags: ["projects", "filtering", "ux"]
 created: "2026-03-15"
