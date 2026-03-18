@@ -9,6 +9,7 @@ interface SessionTableProps {
   sortDirection: SortDirection;
   onToggleSort: (column: SortColumn) => void;
   onDirectoryClick: (dir: string) => void;
+  onModelClick: (model: string) => void;
   selectedIndex?: number;
 }
 
@@ -18,6 +19,7 @@ export function SessionTable({
   sortDirection,
   onToggleSort,
   onDirectoryClick,
+  onModelClick,
   selectedIndex,
 }: SessionTableProps) {
   return (
@@ -42,6 +44,7 @@ export function SessionTable({
               key={session.id}
               session={session}
               onDirectoryClick={onDirectoryClick}
+              onModelClick={onModelClick}
               isSelected={selectedIndex === index}
               rowIndex={index}
             />

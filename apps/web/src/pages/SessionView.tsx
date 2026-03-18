@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageBubble } from "../components/MessageBubble";
+import { ModelBadge } from "../components/ModelBadge";
 import { CostDisplay } from "../components/CostDisplay";
 import { LiveIndicator, Pagination, FollowToggle } from "../components/SessionControls";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
@@ -121,9 +122,7 @@ export function SessionView() {
           <span className="select-all font-mono text-xs">{session.id}</span>
           <span>{projectName(session.project)}</span>
           {session.model && (
-            <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-xs">
-              {session.model}
-            </span>
+            <ModelBadge model={session.model} />
           )}
           <span>
             {displayMessages.length} message

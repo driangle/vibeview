@@ -135,6 +135,16 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		sessions = filtered
 	}
 
+	if model := r.URL.Query().Get("model"); model != "" {
+		filtered := make([]session.SessionMeta, 0)
+		for _, sm := range sessions {
+			if sm.Model == model {
+				filtered = append(filtered, sm)
+			}
+		}
+		sessions = filtered
+	}
+
 	if q := r.URL.Query().Get("q"); q != "" {
 		query := strings.ToLower(q)
 		filtered := make([]session.SessionMeta, 0)

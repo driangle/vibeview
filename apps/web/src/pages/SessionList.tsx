@@ -19,6 +19,7 @@ function buildSessionsUrl(
   q: string,
   from: string,
   to: string,
+  model: string,
   page?: number,
 ): string {
   const params = new URLSearchParams();
@@ -26,6 +27,7 @@ function buildSessionsUrl(
   if (q) params.set("q", q);
   if (from) params.set("from", from);
   if (to) params.set("to", to);
+  if (model) params.set("model", model);
   if (page !== undefined) {
     params.set("limit", String(PAGE_SIZE));
     params.set("offset", String((page - 1) * PAGE_SIZE));
@@ -59,6 +61,7 @@ export function SessionList() {
 
   // Persisted filter defaults — used when URL params are absent
   const [storedDir, setStoredDir] = useLocalStorage("filter:dir", "");
+  const [storedModel, setStoredModel] = useLocalStorage("filter:model", "");
   const [storedFrom, setStoredFrom] = useLocalStorage("filter:from", "");
   const [storedTo, setStoredTo] = useLocalStorage("filter:to", "");
 
@@ -68,13 +71,14 @@ export function SessionList() {
     if (initialized.current) return;
     initialized.current = true;
     const hasUrlFilters =
-      searchParams.has("dir") || searchParams.has("from") || searchParams.has("to");
+      searchParams.has("dir") || searchParams.has("model") || searchParams.has("from") || searchParams.has("to");
     if (hasUrlFilters) return;
-    const needsUpdate = storedDir || storedFrom || storedTo;
+    const needsUpdate = storedDir || storedModel || storedFrom || storedTo;
     if (!needsUpdate) return;
     setSearchParams(
       (prev) => {
         if (storedDir) prev.set("dir", storedDir);
+        if (storedModel) prev.set("model", storedModel);
         if (storedFrom) prev.set("from", storedFrom);
         if (storedTo) prev.set("to", storedTo);
         return prev;
@@ -84,6 +88,7 @@ export function SessionList() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirFilter = searchParams.get("dir") || "";
+  const modelFilter = searchParams.get("model") || "";
   const fromFilter = searchParams.get("from") || "";
   const toFilter = searchParams.get("to") || "";
   const currentPage = Number(searchParams.get("page")) || 1;
@@ -91,14 +96,15 @@ export function SessionList() {
   // Sync URL param changes to localStorage
   useEffect(() => {
     setStoredDir(dirFilter);
+    setStoredModel(modelFilter);
     setStoredFrom(fromFilter);
     setStoredTo(toFilter);
-  }, [dirFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dirFilter, modelFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>("filter:sortColumn", "date");
   const [sortDirection, setSortDirection] = useLocalStorage<SortDirection>("filter:sortDirection", "desc");
 
-  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, fromFilter, toFilter, currentPage);
+  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, fromFilter, toFilter, modelFilter, currentPage);
   const {
     data: paginated,
     error,
@@ -147,6 +153,12 @@ export function SessionList() {
     return projects.sort();
   }, [allPaginated]);
 
+  const uniqueModels = useMemo(() => {
+    if (!allPaginated?.sessions) return [];
+    const models = [...new Set(allPaginated.sessions.map((s) => s.model).filter(Boolean))];
+    return models.sort();
+  }, [allPaginated]);
+
   function toggleSort(column: SortColumn) {
     if (sortColumn === column) {
       setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
@@ -179,6 +191,18 @@ export function SessionList() {
         prev.set("dir", dir);
       } else {
         prev.delete("dir");
+      }
+      prev.delete("page");
+      return prev;
+    });
+  }
+
+  function setModelFilter(model: string) {
+    setSearchParams((prev) => {
+      if (model) {
+        prev.set("model", model);
+      } else {
+        prev.delete("model");
       }
       prev.delete("page");
       return prev;
@@ -228,6 +252,18 @@ export function SessionList() {
             </option>
           ))}
         </select>
+        <select
+          value={modelFilter}
+          onChange={(e) => setModelFilter(e.target.value)}
+          className="w-[12rem] truncate rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm dark:text-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="">All models</option>
+          {uniqueModels.map((model) => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
         <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
         <input
           type="text"
@@ -250,6 +286,7 @@ export function SessionList() {
         sortDirection={sortDirection}
         onToggleSort={toggleSort}
         onDirectoryClick={setDirFilter}
+        onModelClick={setModelFilter}
         selectedIndex={selectedIndex}
       />
       {loaded && sortedSessions.length > 0 && (

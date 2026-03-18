@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { ModelBadge } from "./ModelBadge";
 import type { Session } from "../types";
 import { formatTime, projectName } from "../utils";
 
@@ -17,11 +18,12 @@ function isRecent(timestamp: string): boolean {
 interface SessionRowProps {
   session: Session;
   onDirectoryClick: (dir: string) => void;
+  onModelClick: (model: string) => void;
   isSelected?: boolean;
   rowIndex?: number;
 }
 
-export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: SessionRowProps) {
+export function SessionRow({ session, onDirectoryClick, onModelClick, isSelected, rowIndex }: SessionRowProps) {
   const navigate = useNavigate();
 
   return (
@@ -70,9 +72,7 @@ export function SessionRow({ session, onDirectoryClick, isSelected, rowIndex }: 
       </td>
       <td className="px-4 py-3 text-xs">
         {session.model && (
-          <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-gray-600 dark:text-gray-400">
-            {session.model}
-          </span>
+          <ModelBadge model={session.model} onClick={onModelClick} />
         )}
       </td>
     </tr>

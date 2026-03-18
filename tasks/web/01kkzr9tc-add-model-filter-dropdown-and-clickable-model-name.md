@@ -1,7 +1,7 @@
 ---
 title: "Add model filter dropdown and clickable model names"
 id: "01kkzr9tc"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "filtering"]
