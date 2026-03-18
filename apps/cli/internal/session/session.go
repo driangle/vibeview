@@ -109,41 +109,105 @@ func Discover(claudeDir string) (*Index, error) {
 	return &Index{Sessions: sessions}, nil
 }
 
+const enrichBatchSize = 100
+
 // Enrich reads each session's JSONL file to populate messageCount, model, usage, and slug.
 // Sessions whose JSONL files no longer exist on disk are removed from the index.
-// It updates sessions in-place and is safe to call concurrently with readers.
+// It processes sessions in batches, flushing each batch to the index so that
+// readers can see partially-enriched data while enrichment continues.
 func (idx *Index) Enrich(claudeDir string) {
 	idx.mu.RLock()
 	snapshot := make([]SessionMeta, len(idx.Sessions))
 	copy(snapshot, idx.Sessions)
 	idx.mu.RUnlock()
 
+	idx.enrichRange(claudeDir, snapshot, 0, len(snapshot), true)
+}
+
+// EnrichN enriches the first n sessions synchronously and returns.
+// Callers typically follow this with a background Enrich call for the rest.
+func (idx *Index) EnrichN(claudeDir string, n int) {
+	idx.mu.RLock()
+	total := len(idx.Sessions)
+	idx.mu.RUnlock()
+
+	if n > total {
+		n = total
+	}
+	if n <= 0 {
+		return
+	}
+
+	idx.mu.RLock()
+	snapshot := make([]SessionMeta, len(idx.Sessions))
+	copy(snapshot, idx.Sessions)
+	idx.mu.RUnlock()
+
+	idx.enrichRange(claudeDir, snapshot, 0, n, false)
+}
+
+func (idx *Index) enrichRange(claudeDir string, snapshot []SessionMeta, from, to int, skipEnriched bool) {
 	type result struct {
 		meta    SessionMeta
 		exists  bool
+		skipped bool
 	}
-	results := make([]result, len(snapshot))
 
-	for i, meta := range snapshot {
-		sessionPath := ResolveFilePath(claudeDir, meta)
-		if _, err := os.Stat(sessionPath); err != nil {
-			// Some history entries (e.g. /usage commands) never produce a JSONL file.
-			log.Printf("warning: session %s has no JSONL file at %s (removing from index)", meta.SessionID, sessionPath)
-			results[i] = result{meta: meta, exists: false}
+	for start := from; start < to; start += enrichBatchSize {
+		end := start + enrichBatchSize
+		if end > to {
+			end = to
+		}
+
+		results := make([]result, end-start)
+		for i, meta := range snapshot[start:end] {
+			if skipEnriched && meta.MessageCount > 0 {
+				results[i] = result{meta: meta, exists: true, skipped: true}
+				continue
+			}
+			sessionPath := ResolveFilePath(claudeDir, meta)
+			if _, err := os.Stat(sessionPath); err != nil {
+				log.Printf("warning: session %s has no JSONL file at %s (removing from index)", meta.SessionID, sessionPath)
+				results[i] = result{meta: meta, exists: false}
+				continue
+			}
+			results[i] = result{meta: enrichSession(claudeDir, meta), exists: true}
+		}
+
+		// If every item was skipped, no index update needed.
+		allSkipped := true
+		for _, r := range results {
+			if !r.skipped {
+				allSkipped = false
+				break
+			}
+		}
+		if allSkipped {
 			continue
 		}
-		results[i] = result{meta: enrichSession(claudeDir, meta), exists: true}
-	}
 
-	idx.mu.Lock()
-	filtered := make([]SessionMeta, 0, len(results))
-	for _, r := range results {
-		if r.exists {
-			filtered = append(filtered, r.meta)
+		// Flush this batch into the index.
+		idx.mu.Lock()
+		for i, r := range results {
+			si := start + i
+			if r.exists {
+				idx.Sessions[si] = r.meta
+			} else {
+				idx.Sessions[si].SessionID = ""
+			}
 		}
+		// On final batch, compact out removed sessions.
+		if end == to {
+			filtered := make([]SessionMeta, 0, len(idx.Sessions))
+			for _, s := range idx.Sessions {
+				if s.SessionID != "" {
+					filtered = append(filtered, s)
+				}
+			}
+			idx.Sessions = filtered
+		}
+		idx.mu.Unlock()
 	}
-	idx.Sessions = filtered
-	idx.mu.Unlock()
 }
 
 // enrichSession reads a session's JSONL file and populates derived fields.
@@ -181,7 +245,7 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 	}
 
 	for _, msg := range messages {
-		if msg.Type == claude.MessageTypeUser && msg.Message != nil {
+		if msg.Type == claude.MessageTypeUser && msg.Message != nil && !msg.IsMeta {
 			for _, block := range msg.Message.Content {
 				if block.Type == "text" && block.Text != "" {
 					meta.Slug = truncateSlug(block.Text, 80)
@@ -350,7 +414,7 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 
 	// Derive slug from first user message.
 	for _, msg := range messages {
-		if msg.Type == claude.MessageTypeUser && msg.Message != nil {
+		if msg.Type == claude.MessageTypeUser && msg.Message != nil && !msg.IsMeta {
 			for _, block := range msg.Message.Content {
 				if block.Type == "text" && block.Text != "" {
 					meta.Slug = truncateSlug(block.Text, 80)
@@ -364,11 +428,16 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 	return meta, nil
 }
 
-var xmlTagPattern = regexp.MustCompile(`<[^>]+>`)
+var (
+	// Strip redundant command-name elements entirely (content duplicates command-message).
+	commandNamePattern = regexp.MustCompile(`<command-name>[^<]*</command-name>`)
+	xmlTagPattern      = regexp.MustCompile(`<[^>]+>`)
+)
 
 // truncateSlug shortens text to maxLen, breaking at a word boundary.
 // It strips XML/HTML tags before truncating.
 func truncateSlug(text string, maxLen int) string {
+	text = commandNamePattern.ReplaceAllString(text, "")
 	text = xmlTagPattern.ReplaceAllString(text, "")
 	text = strings.Join(strings.Fields(text), " ")
 	if len(text) <= maxLen {

@@ -35,7 +35,7 @@ type Server struct {
 }
 
 // New creates a Server. In standalone mode, it uses the provided Index directly.
-// Otherwise, it discovers sessions from claudeDir and enriches them in the background.
+// Otherwise, it discovers sessions from claudeDir and enriches them before serving.
 func New(cfg Config) (*Server, error) {
 	idx := cfg.Index
 	if idx == nil {
@@ -62,6 +62,9 @@ func New(cfg Config) (*Server, error) {
 	s.routes()
 
 	if !cfg.Standalone {
+		// Enrich the first page synchronously so it's ready on first load,
+		// then continue enriching the rest in the background.
+		idx.EnrichN(cfg.ClaudeDir, 100)
 		go idx.Enrich(cfg.ClaudeDir)
 	}
 

@@ -80,6 +80,7 @@ type Message struct {
 	Cwd        string         `json:"cwd"`
 	GitBranch  string         `json:"gitBranch"`
 	IsSidechain bool          `json:"isSidechain"`
+	IsMeta      bool          `json:"isMeta"`
 	Version    string         `json:"version"`
 
 	// Present on user/assistant messages.

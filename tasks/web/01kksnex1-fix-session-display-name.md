@@ -1,7 +1,7 @@
 ---
 title: "Fix session name to show first user message or custom title"
 id: "01kksnex1"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["sessions", "ui"]
