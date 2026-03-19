@@ -11,6 +11,8 @@ interface SessionTableProps {
   onDirectoryClick: (dir: string) => void;
   onModelClick: (model: string) => void;
   selectedIndex?: number;
+  isLoaded?: boolean;
+  hasFilters?: boolean;
 }
 
 export function SessionTable({
@@ -21,6 +23,8 @@ export function SessionTable({
   onDirectoryClick,
   onModelClick,
   selectedIndex,
+  isLoaded,
+  hasFilters,
 }: SessionTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
@@ -109,6 +113,13 @@ export function SessionTable({
               rowIndex={index}
             />
           ))}
+          {isLoaded && sessions.length === 0 && (
+            <tr>
+              <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-fg">
+                {hasFilters ? 'No sessions match your filters' : 'No sessions found'}
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

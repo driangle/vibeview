@@ -344,6 +344,8 @@ export function SessionList() {
           onDirectoryClick={setDirFilter}
           onModelClick={setModelFilter}
           selectedIndex={selectedIndex}
+          isLoaded={!!loaded}
+          hasFilters={!!(dirFilter || modelFilter || fromFilter || toFilter || debouncedSearch)}
         />
         {loaded && sortedSessions.length > 0 && (
           <Pagination

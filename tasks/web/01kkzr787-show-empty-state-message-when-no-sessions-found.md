@@ -1,7 +1,7 @@
 ---
 title: "Show empty state message when no sessions found"
 id: "01kkzr787"
-status: pending
+status: completed
 priority: low
 type: feature
 tags: ["ui"]
@@ -16,9 +16,9 @@ Display a helpful empty state message below the session table when there are no 
 
 ## Tasks
 
-- [ ] Add an empty state message below the `SessionTable` when `sortedSessions` is empty and data has loaded
-- [ ] Show different messages for "no sessions found" vs "no sessions match your filter"
-- [ ] Style the empty state consistently with the rest of the page
+- [x] Add an empty state message below the `SessionTable` when `sortedSessions` is empty and data has loaded
+- [x] Show different messages for "no sessions found" vs "no sessions match your filter"
+- [x] Style the empty state consistently with the rest of the page
 
 ## Acceptance Criteria
 
