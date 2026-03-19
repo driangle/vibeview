@@ -21,9 +21,18 @@ function formatDate(timestamp: string): string {
 export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { settings } = useSettings();
+  const { settings, isLoaded } = useSettings();
   const [userPage, setUserPage] = useState<number | null>(null);
-  const [followMode, setFollowMode] = useState(settings.autoFollow);
+  const [followMode, setFollowMode] = useState(false);
+
+  // Sync follow mode once settings load from the API.
+  const followInitialized = useRef(false);
+  useEffect(() => {
+    if (isLoaded && !followInitialized.current) {
+      followInitialized.current = true;
+      setFollowMode(settings.autoFollow);
+    }
+  }, [isLoaded, settings.autoFollow]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
