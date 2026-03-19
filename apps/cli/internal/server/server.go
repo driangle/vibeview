@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/session"
 	"github.com/driangle/vibeview/internal/spa"
 	"github.com/driangle/vibeview/internal/watcher"
@@ -81,6 +82,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
+	s.mux.HandleFunc("GET /api/search", s.handleSearch)
 
 	// Serve embedded SPA for all other routes.
 	s.mux.Handle("/", spa.Handler())
@@ -297,6 +299,42 @@ func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query().Get("q")
+	if q == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "q parameter is required"})
+		return
+	}
+
+	limit := 20
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if n, err := strconv.Atoi(limitStr); err == nil && n > 0 {
+			limit = n
+		}
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	results := search.Search(r.Context(), s.index, search.Options{
+		Query:     q,
+		Limit:     limit,
+		ClaudeDir: s.claudeDir,
+	})
+
+	resp := SearchResponse{
+		Results: make([]SearchResultResponse, 0, len(results)),
+		Total:   len(results),
+	}
+	for _, r := range results {
+		resp.Results = append(resp.Results, SearchResultResponse{
+			Session: toSessionResponse(r.Meta),
+			Snippet: r.Snippet,
+		})
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 // --- Response Types ---
 
 // ConfigResponse is the API representation of the server configuration.
@@ -323,6 +361,18 @@ type SessionResponse struct {
 type PaginatedSessionsResponse struct {
 	Sessions []SessionResponse `json:"sessions"`
 	Total    int               `json:"total"`
+}
+
+// SearchResultResponse is a single content search result.
+type SearchResultResponse struct {
+	Session SessionResponse `json:"session"`
+	Snippet string          `json:"snippet"`
+}
+
+// SearchResponse wraps content search results.
+type SearchResponse struct {
+	Results []SearchResultResponse `json:"results"`
+	Total   int                    `json:"total"`
 }
 
 // SessionDetailResponse is the API representation of a single session with messages.

@@ -4,12 +4,13 @@ import useSWR from 'swr';
 import { fetcher } from '../api';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { Pagination } from '../components/Pagination';
+import { SearchResults } from '../components/SearchResults';
 import { SessionTable } from '../components/SessionTable';
 import type { SortColumn, SortDirection } from '../components/SortHeader';
 import { useDebounced } from '../hooks/useDebounced';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import type { PaginatedSessions, Session } from '../types';
+import type { PaginatedSessions, SearchResponse, Session } from '../types';
 import { projectName } from '../utils';
 
 const PAGE_SIZE = 100;
@@ -60,6 +61,7 @@ export function SessionList() {
   const navigate = useNavigate();
   const [search, setSearch] = useLocalStorage('filter:search', '');
   const debouncedSearch = useDebounced(search, 300);
+  const debouncedContentQuery = useDebounced(search, 500);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [storedDir, setStoredDir] = useLocalStorage('filter:dir', '');
@@ -127,6 +129,14 @@ export function SessionList() {
   const { data: allPaginated } = useSWR<PaginatedSessions>('/api/sessions', fetcher, {
     refreshInterval: 5000,
   });
+
+  const contentSearchUrl = debouncedContentQuery
+    ? `/api/search?q=${encodeURIComponent(debouncedContentQuery)}&limit=20`
+    : null;
+  const { data: searchData, isLoading: searchLoading } = useSWR<SearchResponse>(
+    contentSearchUrl,
+    fetcher,
+  );
 
   const sessions = paginated?.sessions;
   const total = paginated?.total ?? 0;
@@ -335,26 +345,36 @@ export function SessionList() {
           <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
         </div>
 
-        {/* Table */}
-        <SessionTable
-          sessions={loaded ? sortedSessions : []}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onToggleSort={toggleSort}
-          onDirectoryClick={setDirFilter}
-          onModelClick={setModelFilter}
-          selectedIndex={selectedIndex}
-          isLoaded={!!loaded}
-          hasFilters={!!(dirFilter || modelFilter || fromFilter || toFilter || debouncedSearch)}
-        />
-        {loaded && sortedSessions.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            total={total}
-            pageSize={PAGE_SIZE}
-            onPageChange={setPage}
+        {/* Results */}
+        {debouncedContentQuery ? (
+          <SearchResults
+            results={searchData?.results ?? []}
+            query={debouncedContentQuery}
+            isLoading={searchLoading}
           />
+        ) : (
+          <>
+            <SessionTable
+              sessions={loaded ? sortedSessions : []}
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onToggleSort={toggleSort}
+              onDirectoryClick={setDirFilter}
+              onModelClick={setModelFilter}
+              selectedIndex={selectedIndex}
+              isLoaded={!!loaded}
+              hasFilters={!!(dirFilter || modelFilter || fromFilter || toFilter || debouncedSearch)}
+            />
+            {loaded && sortedSessions.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                total={total}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            )}
+          </>
         )}
 
         {/* Footer */}

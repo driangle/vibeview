@@ -1,7 +1,7 @@
 ---
 title: "Enable global search of session contents"
 id: "01kkzqdnh"
-status: pending
+status: in-progress
 priority: medium
 type: feature
 tags: []

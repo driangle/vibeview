@@ -71,3 +71,13 @@ export interface SessionDetail extends Session {
   filePath: string;
   messages: MessageResponse[];
 }
+
+export interface SearchResult {
+  session: Session;
+  snippet: string;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  total: number;
+}
