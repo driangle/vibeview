@@ -81,3 +81,26 @@ export interface SearchResponse {
   results: SearchResult[];
   total: number;
 }
+
+export interface SortSettings {
+  column: string;
+  direction: string;
+}
+
+export interface ModelPricing {
+  inputPerM: number;
+  outputPerM: number;
+}
+
+export interface Settings {
+  theme: string;
+  defaultSort: SortSettings;
+  pageSize: number;
+  dateFormat: string;
+  autoFollow: boolean;
+  refreshInterval: number;
+  showCost: boolean;
+  customModelPricing: Record<string, ModelPricing>;
+  messagesPerPage: number;
+  recentThreshold: number;
+}

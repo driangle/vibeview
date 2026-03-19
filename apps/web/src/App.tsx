@@ -4,6 +4,7 @@ import { Footer } from './components/Footer';
 import { DirectoryList } from './pages/DirectoryList';
 import { SessionList } from './pages/SessionList';
 import { SessionView } from './pages/SessionView';
+import { Settings } from './pages/Settings';
 
 export function App() {
   return (
@@ -15,6 +16,7 @@ export function App() {
             <Route path="/" element={<SessionList />} />
             <Route path="/directories" element={<DirectoryList />} />
             <Route path="/session/:id" element={<SessionView />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
         <Footer />

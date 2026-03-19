@@ -1,7 +1,7 @@
 ---
 id: "01km32n4d"
 title: "Settings page UI and navigation"
-status: pending
+status: completed
 priority: medium
 effort: medium
 type: feature
