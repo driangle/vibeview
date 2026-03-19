@@ -4,6 +4,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,28 +14,31 @@ import (
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/session"
+	"github.com/driangle/vibeview/internal/settings"
 	"github.com/driangle/vibeview/internal/spa"
 	"github.com/driangle/vibeview/internal/watcher"
 )
 
 // Config holds the configuration for creating a Server.
 type Config struct {
-	ClaudeDir  string
-	Index      *session.Index // Pre-built index (for standalone mode).
-	Standalone bool           // True when viewing standalone files (no ~/.claude).
-	Paths      []string       // Explicit file/directory paths (standalone mode).
-	Dirs       []string       // Filter to these project directory names (under ~/.claude/projects/).
+	ClaudeDir    string
+	Index        *session.Index // Pre-built index (for standalone mode).
+	Standalone   bool           // True when viewing standalone files (no ~/.claude).
+	Paths        []string       // Explicit file/directory paths (standalone mode).
+	Dirs         []string       // Filter to these project directory names (under ~/.claude/projects/).
+	SettingsPath string         // Path to the settings JSON file.
 }
 
 // Server serves the VibeView HTTP API.
 type Server struct {
-	claudeDir  string
-	standalone bool
-	paths      []string
-	dirs       []string
-	index      *session.Index
-	broker     *watcher.Broker
-	mux        *http.ServeMux
+	claudeDir    string
+	standalone   bool
+	paths        []string
+	dirs         []string
+	settingsPath string
+	index        *session.Index
+	broker       *watcher.Broker
+	mux          *http.ServeMux
 }
 
 // New creates a Server. In standalone mode, it uses the provided Index directly.
@@ -55,13 +59,14 @@ func New(cfg Config) (*Server, error) {
 	}
 
 	s := &Server{
-		claudeDir:  cfg.ClaudeDir,
-		standalone: cfg.Standalone,
-		paths:      cfg.Paths,
-		dirs:       cfg.Dirs,
-		index:      idx,
-		broker:     broker,
-		mux:        http.NewServeMux(),
+		claudeDir:    cfg.ClaudeDir,
+		standalone:   cfg.Standalone,
+		paths:        cfg.Paths,
+		dirs:         cfg.Dirs,
+		settingsPath: cfg.SettingsPath,
+		index:        idx,
+		broker:       broker,
+		mux:          http.NewServeMux(),
 	}
 	s.routes()
 
@@ -79,6 +84,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/config", s.handleConfig)
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
 	s.mux.HandleFunc("GET /api/pricing", s.handlePricing)
+	s.mux.HandleFunc("GET /api/settings", s.handleGetSettings)
+	s.mux.HandleFunc("PUT /api/settings", s.handleUpdateSettings)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
@@ -98,7 +105,7 @@ func (s *Server) ListenAndServe(port int) error {
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -127,6 +134,42 @@ func (s *Server) handlePricing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(claude.GetPricingJSON())
+}
+
+func (s *Server) handleGetSettings(w http.ResponseWriter, r *http.Request) {
+	current, err := settings.Load(s.settingsPath)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, current)
+}
+
+func (s *Server) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "failed to read body"})
+		return
+	}
+
+	current, err := settings.Load(s.settingsPath)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	merged, err := settings.MergeJSON(current, body)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	if err := settings.Save(s.settingsPath, merged); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, merged)
 }
 
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {

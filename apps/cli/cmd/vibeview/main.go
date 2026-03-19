@@ -41,9 +41,12 @@ func main() {
 		}
 	}
 
+	settingsPath := filepath.Join(home, ".config", "vibeview", "settings.json")
+
 	cfg := server.Config{
-		ClaudeDir: *claudeDir,
-		Dirs:      dirs,
+		ClaudeDir:    *claudeDir,
+		Dirs:         dirs,
+		SettingsPath: settingsPath,
 	}
 
 	if len(paths) > 0 {

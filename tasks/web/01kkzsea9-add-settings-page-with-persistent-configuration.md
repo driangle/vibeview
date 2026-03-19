@@ -1,7 +1,7 @@
 ---
 title: "Add settings page with persistent configuration"
 id: "01kkzsea9"
-status: pending
+status: in-progress
 priority: medium
 type: feature
 tags: ["settings", "ui", "config"]
@@ -41,6 +41,12 @@ Not all of these need to ship in v1. Pick the most impactful subset.
 - [ ] Wire settings values into the app (replace hardcoded defaults / localStorage values)
 - [ ] Fall back gracefully when the settings file doesn't exist (use defaults)
 - [ ] Validate settings on the backend before writing
+
+## Sub-tasks
+
+- `01km32n1x` — Backend settings API and persistence (schema, file I/O, GET/PUT endpoints, validation)
+- `01km32n4d` — Settings page UI and navigation (route, form controls, nav link)
+- `01km32n7d` — Wire settings into app components (replace hardcoded defaults with settings values)
 
 ## Acceptance Criteria
 
