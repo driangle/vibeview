@@ -1,7 +1,13 @@
 import { useMemo, useEffect } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '../api';
-import type { SessionDetail, ContentBlock, MessageResponse, UsageTotals } from '../types';
+import type {
+  ActivityState,
+  SessionDetail,
+  ContentBlock,
+  MessageResponse,
+  UsageTotals,
+} from '../types';
 import { calculateCost } from '../pricing';
 import { useSessionStream } from './useSessionStream';
 
@@ -72,6 +78,29 @@ export function useSessionData(id: string | undefined) {
     return null;
   }, [streamedMessages]);
 
+  // Derive live activity state from the latest streamed message.
+  const liveActivityState = useMemo<ActivityState | undefined>(() => {
+    if (streamedMessages.length === 0) return undefined;
+    // Walk backwards to find the last semantically meaningful message.
+    for (let i = streamedMessages.length - 1; i >= 0; i--) {
+      const msg = streamedMessages[i];
+      if (msg.type === 'assistant' && msg.message) {
+        const content = msg.message.content;
+        if (Array.isArray(content) && content.some((b) => b.type === 'tool_use')) {
+          return 'waiting_for_approval';
+        }
+        return 'waiting_for_input';
+      }
+      if (msg.type === 'user') {
+        return 'working';
+      }
+      if (msg.type === 'progress') {
+        return 'working';
+      }
+    }
+    return undefined;
+  }, [streamedMessages]);
+
   // Group agent_progress messages by agentId.
   const { agentGroups, agentGroupFirstIds } = useMemo(() => {
     const groups = new Map<string, MessageResponse[]>();
@@ -106,6 +135,7 @@ export function useSessionData(id: string | undefined) {
     toolResults,
     liveUsage,
     liveCustomTitle,
+    liveActivityState,
     displayMessages,
     agentGroups,
     agentGroupFirstIds,

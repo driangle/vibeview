@@ -73,14 +73,19 @@ export function SessionRow({
       className={`border-t border-border transition-colors hover:bg-secondary/50 cursor-pointer ${isSelected ? 'ring-2 ring-ring bg-primary/5' : ''}`}
     >
       {/* Session name */}
-      <td className="px-4 py-3 text-sm truncate">
+      <td className="px-4 py-3 text-sm overflow-visible">
         <Link
           to={`/session/${session.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="font-medium text-fg hover:text-primary transition-colors"
+          className="block truncate font-medium text-fg hover:text-primary transition-colors"
         >
           {session.customTitle || session.slug || session.id}
         </Link>
+        {session.activityState && session.activityState !== 'idle' && (
+          <div className="mt-0.5">
+            <ActivityBadge state={session.activityState} />
+          </div>
+        )}
       </td>
 
       {/* Directory */}
@@ -107,10 +112,7 @@ export function SessionRow({
 
       {/* Messages */}
       <td className="px-4 py-3 text-xs text-muted-fg text-right whitespace-nowrap">
-        <span className="inline-flex items-center gap-1.5">
-          <ActivityBadge state={session.activityState} />
-          {session.messageCount}
-        </span>
+        {session.messageCount}
       </td>
 
       {/* Model */}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ActivityBadge } from '../components/ActivityBadge';
 import { MessageBubble } from '../components/MessageBubble';
 import { ModelBadge } from '../components/ModelBadge';
 import { CostDisplay } from '../components/CostDisplay';
@@ -45,6 +46,7 @@ export function SessionView() {
     toolResults,
     liveUsage,
     liveCustomTitle,
+    liveActivityState,
     displayMessages,
     agentGroups,
     agentGroupFirstIds,
@@ -133,6 +135,7 @@ export function SessionView() {
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {liveCustomTitle || session.customTitle || session.slug || session.id}
           </h1>
+          <ActivityBadge state={liveActivityState ?? session.activityState} />
           <LiveIndicator status={connectionStatus} />
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
