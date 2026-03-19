@@ -1,13 +1,14 @@
 import { useEffect, useCallback } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 
-type Theme = 'light' | 'dark';
+export type ThemeSetting = 'light' | 'dark' | 'system';
+type ResolvedTheme = 'light' | 'dark';
 
-function getSystemTheme(): Theme {
+function getSystemTheme(): ResolvedTheme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function applyTheme(theme: Theme) {
+function applyTheme(theme: ResolvedTheme) {
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
   } else {
@@ -15,14 +16,23 @@ function applyTheme(theme: Theme) {
   }
 }
 
-function resolveTheme(setting: string): Theme {
+function resolveTheme(setting: string): ResolvedTheme {
   if (setting === 'light' || setting === 'dark') return setting;
   return getSystemTheme();
 }
 
-export function useTheme(): { theme: Theme; toggle: () => void } {
+const cycleOrder: ThemeSetting[] = ['light', 'dark', 'system'];
+
+export function useTheme(): {
+  theme: ResolvedTheme;
+  setting: ThemeSetting;
+  toggle: () => void;
+} {
   const { settings, updateSettings } = useSettings();
-  const theme = resolveTheme(settings.theme);
+  const setting = (
+    ['light', 'dark', 'system'].includes(settings.theme) ? settings.theme : 'system'
+  ) as ThemeSetting;
+  const theme = resolveTheme(setting);
 
   useEffect(() => {
     applyTheme(theme);
@@ -30,16 +40,18 @@ export function useTheme(): { theme: Theme; toggle: () => void } {
 
   // Listen for OS preference changes when theme is "system".
   useEffect(() => {
-    if (settings.theme !== 'system') return;
+    if (setting !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => applyTheme(e.matches ? 'dark' : 'light');
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  }, [settings.theme]);
+  }, [setting]);
 
   const toggle = useCallback(() => {
-    updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' });
-  }, [theme, updateSettings]);
+    const next = cycleOrder[(cycleOrder.indexOf(setting) + 1) % cycleOrder.length];
+    applyTheme(resolveTheme(next));
+    updateSettings({ theme: next });
+  }, [setting, updateSettings]);
 
-  return { theme, toggle };
+  return { theme, setting, toggle };
 }
