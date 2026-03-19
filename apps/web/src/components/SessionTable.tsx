@@ -13,6 +13,9 @@ interface SessionTableProps {
   selectedIndex?: number;
   isLoaded?: boolean;
   hasFilters?: boolean;
+  showCost?: boolean;
+  dateFormat?: string;
+  recentThreshold?: number;
 }
 
 export function SessionTable({
@@ -25,6 +28,9 @@ export function SessionTable({
   selectedIndex,
   isLoaded,
   hasFilters,
+  showCost = true,
+  dateFormat,
+  recentThreshold,
 }: SessionTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
@@ -91,15 +97,17 @@ export function SessionTable({
               onToggle={onToggleSort}
               className="w-[13%]"
             />
-            <SortHeader
-              label="Cost"
-              column="cost"
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onToggle={onToggleSort}
-              className="w-[10%]"
-              icon="dollar"
-            />
+            {showCost && (
+              <SortHeader
+                label="Cost"
+                column="cost"
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onToggle={onToggleSort}
+                className="w-[10%]"
+                icon="dollar"
+              />
+            )}
           </tr>
         </thead>
         <tbody>
@@ -111,11 +119,17 @@ export function SessionTable({
               onModelClick={onModelClick}
               isSelected={selectedIndex === index}
               rowIndex={index}
+              showCost={showCost}
+              dateFormat={dateFormat}
+              recentThreshold={recentThreshold}
             />
           ))}
           {isLoaded && sessions.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-fg">
+              <td
+                colSpan={showCost ? 7 : 6}
+                className="px-4 py-12 text-center text-sm text-muted-fg"
+              >
                 {hasFilters ? 'No sessions match your filters' : 'No sessions found'}
               </td>
             </tr>

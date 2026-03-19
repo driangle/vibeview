@@ -1,7 +1,7 @@
 ---
 id: "01km32n7d"
 title: "Wire settings into app components"
-status: pending
+status: completed
 priority: medium
 effort: medium
 type: feature

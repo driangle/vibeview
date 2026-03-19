@@ -3,7 +3,7 @@ import { ModelBadge } from './ModelBadge';
 import type { Session } from '../types';
 import { projectName } from '../utils';
 
-const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
+const DEFAULT_RECENT_THRESHOLD_MS = 5 * 60 * 1000;
 
 function formatTokens(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -11,8 +11,8 @@ function formatTokens(count: number): string {
   return String(count);
 }
 
-function isRecent(timestamp: string): boolean {
-  return Date.now() - new Date(timestamp).getTime() < RECENT_THRESHOLD_MS;
+function isRecent(timestamp: string, threshold = DEFAULT_RECENT_THRESHOLD_MS): boolean {
+  return Date.now() - new Date(timestamp).getTime() < threshold;
 }
 
 function formatSessionDate(timestamp: string): { date: string; relative: string } {
@@ -55,6 +55,9 @@ interface SessionRowProps {
   onModelClick: (model: string) => void;
   isSelected?: boolean;
   rowIndex?: number;
+  showCost?: boolean;
+  dateFormat?: string;
+  recentThreshold?: number;
 }
 
 export function SessionRow({
@@ -63,9 +66,12 @@ export function SessionRow({
   onModelClick,
   isSelected,
   rowIndex,
+  showCost = true,
+  dateFormat = 'relative',
+  recentThreshold,
 }: SessionRowProps) {
   const navigate = useNavigate();
-  const recent = isRecent(session.timestamp);
+  const recent = isRecent(session.timestamp, recentThreshold);
   const time = formatSessionDate(session.timestamp);
 
   return (
@@ -102,7 +108,9 @@ export function SessionRow({
       {/* Time */}
       <td className="px-4 py-3 whitespace-nowrap">
         <div className="text-xs text-fg font-medium">{time.date}</div>
-        {time.relative && <div className="text-[11px] text-muted-fg">{time.relative}</div>}
+        {dateFormat === 'relative' && time.relative && (
+          <div className="text-[11px] text-muted-fg">{time.relative}</div>
+        )}
       </td>
 
       {/* Messages */}
@@ -136,9 +144,11 @@ export function SessionRow({
       </td>
 
       {/* Cost */}
-      <td className="px-4 py-3 text-sm text-fg text-right whitespace-nowrap font-medium">
-        ${session.usage.costUSD.toFixed(2)}
-      </td>
+      {showCost && (
+        <td className="px-4 py-3 text-sm text-fg text-right whitespace-nowrap font-medium">
+          ${session.usage.costUSD.toFixed(2)}
+        </td>
+      )}
     </tr>
   );
 }

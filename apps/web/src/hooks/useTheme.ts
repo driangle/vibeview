@@ -1,8 +1,7 @@
 import { useEffect, useCallback } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useSettings } from '../contexts/SettingsContext';
 
 type Theme = 'light' | 'dark';
-type StoredTheme = Theme | null;
 
 function getSystemTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -16,26 +15,31 @@ function applyTheme(theme: Theme) {
   }
 }
 
+function resolveTheme(setting: string): Theme {
+  if (setting === 'light' || setting === 'dark') return setting;
+  return getSystemTheme();
+}
+
 export function useTheme(): { theme: Theme; toggle: () => void } {
-  const [stored, setStored] = useLocalStorage<StoredTheme>('theme', null);
-  const theme: Theme = stored ?? getSystemTheme();
+  const { settings, updateSettings } = useSettings();
+  const theme = resolveTheme(settings.theme);
 
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
 
-  // Listen for OS preference changes when no saved preference
+  // Listen for OS preference changes when theme is "system".
   useEffect(() => {
-    if (stored !== null) return;
+    if (settings.theme !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => applyTheme(e.matches ? 'dark' : 'light');
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  }, [stored]);
+  }, [settings.theme]);
 
   const toggle = useCallback(() => {
-    setStored(theme === 'dark' ? 'light' : 'dark');
-  }, [theme, setStored]);
+    updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' });
+  }, [theme, updateSettings]);
 
   return { theme, toggle };
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
-import { fetcher } from '../api';
+import { useSettings } from '../contexts/SettingsContext';
 import type { Settings as SettingsType, ModelPricing } from '../types';
 
 const selectClass =
@@ -189,42 +188,30 @@ const recentThresholdOptions = [
 ];
 
 export function Settings() {
-  const { data, error, isLoading, mutate } = useSWR<SettingsType>('/api/settings', fetcher);
+  const { settings, updateSettings, isLoaded } = useSettings();
 
-  const [form, setForm] = useState<SettingsType | null>(null);
+  const [form, setForm] = useState<SettingsType>(settings);
   const [status, setStatus] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Sync form when settings load from API for the first time.
+  const [initialized, setInitialized] = useState(false);
   useEffect(() => {
-    if (data && !form) setForm(data);
-  }, [data, form]);
-
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-2xl p-8">
-        <div className="text-sm text-muted-fg">Loading settings...</div>
-      </div>
-    );
-  }
-
-  if (error || !form) {
-    return (
-      <div className="mx-auto max-w-2xl p-8">
-        <div className="text-sm text-destructive">Failed to load settings.</div>
-      </div>
-    );
-  }
+    if (isLoaded && !initialized) {
+      setForm(settings);
+      setInitialized(true);
+    }
+  }, [isLoaded, initialized, settings]);
 
   function update<K extends keyof SettingsType>(key: K, value: SettingsType[K]) {
-    setForm((f) => (f ? { ...f, [key]: value } : f));
+    setForm((f) => ({ ...f, [key]: value }));
     setStatus(null);
   }
 
   async function save() {
-    if (!form) return;
     setSaving(true);
     setStatus(null);
     try {
@@ -235,15 +222,13 @@ export function Settings() {
       });
       const body = await res.json();
       if (!res.ok) {
-        setStatus({
-          type: 'error',
-          message: body.error || 'Failed to save',
-        });
-      } else {
-        setForm(body);
-        mutate(body, false);
-        setStatus({ type: 'success', message: 'Settings saved' });
+        setStatus({ type: 'error', message: body.error || 'Failed to save' });
+        return;
       }
+      // Sync the context with the saved values.
+      await updateSettings(body);
+      setForm(body);
+      setStatus({ type: 'success', message: 'Settings saved' });
     } catch {
       setStatus({ type: 'error', message: 'Network error' });
     } finally {
@@ -251,7 +236,7 @@ export function Settings() {
     }
   }
 
-  const hasChanges = JSON.stringify(form) !== JSON.stringify(data);
+  const hasChanges = JSON.stringify(form) !== JSON.stringify(settings);
 
   return (
     <div className="mx-auto max-w-2xl p-8">

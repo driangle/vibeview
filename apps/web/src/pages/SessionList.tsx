@@ -7,13 +7,12 @@ import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
 import { SessionTable } from '../components/SessionTable';
 import type { SortColumn, SortDirection } from '../components/SortHeader';
+import { useSettings } from '../contexts/SettingsContext';
 import { useDebounced } from '../hooks/useDebounced';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { PaginatedSessions, SearchResponse, Session } from '../types';
 import { projectName } from '../utils';
-
-const PAGE_SIZE = 100;
 
 function buildSessionsUrl(
   project: string,
@@ -21,6 +20,7 @@ function buildSessionsUrl(
   from: string,
   to: string,
   model: string,
+  pageSize: number,
   page?: number,
 ): string {
   const params = new URLSearchParams();
@@ -30,8 +30,8 @@ function buildSessionsUrl(
   if (to) params.set('to', to);
   if (model) params.set('model', model);
   if (page !== undefined) {
-    params.set('limit', String(PAGE_SIZE));
-    params.set('offset', String((page - 1) * PAGE_SIZE));
+    params.set('limit', String(pageSize));
+    params.set('offset', String((page - 1) * pageSize));
   }
   const qs = params.toString();
   return qs ? `/api/sessions?${qs}` : '/api/sessions';
@@ -61,6 +61,7 @@ const selectActive = `${selectBase} border-primary/40 bg-primary/5 text-fg`;
 
 export function SessionList() {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [search, setSearch] = useLocalStorage('filter:search', '');
   const debouncedSearch = useDebounced(search, 400);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -107,28 +108,36 @@ export function SessionList() {
     setStoredTo(toFilter);
   }, [dirFilter, modelFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>('filter:sortColumn', 'date');
+  const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>(
+    'filter:sortColumn',
+    settings.defaultSort.column as SortColumn,
+  );
   const [sortDirection, setSortDirection] = useLocalStorage<SortDirection>(
     'filter:sortDirection',
-    'desc',
+    settings.defaultSort.direction as SortDirection,
   );
 
+  const pageSize = settings.pageSize;
   const apiUrl = buildSessionsUrl(
     dirFilter,
     debouncedSearch,
     fromFilter,
     toFilter,
     modelFilter,
+    pageSize,
     currentPage,
   );
   const {
     data: paginated,
     error,
     isLoading,
-  } = useSWR<PaginatedSessions>(apiUrl, fetcher, { refreshInterval: 5000, keepPreviousData: true });
+  } = useSWR<PaginatedSessions>(apiUrl, fetcher, {
+    refreshInterval: settings.refreshInterval,
+    keepPreviousData: true,
+  });
 
   const { data: allPaginated } = useSWR<PaginatedSessions>('/api/sessions', fetcher, {
-    refreshInterval: 5000,
+    refreshInterval: settings.refreshInterval,
   });
 
   const contentSearchUrl = debouncedSearch
@@ -142,7 +151,7 @@ export function SessionList() {
 
   const sessions = paginated?.sessions;
   const total = paginated?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const sortedSessions = useMemo(() => {
     if (!sessions) return [];
@@ -397,13 +406,16 @@ export function SessionList() {
               selectedIndex={selectedIndex}
               isLoaded={!!loaded}
               hasFilters={!!(dirFilter || modelFilter || fromFilter || toFilter || debouncedSearch)}
+              showCost={settings.showCost}
+              dateFormat={settings.dateFormat}
+              recentThreshold={settings.recentThreshold}
             />
             {loaded && sortedSessions.length > 0 && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 total={total}
-                pageSize={PAGE_SIZE}
+                pageSize={pageSize}
                 onPageChange={setPage}
               />
             )}

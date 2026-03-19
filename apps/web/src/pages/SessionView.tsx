@@ -6,10 +6,8 @@ import { CostDisplay } from '../components/CostDisplay';
 import { CopyableText } from '../components/CopyableText';
 import { LiveIndicator, Pagination, FollowToggle } from '../components/SessionControls';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { useSettings } from '../contexts/SettingsContext';
 import { useSessionData } from '../hooks/useSessionData';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-
-const MESSAGES_PER_PAGE = 100;
 
 function projectName(project: string): string {
   const parts = project.split('/').filter(Boolean);
@@ -23,9 +21,9 @@ function formatDate(timestamp: string): string {
 export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [userPage, setUserPage] = useState<number | null>(null);
-  const [, setSavedFollowMode] = useLocalStorage('followMode', true);
-  const [followMode, setFollowMode] = useState(false);
+  const [followMode, setFollowMode] = useState(settings.autoFollow);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -43,14 +41,14 @@ export function SessionView() {
     agentGroupFirstIds,
   } = useSessionData(id);
 
-  const totalPages = Math.max(1, Math.ceil(displayMessages.length / MESSAGES_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(displayMessages.length / settings.messagesPerPage));
 
   // In follow mode, always show the last page; otherwise use user-selected page.
   const page = followMode ? totalPages - 1 : Math.min(userPage ?? 0, totalPages - 1);
 
   const paginatedMessages = displayMessages.slice(
-    page * MESSAGES_PER_PAGE,
-    (page + 1) * MESSAGES_PER_PAGE,
+    page * settings.messagesPerPage,
+    (page + 1) * settings.messagesPerPage,
   );
 
   const onBack = useCallback(() => {
@@ -209,7 +207,6 @@ export function SessionView() {
             }
             return !prev;
           });
-          setSavedFollowMode((prev) => !prev);
         }}
       />
     </div>
