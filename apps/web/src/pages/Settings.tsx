@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import type { Settings as SettingsType, ModelPricing } from '../types';
 
+function applyThemePreview(theme: string) {
+  const resolved =
+    theme === 'system'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+      : theme;
+  document.documentElement.classList.toggle('dark', resolved === 'dark');
+}
+
 const selectClass =
   'rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none';
 
@@ -270,7 +280,10 @@ export function Settings() {
                 { label: 'System', value: 'system' },
               ]}
               value={form.theme}
-              onChange={(v) => update('theme', v)}
+              onChange={(v) => {
+                update('theme', v);
+                applyThemePreview(v);
+              }}
             />
           </Field>
           <Field label="Date format" description="How timestamps are displayed">
