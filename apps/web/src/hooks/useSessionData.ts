@@ -61,6 +61,17 @@ export function useSessionData(id: string | undefined) {
     return base;
   }, [session, streamedMessages]);
 
+  // Derive live custom title from streamed custom-title events.
+  const liveCustomTitle = useMemo(() => {
+    for (let i = streamedMessages.length - 1; i >= 0; i--) {
+      const msg = streamedMessages[i];
+      if (msg.type === 'custom-title' && msg.customTitle) {
+        return msg.customTitle;
+      }
+    }
+    return null;
+  }, [streamedMessages]);
+
   // Group agent_progress messages by agentId.
   const { agentGroups, agentGroupFirstIds } = useMemo(() => {
     const groups = new Map<string, MessageResponse[]>();
@@ -94,6 +105,7 @@ export function useSessionData(id: string | undefined) {
     allMessages,
     toolResults,
     liveUsage,
+    liveCustomTitle,
     displayMessages,
     agentGroups,
     agentGroupFirstIds,

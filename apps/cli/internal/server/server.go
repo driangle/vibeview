@@ -329,12 +329,13 @@ type SessionDetailResponse struct {
 
 // MessageResponse is the API representation of a single message.
 type MessageResponse struct {
-	UUID      string             `json:"uuid"`
-	Type      string             `json:"type"`
-	Timestamp string             `json:"timestamp"`
-	Message   *claude.APIMessage `json:"message,omitempty"`
-	Data      map[string]any     `json:"data,omitempty"`
-	Snapshot  map[string]any     `json:"snapshot,omitempty"`
+	UUID        string             `json:"uuid"`
+	Type        string             `json:"type"`
+	Timestamp   string             `json:"timestamp"`
+	Message     *claude.APIMessage `json:"message,omitempty"`
+	Data        map[string]any     `json:"data,omitempty"`
+	Snapshot    map[string]any     `json:"snapshot,omitempty"`
+	CustomTitle string             `json:"customTitle,omitempty"`
 }
 
 // --- Helpers ---
@@ -354,12 +355,13 @@ func toSessionResponse(m session.SessionMeta) SessionResponse {
 
 func toMessageResponse(msg claude.Message) MessageResponse {
 	return MessageResponse{
-		UUID:      msg.UUID,
-		Type:      string(msg.Type),
-		Timestamp: msToISO(msg.Timestamp.Int64()),
-		Message:   msg.Message,
-		Data:      msg.Data,
-		Snapshot:  msg.Snapshot,
+		UUID:        msg.UUID,
+		Type:        string(msg.Type),
+		Timestamp:   msToISO(msg.Timestamp.Int64()),
+		Message:     msg.Message,
+		Data:        msg.Data,
+		Snapshot:    msg.Snapshot,
+		CustomTitle: msg.CustomTitle,
 	}
 }
 

@@ -37,6 +37,7 @@ export function SessionView() {
     connectionStatus,
     toolResults,
     liveUsage,
+    liveCustomTitle,
     displayMessages,
     agentGroups,
     agentGroupFirstIds,
@@ -113,7 +114,7 @@ export function SessionView() {
       <div className="mb-6">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            {session.customTitle || session.slug || session.id}
+            {liveCustomTitle || session.customTitle || session.slug || session.id}
           </h1>
           <LiveIndicator status={connectionStatus} />
         </div>

@@ -1,7 +1,7 @@
 ---
 title: "New sessions show sessionId instead of resolved name (slug)"
 id: "01km03a5e"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["session", "watcher"]

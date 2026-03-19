@@ -295,12 +295,13 @@ func (b *Broker) pingLoop() {
 
 // messageEvent matches the MessageResponse type from the server package.
 type messageEvent struct {
-	UUID      string             `json:"uuid"`
-	Type      string             `json:"type"`
-	Timestamp string             `json:"timestamp"`
-	Message   *claude.APIMessage `json:"message,omitempty"`
-	Data      map[string]any     `json:"data,omitempty"`
-	Snapshot  map[string]any     `json:"snapshot,omitempty"`
+	UUID        string             `json:"uuid"`
+	Type        string             `json:"type"`
+	Timestamp   string             `json:"timestamp"`
+	Message     *claude.APIMessage `json:"message,omitempty"`
+	Data        map[string]any     `json:"data,omitempty"`
+	Snapshot    map[string]any     `json:"snapshot,omitempty"`
+	CustomTitle string             `json:"customTitle,omitempty"`
 }
 
 func toMessageEvent(msg claude.Message) messageEvent {
@@ -309,11 +310,12 @@ func toMessageEvent(msg claude.Message) messageEvent {
 		ts = time.UnixMilli(msg.Timestamp.Int64()).UTC().Format(time.RFC3339)
 	}
 	return messageEvent{
-		UUID:      msg.UUID,
-		Type:      string(msg.Type),
-		Timestamp: ts,
-		Message:   msg.Message,
-		Data:      msg.Data,
-		Snapshot:  msg.Snapshot,
+		UUID:        msg.UUID,
+		Type:        string(msg.Type),
+		Timestamp:   ts,
+		Message:     msg.Message,
+		Data:        msg.Data,
+		Snapshot:    msg.Snapshot,
+		CustomTitle: msg.CustomTitle,
 	}
 }
