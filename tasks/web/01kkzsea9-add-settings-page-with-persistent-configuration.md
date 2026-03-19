@@ -1,7 +1,7 @@
 ---
 title: "Add settings page with persistent configuration"
 id: "01kkzsea9"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["settings", "ui", "config"]
@@ -33,14 +33,14 @@ Not all of these need to ship in v1. Pick the most impactful subset.
 
 ## Tasks
 
-- [ ] Design a settings schema (JSON) covering the initial set of configurable options
-- [ ] Add a backend settings file path (e.g. `~/.config/vibeview/settings.json`)
-- [ ] Add `GET /api/settings` and `PUT /api/settings` endpoints in the Go server
-- [ ] Create a `/settings` route in the React app with a form-based UI
-- [ ] Add a nav link to the Settings page in the NavBar
-- [ ] Wire settings values into the app (replace hardcoded defaults / localStorage values)
-- [ ] Fall back gracefully when the settings file doesn't exist (use defaults)
-- [ ] Validate settings on the backend before writing
+- [x] Design a settings schema (JSON) covering the initial set of configurable options
+- [x] Add a backend settings file path (e.g. `~/.config/vibeview/settings.json`)
+- [x] Add `GET /api/settings` and `PUT /api/settings` endpoints in the Go server
+- [x] Create a `/settings` route in the React app with a form-based UI
+- [x] Add a nav link to the Settings page in the NavBar
+- [x] Wire settings values into the app (replace hardcoded defaults / localStorage values)
+- [x] Fall back gracefully when the settings file doesn't exist (use defaults)
+- [x] Validate settings on the backend before writing
 
 ## Sub-tasks
 
