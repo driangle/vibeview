@@ -296,7 +296,7 @@ export function Settings() {
               onChange={(v) => update('dateFormat', v)}
             />
           </Field>
-          <Field label="Show cost column" description="Display cost in session list">
+          <Field label="Show costs" description="Display cost column and total cost summary">
             <Toggle checked={form.showCost} onChange={(v) => update('showCost', v)} />
           </Field>
         </Section>
