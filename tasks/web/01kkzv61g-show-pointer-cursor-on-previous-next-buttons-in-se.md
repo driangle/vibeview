@@ -1,7 +1,7 @@
 ---
 title: "Show pointer cursor on Previous/Next buttons in Session View"
 id: "01kkzv61g"
-status: pending
+status: completed
 priority: low
 type: bug
 tags: ["ui"]

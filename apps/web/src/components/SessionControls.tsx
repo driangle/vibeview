@@ -23,7 +23,7 @@ export function Pagination({
   onPageChange: (page: number) => void;
 }) {
   const buttonClass =
-    'rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40';
+    'rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 hover:border-gray-400 dark:hover:bg-gray-700 dark:hover:border-gray-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
     <div className="flex items-center justify-between py-3">
