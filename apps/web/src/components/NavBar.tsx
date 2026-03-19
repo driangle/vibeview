@@ -9,9 +9,17 @@ function ConfigLabel({ config }: { config: AppConfig }) {
   const [showModal, setShowModal] = useState(false);
 
   if (!config.standalone) {
+    const dirs = config.dirs ?? [];
     return (
-      <span className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-secondary-fg">
-        {config.claudeDir}
+      <span className="flex items-center gap-2">
+        {dirs.length > 0 && (
+          <span className="rounded bg-warning/15 px-2 py-0.5 font-mono text-xs text-warning">
+            {dirs.length === 1 ? dirs[0] : `${dirs.length} dirs`}
+          </span>
+        )}
+        <span className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-secondary-fg">
+          {config.claudeDir}
+        </span>
       </span>
     );
   }

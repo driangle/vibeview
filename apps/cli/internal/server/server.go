@@ -30,6 +30,7 @@ type Server struct {
 	claudeDir  string
 	standalone bool
 	paths      []string
+	dirs       []string
 	index      *session.Index
 	broker     *watcher.Broker
 	mux        *http.ServeMux
@@ -56,6 +57,7 @@ func New(cfg Config) (*Server, error) {
 		claudeDir:  cfg.ClaudeDir,
 		standalone: cfg.Standalone,
 		paths:      cfg.Paths,
+		dirs:       cfg.Dirs,
 		index:      idx,
 		broker:     broker,
 		mux:        http.NewServeMux(),
@@ -111,6 +113,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		ClaudeDir:  s.claudeDir,
 		Standalone: s.standalone,
 		Paths:      s.paths,
+		Dirs:       s.dirs,
 	})
 }
 
@@ -301,6 +304,7 @@ type ConfigResponse struct {
 	ClaudeDir  string   `json:"claudeDir"`
 	Standalone bool     `json:"standalone"`
 	Paths      []string `json:"paths,omitempty"`
+	Dirs       []string `json:"dirs,omitempty"`
 }
 
 // SessionResponse is the API representation of a session in list responses.

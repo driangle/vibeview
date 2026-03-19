@@ -2,6 +2,7 @@ export interface AppConfig {
   claudeDir: string;
   standalone: boolean;
   paths?: string[];
+  dirs?: string[];
 }
 
 export interface UsageTotals {
