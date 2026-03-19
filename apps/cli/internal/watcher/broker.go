@@ -31,6 +31,7 @@ type Broker struct {
 	claudeDir  string
 	standalone bool
 	index      *session.Index
+	dirSet     map[string]struct{} // encoded project dir names to filter (nil = no filter)
 
 	mu      sync.Mutex
 	clients map[string]map[*Client]struct{} // sessionID -> set of clients
@@ -43,11 +44,20 @@ type Broker struct {
 
 // NewBroker creates a new SSE broker that watches for file changes.
 // In standalone mode, history watching is skipped.
-func NewBroker(claudeDir string, index *session.Index, standalone bool) (*Broker, error) {
+func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []string) (*Broker, error) {
+	var dirSet map[string]struct{}
+	if len(dirs) > 0 {
+		dirSet = make(map[string]struct{}, len(dirs))
+		for _, d := range dirs {
+			dirSet[d] = struct{}{}
+		}
+	}
+
 	b := &Broker{
 		claudeDir:  claudeDir,
 		standalone: standalone,
 		index:      index,
+		dirSet:     dirSet,
 		clients:    make(map[string]map[*Client]struct{}),
 		tailers:    make(map[string]*Tailer),
 		done:       make(chan struct{}),
@@ -242,6 +252,14 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		entry, err := claude.ParseHistoryLine(line)
 		if err != nil {
 			continue
+		}
+
+		// Skip entries that don't match the directory filter.
+		if b.dirSet != nil {
+			encoded := claude.EncodeProjectPath(entry.Project)
+			if _, ok := b.dirSet[encoded]; !ok {
+				continue
+			}
 		}
 
 		b.index.AddSession(b.claudeDir, entry)

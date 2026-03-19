@@ -81,7 +81,9 @@ func (idx *Index) SetCustomTitle(id, title string) {
 
 // Discover reads history.jsonl and builds an index with basic metadata.
 // This is fast — it only reads the small history file, not individual session files.
-func Discover(claudeDir string) (*Index, error) {
+// When dirs is non-empty, only sessions whose encoded project path matches one of
+// the specified directory names are included.
+func Discover(claudeDir string, dirs []string) (*Index, error) {
 	historyPath := filepath.Join(claudeDir, "history.jsonl")
 	f, err := os.Open(historyPath)
 	if err != nil {
@@ -94,10 +96,16 @@ func Discover(claudeDir string) (*Index, error) {
 		return nil, err
 	}
 
+	// Build a set of valid dirs for filtering.
+	dirSet := buildDirSet(claudeDir, dirs)
+
 	// Deduplicate by session ID, keeping the entry with the latest timestamp.
 	seen := make(map[string]int) // sessionID -> index in sessions slice
 	var sessions []SessionMeta
 	for _, entry := range entries {
+		if !matchesDirFilter(dirSet, entry.Project) {
+			continue
+		}
 		meta := SessionMeta{
 			SessionID: entry.SessionID,
 			Project:   entry.Project,
@@ -119,6 +127,57 @@ func Discover(claudeDir string) (*Index, error) {
 	})
 
 	return &Index{Sessions: sessions}, nil
+}
+
+// buildDirSet resolves user-provided directory names against actual subdirectories
+// under claudeDir/projects/. Each value can be an exact encoded directory name,
+// or a simple name like "myproject" that is matched against the basename of the
+// decoded project path. Returns a set of matched encoded directory names.
+// Warns on stderr for any value that doesn't match. Returns nil if dirs is empty.
+func buildDirSet(claudeDir string, dirs []string) map[string]struct{} {
+	if len(dirs) == 0 {
+		return nil
+	}
+
+	projectsDir := filepath.Join(claudeDir, "projects")
+	entries, err := os.ReadDir(projectsDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: cannot read projects directory %s: %v\n", projectsDir, err)
+		return nil
+	}
+
+	dirSet := make(map[string]struct{})
+	for _, d := range dirs {
+		matched := false
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+			name := entry.Name()
+			decoded := claude.DecodeProjectPath(name)
+			// Match against: exact encoded name, basename of decoded path,
+			// or trailing path suffix.
+			if name == d || filepath.Base(decoded) == d || strings.HasSuffix(decoded, "/"+d) {
+				dirSet[name] = struct{}{}
+				matched = true
+			}
+		}
+		if !matched {
+			fmt.Fprintf(os.Stderr, "warning: no project directory matching %q found under %s\n", d, projectsDir)
+		}
+	}
+	return dirSet
+}
+
+// matchesDirFilter returns true if the entry's project matches the dir filter.
+// Returns true for all entries when dirSet is nil (no filter).
+func matchesDirFilter(dirSet map[string]struct{}, project string) bool {
+	if dirSet == nil {
+		return true
+	}
+	encoded := claude.EncodeProjectPath(project)
+	_, ok := dirSet[encoded]
+	return ok
 }
 
 const enrichBatchSize = 100

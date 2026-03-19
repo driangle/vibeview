@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/driangle/vibeview/internal/server"
 	"github.com/driangle/vibeview/internal/session"
@@ -22,12 +23,23 @@ func main() {
 	port := flag.Int("port", 4880, "port to listen on")
 	claudeDir := flag.String("claude-dir", filepath.Join(home, ".claude"), "path to claude data directory")
 	open := flag.Bool("open", true, "open browser on startup")
+	dirsFlag := flag.String("dirs", "", "comma-separated project directory names to filter (under ~/.claude/projects/)")
 	flag.Parse()
 
 	paths := flag.Args()
 
+	var dirs []string
+	if *dirsFlag != "" {
+		for _, d := range strings.Split(*dirsFlag, ",") {
+			if trimmed := strings.TrimSpace(d); trimmed != "" {
+				dirs = append(dirs, trimmed)
+			}
+		}
+	}
+
 	cfg := server.Config{
 		ClaudeDir: *claudeDir,
+		Dirs:      dirs,
 	}
 
 	if len(paths) > 0 {
@@ -47,6 +59,9 @@ func main() {
 		fmt.Printf("  port:      %d\n", *port)
 		fmt.Printf("  claude-dir: %s\n", *claudeDir)
 		fmt.Printf("  open:      %t\n", *open)
+		if len(dirs) > 0 {
+			fmt.Printf("  dirs:      %s\n", strings.Join(dirs, ", "))
+		}
 	}
 
 	srv, err := server.New(cfg)

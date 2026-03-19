@@ -60,7 +60,7 @@ func setupTestDir(t *testing.T) string {
 func TestDiscover(t *testing.T) {
 	dir := setupTestDir(t)
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestDiscover(t *testing.T) {
 func TestDiscoverMetadata(t *testing.T) {
 	dir := setupTestDir(t)
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestDiscoverMetadata(t *testing.T) {
 func TestDiscoverUsageTotals(t *testing.T) {
 	dir := setupTestDir(t)
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -201,7 +201,7 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 func TestDiscoverMissingSessionFile(t *testing.T) {
 	dir := setupTestDir(t)
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -266,7 +266,7 @@ func TestDiscoverMissingSessionFile(t *testing.T) {
 func TestFilterByProject(t *testing.T) {
 	dir := setupTestDir(t)
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestFilterByProject(t *testing.T) {
 func TestFilterByProjectPreservesOrder(t *testing.T) {
 	dir := setupTestDir(t)
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -342,7 +342,7 @@ func TestSlugExtractedWhenNonUserMessagesFirst(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -403,7 +403,7 @@ func TestSlugSkipsMetaMessages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	idx, err := Discover(dir)
+	idx, err := Discover(dir, nil)
 	if err != nil {
 		t.Fatalf("Discover: %v", err)
 	}
@@ -419,7 +419,7 @@ func TestSlugSkipsMetaMessages(t *testing.T) {
 
 func TestDiscoverMissingHistoryFile(t *testing.T) {
 	dir := t.TempDir()
-	_, err := Discover(dir)
+	_, err := Discover(dir, nil)
 	if err == nil {
 		t.Error("expected error for missing history.jsonl")
 	}

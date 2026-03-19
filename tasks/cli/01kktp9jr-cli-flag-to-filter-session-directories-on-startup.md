@@ -1,7 +1,7 @@
 ---
 title: "CLI flag to filter session directories on startup"
 id: "01kktp9jr"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["cli", "filtering"]
@@ -18,11 +18,11 @@ This is about filtering which `~/.claude/projects/<encoded_project_name>` direct
 
 ## Tasks
 
-- [ ] Add a new `-dirs` (or similar) repeated/comma-separated string flag to `main.go` that accepts directory names or paths relative to the projects directory
-- [ ] Pass the filter list through `server.Config` to the session discovery layer
-- [ ] Update session discovery in `session.go` to only scan the specified project directories when the flag is provided (scan all when omitted for backwards compatibility)
-- [ ] Update the file watcher to only watch filtered directories
-- [ ] Add usage documentation to `-help` output
+- [x] Add a new `-dirs` (or similar) repeated/comma-separated string flag to `main.go` that accepts directory names or paths relative to the projects directory
+- [x] Pass the filter list through `server.Config` to the session discovery layer
+- [x] Update session discovery in `session.go` to only scan the specified project directories when the flag is provided (scan all when omitted for backwards compatibility)
+- [x] Update the file watcher to only watch filtered directories
+- [x] Add usage documentation to `-help` output
 
 ## Acceptance Criteria
 

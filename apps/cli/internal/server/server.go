@@ -22,6 +22,7 @@ type Config struct {
 	Index      *session.Index // Pre-built index (for standalone mode).
 	Standalone bool           // True when viewing standalone files (no ~/.claude).
 	Paths      []string       // Explicit file/directory paths (standalone mode).
+	Dirs       []string       // Filter to these project directory names (under ~/.claude/projects/).
 }
 
 // Server serves the VibeView HTTP API.
@@ -40,13 +41,13 @@ func New(cfg Config) (*Server, error) {
 	idx := cfg.Index
 	if idx == nil {
 		var err error
-		idx, err = session.Discover(cfg.ClaudeDir)
+		idx, err = session.Discover(cfg.ClaudeDir, cfg.Dirs)
 		if err != nil {
 			return nil, fmt.Errorf("discover sessions: %w", err)
 		}
 	}
 
-	broker, err := watcher.NewBroker(cfg.ClaudeDir, idx, cfg.Standalone)
+	broker, err := watcher.NewBroker(cfg.ClaudeDir, idx, cfg.Standalone, cfg.Dirs)
 	if err != nil {
 		return nil, fmt.Errorf("start broker: %w", err)
 	}
