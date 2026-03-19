@@ -1,7 +1,7 @@
 ---
 title: "Investigate 'has no JSONL file' warning"
 id: "01kksnpvv"
-status: pending
+status: in-progress
 priority: medium
 type: bug
 tags: ["sessions", "logging"]
@@ -28,10 +28,10 @@ This may be a bug or expected behavior. Two hypotheses:
 
 ## Tasks
 
-- [ ] Identify which sessions trigger the warning — check if they follow a pattern (e.g. specific project paths, session ID formats, timestamps)
-- [ ] Check if the sessions are "virtual" usage/billing conversations that Claude Code creates without actual JSONL data
+- [x] Identify which sessions trigger the warning — check if they follow a pattern (e.g. specific project paths, session ID formats, timestamps)
+- [x] Check if the sessions are "virtual" usage/billing conversations that Claude Code creates without actual JSONL data
 - [ ] If bug: fix the path resolution or file discovery logic so the JSONL files are found
-- [ ] If expected: either suppress the warning for virtual sessions or downgrade to debug-level logging
+- [x] If expected: either suppress the warning for virtual sessions or downgrade to debug-level logging
 
 ## Acceptance Criteria
 

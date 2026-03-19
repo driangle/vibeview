@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/driangle/vibeview/internal/logutil"
 )
 
 // Timestamp can unmarshal from both an integer (epoch millis) and an ISO 8601 string.
@@ -248,7 +249,7 @@ func ParseHistoryFile(r io.Reader) ([]HistoryEntry, error) {
 		}
 		entry, err := ParseHistoryLine(line)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "history.jsonl line %d: %v\n", lineNum, err)
+			logutil.Warnf("history.jsonl line %d: %v", lineNum, err)
 			continue
 		}
 		entries = append(entries, entry)
@@ -274,7 +275,7 @@ func ParseSessionFile(r io.Reader) ([]Message, error) {
 		}
 		msg, err := ParseMessageLine(line)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "session jsonl line %d: %v\n", lineNum, err)
+			logutil.Warnf("session jsonl line %d: %v", lineNum, err)
 			continue
 		}
 		messages = append(messages, msg)

@@ -3,7 +3,6 @@ package session
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/logutil"
 )
 
 // UsageTotals holds aggregated token and cost data for a session.
@@ -142,7 +142,7 @@ func buildDirSet(claudeDir string, dirs []string) map[string]struct{} {
 	projectsDir := filepath.Join(claudeDir, "projects")
 	entries, err := os.ReadDir(projectsDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "warning: cannot read projects directory %s: %v\n", projectsDir, err)
+		logutil.Warnf("cannot read projects directory %s: %v", projectsDir, err)
 		return nil
 	}
 
@@ -163,7 +163,7 @@ func buildDirSet(claudeDir string, dirs []string) map[string]struct{} {
 			}
 		}
 		if !matched {
-			fmt.Fprintf(os.Stderr, "warning: no project directory matching %q found under %s\n", d, projectsDir)
+			logutil.Warnf("no project directory matching %q found under %s", d, projectsDir)
 		}
 	}
 	return dirSet
@@ -238,7 +238,7 @@ func (idx *Index) enrichRange(claudeDir string, snapshot []SessionMeta, from, to
 			}
 			sessionPath := ResolveFilePath(claudeDir, meta)
 			if _, err := os.Stat(sessionPath); err != nil {
-				log.Printf("warning: session %s has no JSONL file at %s (removing from index)", meta.SessionID, sessionPath)
+				logutil.Debugf("session %s has no JSONL file at %s (removing from index)", meta.SessionID, sessionPath)
 				results[i] = result{meta: meta, exists: false}
 				continue
 			}
@@ -402,12 +402,12 @@ func LoadFromPaths(paths []string) (*Index, error) {
 	for _, p := range paths {
 		abs, err := filepath.Abs(p)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: cannot resolve path %q: %v\n", p, err)
+			logutil.Warnf("cannot resolve path %q: %v", p, err)
 			continue
 		}
 		info, err := os.Stat(abs)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: cannot stat %q: %v\n", abs, err)
+			logutil.Warnf("cannot stat %q: %v", abs, err)
 			continue
 		}
 		if info.IsDir() {
@@ -429,7 +429,7 @@ func LoadFromPaths(paths []string) (*Index, error) {
 	for _, f := range files {
 		meta, err := loadSessionFromFile(f)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: skipping %q: %v\n", f, err)
+			logutil.Warnf("skipping %q: %v", f, err)
 			continue
 		}
 		sessions = append(sessions, meta)

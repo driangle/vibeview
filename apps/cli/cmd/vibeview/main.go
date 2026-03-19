@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/driangle/vibeview/internal/logutil"
 	"github.com/driangle/vibeview/internal/server"
 	"github.com/driangle/vibeview/internal/session"
 )
@@ -24,7 +25,10 @@ func main() {
 	claudeDir := flag.String("claude-dir", filepath.Join(home, ".claude"), "path to claude data directory")
 	open := flag.Bool("open", true, "open browser on startup")
 	dirsFlag := flag.String("dirs", "", "comma-separated project directory names to filter (under ~/.claude/projects/)")
+	logLevel := flag.String("log-level", "warn", "log level: debug, warn, error")
 	flag.Parse()
+
+	logutil.SetLevel(logutil.ParseLevel(*logLevel))
 
 	paths := flag.Args()
 
