@@ -6,8 +6,10 @@ type Props = {
 
 type Preset = 'all' | 'today' | '7d' | '30d';
 
-const selectClass =
-  'rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none cursor-pointer';
+const selectBase =
+  'rounded-md border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none';
+const selectDefault = `${selectBase} border-border bg-card text-fg`;
+const selectActive = `${selectBase} border-primary/40 bg-primary/5 text-fg`;
 
 function startOfDay(date: Date): number {
   const d = new Date(date);
@@ -70,7 +72,7 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
     <select
       value={preset}
       onChange={(e) => handlePresetChange(e.target.value as Preset)}
-      className={`w-[160px] ${selectClass}`}
+      className={`w-[160px] ${preset !== 'all' ? selectActive : selectDefault}`}
     >
       <option value="all">All time</option>
       <option value="today">Today</option>

@@ -38,7 +38,7 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
     <div className="my-2 rounded border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50"
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50"
       >
         <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
         <span className="rounded bg-amber-200 dark:bg-amber-800 px-1.5 py-0.5 font-mono font-medium text-amber-800 dark:text-amber-200">
@@ -69,7 +69,7 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
           <div className="border-t border-amber-200 dark:border-amber-700 px-3 py-2">
             <button
               onClick={() => setShowRawJson(true)}
-              className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+              className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             >
               View raw JSON
             </button>

@@ -17,13 +17,15 @@ export function Pagination({
   page,
   totalPages,
   onPageChange,
+  onJumpToLatest,
 }: {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onJumpToLatest?: () => void;
 }) {
   const buttonClass =
-    'rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 hover:border-gray-400 dark:hover:bg-gray-700 dark:hover:border-gray-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40';
+    'rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 hover:border-gray-400 dark:hover:bg-gray-700 dark:hover:border-gray-500 disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
     <div className="flex items-center justify-between py-3">
@@ -39,9 +41,19 @@ export function Pagination({
           Previous
         </button>
       </div>
-      <span className="text-sm text-gray-500 dark:text-gray-400">
-        Page {page + 1} of {totalPages}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          Page {page + 1} of {totalPages}
+        </span>
+        {onJumpToLatest && page < totalPages - 1 && (
+          <button
+            onClick={onJumpToLatest}
+            className="rounded px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+          >
+            Jump to latest &darr;
+          </button>
+        )}
+      </div>
       <div className="flex gap-2">
         <button
           onClick={() => onPageChange(page + 1)}

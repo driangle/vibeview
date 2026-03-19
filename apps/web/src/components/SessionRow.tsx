@@ -93,7 +93,7 @@ export function SessionRow({
             e.stopPropagation();
             onDirectoryClick(session.project);
           }}
-          className="cursor-pointer text-muted-fg hover:text-primary hover:underline transition-colors"
+          className="text-muted-fg hover:text-primary hover:underline transition-colors"
         >
           {projectName(session.project)}
         </button>

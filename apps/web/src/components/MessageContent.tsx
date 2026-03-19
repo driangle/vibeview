@@ -38,7 +38,7 @@ function CaveatSegment({ content, onClick }: { content: string; onClick: () => v
     <button
       type="button"
       onClick={onClick}
-      className="my-2 flex w-full cursor-pointer items-start gap-2 rounded-md border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-left text-xs text-amber-800 dark:text-amber-300 transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/50"
+      className="my-2 flex w-full items-start gap-2 rounded-md border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-left text-xs text-amber-800 dark:text-amber-300 transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/50"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -70,7 +70,7 @@ function CommandSegment({
     <button
       type="button"
       onClick={onClick}
-      className="my-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 text-left font-mono text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+      className="my-2 flex w-full items-center gap-2 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 text-left font-mono text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

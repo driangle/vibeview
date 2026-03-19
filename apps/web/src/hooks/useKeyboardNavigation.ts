@@ -4,6 +4,8 @@ interface UseKeyboardNavigationOptions {
   itemCount: number;
   onSelect?: (index: number) => void;
   onBack?: () => void;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
   enabled?: boolean;
 }
 
@@ -14,6 +16,8 @@ export function useKeyboardNavigation({
   itemCount,
   onSelect,
   onBack,
+  onPrevPage,
+  onNextPage,
   enabled = true,
 }: UseKeyboardNavigationOptions) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -69,8 +73,20 @@ export function useKeyboardNavigation({
           });
           break;
         }
-        case 'Enter':
         case 'ArrowRight': {
+          if (onNextPage) {
+            e.preventDefault();
+            onNextPage();
+          } else if (active) {
+            e.preventDefault();
+            setSelectedIndex((current) => {
+              onSelect?.(current);
+              return current;
+            });
+          }
+          break;
+        }
+        case 'Enter': {
           if (!active) return;
           e.preventDefault();
           setSelectedIndex((current) => {
@@ -79,8 +95,17 @@ export function useKeyboardNavigation({
           });
           break;
         }
-        case 'Escape':
         case 'ArrowLeft': {
+          if (onPrevPage) {
+            e.preventDefault();
+            onPrevPage();
+          } else if (onBack) {
+            e.preventDefault();
+            onBack();
+          }
+          break;
+        }
+        case 'Escape': {
           if (!onBack) return;
           e.preventDefault();
           onBack();
@@ -91,7 +116,7 @@ export function useKeyboardNavigation({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled, itemCount, active, onSelect, onBack, scrollToIndex]);
+  }, [enabled, itemCount, active, onSelect, onBack, onPrevPage, onNextPage, scrollToIndex]);
 
   return { selectedIndex: active ? selectedIndex : -1, setSelectedIndex };
 }

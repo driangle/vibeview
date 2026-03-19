@@ -92,7 +92,7 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
     <div className="my-2 rounded border border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/30">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-violet-100 dark:hover:bg-violet-900/50"
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-violet-100 dark:hover:bg-violet-900/50"
       >
         <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
         <span className="rounded bg-violet-200 dark:bg-violet-800 px-1.5 py-0.5 font-medium text-violet-800 dark:text-violet-200">

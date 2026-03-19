@@ -57,12 +57,6 @@ export function SessionView() {
     navigate(-1);
   }, [navigate]);
 
-  const { selectedIndex } = useKeyboardNavigation({
-    itemCount: paginatedMessages.length,
-    onBack,
-    enabled: !isLoading && paginatedMessages.length > 0,
-  });
-
   const setPage = useCallback(
     (p: number) => {
       setUserPage(p);
@@ -72,6 +66,22 @@ export function SessionView() {
     },
     [totalPages],
   );
+
+  const onPrevPage = useCallback(() => {
+    if (page > 0) setPage(page - 1);
+  }, [page, setPage]);
+
+  const onNextPage = useCallback(() => {
+    if (page < totalPages - 1) setPage(page + 1);
+  }, [page, totalPages, setPage]);
+
+  const { selectedIndex } = useKeyboardNavigation({
+    itemCount: paginatedMessages.length,
+    onBack,
+    onPrevPage: totalPages > 1 ? onPrevPage : undefined,
+    onNextPage: totalPages > 1 ? onNextPage : undefined,
+    enabled: !isLoading && paginatedMessages.length > 0,
+  });
 
   // Auto-disable follow when user scrolls up, re-enable at bottom.
   const handleScroll = useCallback(() => {
@@ -131,17 +141,6 @@ export function SessionView() {
             {displayMessages.length} message
             {displayMessages.length !== 1 ? 's' : ''}
           </span>
-          {totalPages > 1 && page < totalPages - 1 && (
-            <button
-              onClick={() => {
-                setPage(totalPages - 1);
-                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="rounded px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
-            >
-              Jump to latest &darr;
-            </button>
-          )}
           <span>{formatDate(session.timestamp)}</span>
         </div>
         {session.filePath && (
@@ -156,7 +155,17 @@ export function SessionView() {
       </div>
 
       {/* Pagination (top) */}
-      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+      {totalPages > 1 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onJumpToLatest={() => {
+            setPage(totalPages - 1);
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+      )}
 
       {/* Messages */}
       <div className="space-y-4 py-4">
@@ -178,7 +187,17 @@ export function SessionView() {
       </div>
 
       {/* Pagination (bottom) */}
-      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+      {totalPages > 1 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onJumpToLatest={() => {
+            setPage(totalPages - 1);
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+      )}
 
       {/* Auto-follow toggle */}
       <FollowToggle

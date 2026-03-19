@@ -54,14 +54,15 @@ function getSortValue(session: Session, column: SortColumn): string | number {
   }
 }
 
-const selectClass =
-  'rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none cursor-pointer';
+const selectBase =
+  'rounded-md border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none';
+const selectDefault = `${selectBase} border-border bg-card text-fg`;
+const selectActive = `${selectBase} border-primary/40 bg-primary/5 text-fg`;
 
 export function SessionList() {
   const navigate = useNavigate();
   const [search, setSearch] = useLocalStorage('filter:search', '');
-  const debouncedSearch = useDebounced(search, 300);
-  const debouncedContentQuery = useDebounced(search, 500);
+  const debouncedSearch = useDebounced(search, 400);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [storedDir, setStoredDir] = useLocalStorage('filter:dir', '');
@@ -124,18 +125,19 @@ export function SessionList() {
     data: paginated,
     error,
     isLoading,
-  } = useSWR<PaginatedSessions>(apiUrl, fetcher, { refreshInterval: 5000 });
+  } = useSWR<PaginatedSessions>(apiUrl, fetcher, { refreshInterval: 5000, keepPreviousData: true });
 
   const { data: allPaginated } = useSWR<PaginatedSessions>('/api/sessions', fetcher, {
     refreshInterval: 5000,
   });
 
-  const contentSearchUrl = debouncedContentQuery
-    ? `/api/search?q=${encodeURIComponent(debouncedContentQuery)}&limit=20`
+  const contentSearchUrl = debouncedSearch
+    ? `/api/search?q=${encodeURIComponent(debouncedSearch)}&limit=20`
     : null;
   const { data: searchData, isLoading: searchLoading } = useSWR<SearchResponse>(
     contentSearchUrl,
     fetcher,
+    { keepPreviousData: true },
   );
 
   const sessions = paginated?.sessions;
@@ -240,17 +242,22 @@ export function SessionList() {
     });
   }
 
-  const loaded = !error && !isLoading && sessions;
+  const loaded = !error && sessions;
+
+  const isContentSearch = !!debouncedSearch && !!searchData;
+  const displaySessions = isContentSearch
+    ? searchData.results.map((r) => r.session)
+    : (sessions ?? []);
+
+  const statsTotal = isContentSearch ? searchData.total : total;
 
   const totalTokens = useMemo(() => {
-    if (!sessions) return 0;
-    return sessions.reduce((sum, s) => sum + s.usage.inputTokens + s.usage.outputTokens, 0);
-  }, [sessions]);
+    return displaySessions.reduce((sum, s) => sum + s.usage.inputTokens + s.usage.outputTokens, 0);
+  }, [displaySessions]);
 
   const totalCost = useMemo(() => {
-    if (!sessions) return 0;
-    return sessions.reduce((sum, s) => sum + s.usage.costUSD, 0);
-  }, [sessions]);
+    return displaySessions.reduce((sum, s) => sum + s.usage.costUSD, 0);
+  }, [displaySessions]);
 
   function formatStatTokens(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -272,7 +279,7 @@ export function SessionList() {
           <div className="grid grid-cols-3 gap-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-xs text-muted-fg uppercase tracking-wider">Sessions</div>
-              <div className="mt-1 text-2xl font-bold text-fg font-sans">{total}</div>
+              <div className="mt-1 text-2xl font-bold text-fg font-sans">{statsTotal}</div>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-xs text-muted-fg uppercase tracking-wider">Total Tokens</div>
@@ -315,13 +322,39 @@ export function SessionList() {
                   return prev;
                 });
               }}
-              className="w-full rounded-md border border-border bg-card pl-9 pr-3 py-2 text-sm text-fg placeholder:text-muted-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
+              className="w-full rounded-md border border-border bg-card pl-9 pr-8 py-2 text-sm text-fg placeholder:text-muted-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setSearchParams((prev) => {
+                    prev.delete('page');
+                    return prev;
+                  });
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-0.5"
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
           </div>
           <select
             value={dirFilter}
             onChange={(e) => setDirFilter(e.target.value)}
-            className={`w-[200px] truncate ${selectClass}`}
+            className={`w-[200px] truncate ${dirFilter ? selectActive : selectDefault}`}
           >
             <option value="">All folders</option>
             {uniqueProjects.map((project) => (
@@ -333,7 +366,7 @@ export function SessionList() {
           <select
             value={modelFilter}
             onChange={(e) => setModelFilter(e.target.value)}
-            className={`w-[180px] truncate ${selectClass}`}
+            className={`w-[180px] truncate ${modelFilter ? selectActive : selectDefault}`}
           >
             <option value="">All models</option>
             {uniqueModels.map((m) => (
@@ -346,10 +379,10 @@ export function SessionList() {
         </div>
 
         {/* Results */}
-        {debouncedContentQuery ? (
+        {debouncedSearch ? (
           <SearchResults
             results={searchData?.results ?? []}
-            query={debouncedContentQuery}
+            query={debouncedSearch}
             isLoading={searchLoading}
           />
         ) : (

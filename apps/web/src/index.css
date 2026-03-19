@@ -92,4 +92,11 @@
   * {
     border-color: var(--border-color);
   }
+
+  button,
+  a,
+  select,
+  [role='button'] {
+    cursor: pointer;
+  }
 }

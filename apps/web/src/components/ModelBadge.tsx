@@ -7,7 +7,7 @@ interface ModelBadgeProps {
 
 export function ModelBadge({ model, onClick }: ModelBadgeProps) {
   const className =
-    'rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-fg hover:text-primary cursor-pointer transition-colors';
+    'rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-fg hover:text-primary transition-colors';
 
   if (onClick) {
     return (

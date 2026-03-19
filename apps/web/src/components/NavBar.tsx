@@ -31,9 +31,7 @@ function ConfigLabel({ config }: { config: AppConfig }) {
                 if (dirs.length > 1) setShowModal((v) => !v);
               }}
               className={`rounded bg-warning/15 px-2 py-0.5 font-mono text-xs text-warning ${
-                dirs.length > 1
-                  ? 'cursor-pointer hover:bg-warning/25 transition-colors'
-                  : 'cursor-default'
+                dirs.length > 1 ? 'hover:bg-warning/25 transition-colors' : 'cursor-default'
               }`}
             >
               {dirs.length === 1 ? dirs[0] : `${dirs.length} dirs`}
@@ -71,9 +69,7 @@ function ConfigLabel({ config }: { config: AppConfig }) {
           if (paths.length > 1) setShowModal(true);
         }}
         className={`rounded bg-warning/15 px-2 py-0.5 font-mono text-xs text-warning ${
-          paths.length > 1
-            ? 'cursor-pointer hover:bg-warning/25 transition-colors'
-            : 'cursor-default'
+          paths.length > 1 ? 'hover:bg-warning/25 transition-colors' : 'cursor-default'
         }`}
       >
         {label}
@@ -117,7 +113,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="cursor-pointer rounded p-1.5 text-muted-fg hover:bg-secondary hover:text-fg transition-colors"
+      className="rounded p-1.5 text-muted-fg hover:bg-secondary hover:text-fg transition-colors"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       {theme === 'dark' ? (
@@ -153,7 +149,10 @@ export function NavBar() {
   return (
     <nav className="border-b border-border bg-card">
       <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-8">
-        <span className="text-sm font-semibold text-fg font-mono">vibeview</span>
+        <span className="flex items-center gap-2 text-sm font-semibold text-fg font-mono">
+          <img src="/favicon.svg" alt="" className="h-5 w-5" />
+          vibeview
+        </span>
         <NavLink
           to="/"
           end
