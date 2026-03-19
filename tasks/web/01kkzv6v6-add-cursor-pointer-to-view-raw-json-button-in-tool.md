@@ -1,7 +1,7 @@
 ---
 title: "Add cursor pointer to View raw JSON button in tool panel"
 id: "01kkzv6v6"
-status: pending
+status: completed
 priority: low
 type: bug
 tags: ["ui"]

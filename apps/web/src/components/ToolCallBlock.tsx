@@ -69,7 +69,7 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
           <div className="border-t border-amber-200 dark:border-amber-700 px-3 py-2">
             <button
               onClick={() => setShowRawJson(true)}
-              className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
             >
               View raw JSON
             </button>
