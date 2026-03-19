@@ -1,7 +1,7 @@
 ---
 title: "Investigate 'has no JSONL file' warning"
 id: "01kksnpvv"
-status: in-progress
+status: completed
 priority: medium
 type: bug
 tags: ["sessions", "logging"]
