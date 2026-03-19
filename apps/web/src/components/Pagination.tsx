@@ -18,8 +18,8 @@ export function Pagination({
   return (
     <div className="mt-4 flex items-center justify-between">
       <span className="text-sm text-muted-fg">
-        Showing {(currentPage - 1) * pageSize + 1}–
-        {Math.min(currentPage * pageSize, total)} of {total}
+        Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, total)} of{' '}
+        {total}
       </span>
       <div className="flex gap-1">
         <button
@@ -40,8 +40,8 @@ export function Pagination({
               onClick={() => onPageChange(p)}
               className={`cursor-pointer rounded border px-3 py-1 text-sm ${
                 p === currentPage
-                  ? "border-primary bg-primary/10 font-medium text-primary"
-                  : "border-border text-fg hover:bg-secondary"
+                  ? 'border-primary bg-primary/10 font-medium text-primary'
+                  : 'border-border text-fg hover:bg-secondary'
               }`}
             >
               {p}
@@ -67,11 +67,7 @@ function pageNumbers(current: number, total: number): (number | null)[] {
   }
   const pages: (number | null)[] = [1];
   if (current > 3) pages.push(null);
-  for (
-    let p = Math.max(2, current - 1);
-    p <= Math.min(total - 1, current + 1);
-    p++
-  ) {
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
     pages.push(p);
   }
   if (current < total - 2) pages.push(null);

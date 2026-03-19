@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { MessageBubble } from "../components/MessageBubble";
-import { ModelBadge } from "../components/ModelBadge";
-import { CostDisplay } from "../components/CostDisplay";
-import { CopyableText } from "../components/CopyableText";
-import { LiveIndicator, Pagination, FollowToggle } from "../components/SessionControls";
-import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
-import { useSessionData } from "../hooks/useSessionData";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MessageBubble } from '../components/MessageBubble';
+import { ModelBadge } from '../components/ModelBadge';
+import { CostDisplay } from '../components/CostDisplay';
+import { CopyableText } from '../components/CopyableText';
+import { LiveIndicator, Pagination, FollowToggle } from '../components/SessionControls';
+import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { useSessionData } from '../hooks/useSessionData';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const MESSAGES_PER_PAGE = 100;
 
 function projectName(project: string): string {
-  const parts = project.split("/").filter(Boolean);
+  const parts = project.split('/').filter(Boolean);
   return parts[parts.length - 1] || project;
 }
 
@@ -24,7 +24,7 @@ export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [userPage, setUserPage] = useState<number | null>(null);
-  const [, setSavedFollowMode] = useLocalStorage("followMode", true);
+  const [, setSavedFollowMode] = useLocalStorage('followMode', true);
   const [followMode, setFollowMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,10 +42,7 @@ export function SessionView() {
     agentGroupFirstIds,
   } = useSessionData(id);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(displayMessages.length / MESSAGES_PER_PAGE),
-  );
+  const totalPages = Math.max(1, Math.ceil(displayMessages.length / MESSAGES_PER_PAGE));
 
   // In follow mode, always show the last page; otherwise use user-selected page.
   const page = followMode ? totalPages - 1 : Math.min(userPage ?? 0, totalPages - 1);
@@ -65,12 +62,15 @@ export function SessionView() {
     enabled: !isLoading && paginatedMessages.length > 0,
   });
 
-  const setPage = useCallback((p: number) => {
-    setUserPage(p);
-    if (p < totalPages - 1) {
-      setFollowMode(false);
-    }
-  }, [totalPages]);
+  const setPage = useCallback(
+    (p: number) => {
+      setUserPage(p);
+      if (p < totalPages - 1) {
+        setFollowMode(false);
+      }
+    },
+    [totalPages],
+  );
 
   // Auto-disable follow when user scrolls up, re-enable at bottom.
   const handleScroll = useCallback(() => {
@@ -87,7 +87,7 @@ export function SessionView() {
   // Auto-scroll when new messages arrive and follow mode is on.
   useEffect(() => {
     if (followMode && streamedMessages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [streamedMessages.length, followMode]);
 
@@ -108,11 +108,7 @@ export function SessionView() {
   }
 
   return (
-    <div
-      className="mx-auto max-w-4xl p-8"
-      ref={containerRef}
-      onScroll={handleScroll}
-    >
+    <div className="mx-auto max-w-4xl p-8" ref={containerRef} onScroll={handleScroll}>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3">
@@ -129,18 +125,16 @@ export function SessionView() {
           >
             {projectName(session.project)}
           </Link>
-          {session.model && (
-            <ModelBadge model={session.model} />
-          )}
+          {session.model && <ModelBadge model={session.model} />}
           <span>
             {displayMessages.length} message
-            {displayMessages.length !== 1 ? "s" : ""}
+            {displayMessages.length !== 1 ? 's' : ''}
           </span>
           {totalPages > 1 && page < totalPages - 1 && (
             <button
               onClick={() => {
                 setPage(totalPages - 1);
-                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
               }}
               className="rounded px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
             >
@@ -151,20 +145,17 @@ export function SessionView() {
         </div>
         {session.filePath && (
           <div className="mt-1">
-            <CopyableText text={session.filePath} className="select-all truncate font-mono text-xs text-gray-400 dark:text-gray-500" />
+            <CopyableText
+              text={session.filePath}
+              className="select-all truncate font-mono text-xs text-gray-400 dark:text-gray-500"
+            />
           </div>
         )}
         {liveUsage && <CostDisplay usage={liveUsage} />}
       </div>
 
       {/* Pagination (top) */}
-      {totalPages > 1 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
-      )}
+      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 
       {/* Messages */}
       <div className="space-y-4 py-4">
@@ -172,7 +163,7 @@ export function SessionView() {
           <div
             key={msg.uuid}
             data-row-index={index}
-            className={`rounded-lg transition-colors ${selectedIndex === index ? "ring-2 ring-blue-500" : ""}`}
+            className={`rounded-lg transition-colors ${selectedIndex === index ? 'ring-2 ring-blue-500' : ''}`}
           >
             <MessageBubble
               message={msg}
@@ -186,13 +177,7 @@ export function SessionView() {
       </div>
 
       {/* Pagination (bottom) */}
-      {totalPages > 1 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
-      )}
+      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
 
       {/* Auto-follow toggle */}
       <FollowToggle
@@ -200,7 +185,7 @@ export function SessionView() {
         onToggle={() => {
           setFollowMode((prev) => {
             if (!prev) {
-              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
             }
             return !prev;
           });

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import type { ContentBlock } from "../types";
-import { RawJsonModal } from "./RawJsonModal";
+import { useState } from 'react';
+import type { ContentBlock } from '../types';
+import { RawJsonModal } from './RawJsonModal';
 
 interface ToolCallBlockProps {
   block: ContentBlock;
@@ -16,11 +16,11 @@ function formatInput(input: Record<string, unknown>): string {
 }
 
 function formatResult(content: unknown): string {
-  if (typeof content === "string") return content;
+  if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
     return content
-      .map((c) => (typeof c === "object" && c && "text" in c ? c.text : JSON.stringify(c)))
-      .join("\n");
+      .map((c) => (typeof c === 'object' && c && 'text' in c ? c.text : JSON.stringify(c)))
+      .join('\n');
   }
   return JSON.stringify(content, null, 2);
 }
@@ -29,10 +29,10 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
   const [expanded, setExpanded] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
 
-  const toolName = block.name || "Tool";
+  const toolName = block.name || 'Tool';
   const input = block.input || {};
   const summary = formatInput(input);
-  const previewLine = summary.split("\n")[0].slice(0, 100);
+  const previewLine = summary.split('\n')[0].slice(0, 100);
 
   return (
     <div className="my-2 rounded border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30">
@@ -40,9 +40,7 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
         onClick={() => setExpanded(!expanded)}
         className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50"
       >
-        <span className={`transition-transform ${expanded ? "rotate-90" : ""}`}>
-          ▶
-        </span>
+        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
         <span className="rounded bg-amber-200 dark:bg-amber-800 px-1.5 py-0.5 font-mono font-medium text-amber-800 dark:text-amber-200">
           {toolName}
         </span>

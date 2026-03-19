@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
-import { ModelBadge } from "./ModelBadge";
-import type { Session } from "../types";
-import { projectName } from "../utils";
+import { Link, useNavigate } from 'react-router-dom';
+import { ModelBadge } from './ModelBadge';
+import type { Session } from '../types';
+import { projectName } from '../utils';
 
 const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -17,8 +17,21 @@ function isRecent(timestamp: string): boolean {
 
 function formatSessionDate(timestamp: string): { date: string; relative: string } {
   const d = new Date(timestamp);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const date = `${months[d.getMonth()]} ${d.getDate()}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const date = `${months[d.getMonth()]} ${d.getDate()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
   const now = Date.now();
   const diffMs = now - d.getTime();
@@ -27,11 +40,11 @@ function formatSessionDate(timestamp: string): { date: string; relative: string 
   const diffDays = Math.floor(diffMs / 86400000);
 
   let relative: string;
-  if (diffMin < 1) relative = "just now";
+  if (diffMin < 1) relative = 'just now';
   else if (diffMin < 60) relative = `${diffMin}m ago`;
   else if (diffHr < 24) relative = `${diffHr}h ago`;
   else if (diffDays < 7) relative = `${diffDays}d ago`;
-  else relative = "";
+  else relative = '';
 
   return { date, relative };
 }
@@ -44,7 +57,13 @@ interface SessionRowProps {
   rowIndex?: number;
 }
 
-export function SessionRow({ session, onDirectoryClick, onModelClick, isSelected, rowIndex }: SessionRowProps) {
+export function SessionRow({
+  session,
+  onDirectoryClick,
+  onModelClick,
+  isSelected,
+  rowIndex,
+}: SessionRowProps) {
   const navigate = useNavigate();
   const recent = isRecent(session.timestamp);
   const time = formatSessionDate(session.timestamp);
@@ -53,7 +72,7 @@ export function SessionRow({ session, onDirectoryClick, onModelClick, isSelected
     <tr
       data-row-index={rowIndex}
       onClick={() => navigate(`/session/${session.id}`)}
-      className={`border-t border-border transition-colors hover:bg-secondary/50 cursor-pointer ${isSelected ? "ring-2 ring-ring bg-primary/5" : ""}`}
+      className={`border-t border-border transition-colors hover:bg-secondary/50 cursor-pointer ${isSelected ? 'ring-2 ring-ring bg-primary/5' : ''}`}
     >
       {/* Session name */}
       <td className="px-4 py-3 text-sm truncate">
@@ -70,7 +89,10 @@ export function SessionRow({ session, onDirectoryClick, onModelClick, isSelected
       <td className="px-4 py-3 text-xs truncate">
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onDirectoryClick(session.project); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDirectoryClick(session.project);
+          }}
           className="cursor-pointer text-muted-fg hover:text-primary hover:underline transition-colors"
         >
           {projectName(session.project)}
@@ -80,16 +102,17 @@ export function SessionRow({ session, onDirectoryClick, onModelClick, isSelected
       {/* Time */}
       <td className="px-4 py-3 whitespace-nowrap">
         <div className="text-xs text-fg font-medium">{time.date}</div>
-        {time.relative && (
-          <div className="text-[11px] text-muted-fg">{time.relative}</div>
-        )}
+        {time.relative && <div className="text-[11px] text-muted-fg">{time.relative}</div>}
       </td>
 
       {/* Messages */}
       <td className="px-4 py-3 text-xs text-muted-fg text-right whitespace-nowrap">
         <span className="inline-flex items-center gap-1.5">
           {recent && (
-            <span className="h-2 w-2 shrink-0 rounded-full bg-success animate-pulse" title="Active recently" />
+            <span
+              className="h-2 w-2 shrink-0 rounded-full bg-success animate-pulse"
+              title="Active recently"
+            />
           )}
           {session.messageCount}
         </span>
@@ -97,19 +120,17 @@ export function SessionRow({ session, onDirectoryClick, onModelClick, isSelected
 
       {/* Model */}
       <td className="px-4 py-3 text-xs">
-        {session.model && (
-          <ModelBadge model={session.model} onClick={onModelClick} />
-        )}
+        {session.model && <ModelBadge model={session.model} onClick={onModelClick} />}
       </td>
 
       {/* Tokens (in/out) */}
       <td className="px-4 py-3 text-xs text-muted-fg text-right whitespace-nowrap">
         <div>
-          <span className="text-muted-fg/70">in:</span>{" "}
+          <span className="text-muted-fg/70">in:</span>{' '}
           <span className="text-fg">{formatTokens(session.usage.inputTokens)}</span>
         </div>
         <div>
-          <span className="text-muted-fg/70">out:</span>{" "}
+          <span className="text-muted-fg/70">out:</span>{' '}
           <span className="text-fg">{formatTokens(session.usage.outputTokens)}</span>
         </div>
       </td>

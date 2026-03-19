@@ -1,5 +1,5 @@
-type SortColumn = "date" | "name" | "directory" | "messages" | "tokens" | "cost";
-type SortDirection = "asc" | "desc";
+type SortColumn = 'date' | 'name' | 'directory' | 'messages' | 'tokens' | 'cost';
+type SortDirection = 'asc' | 'desc';
 
 interface SortHeaderProps {
   label: string;
@@ -8,28 +8,36 @@ interface SortHeaderProps {
   sortDirection: SortDirection;
   onToggle: (column: SortColumn) => void;
   className?: string;
-  icon?: "folder" | "clock" | "dollar";
+  icon?: 'folder' | 'clock' | 'dollar';
 }
 
-function HeaderIcon({ icon }: { icon: SortHeaderProps["icon"] }) {
+function HeaderIcon({ icon }: { icon: SortHeaderProps['icon'] }) {
   if (!icon) return null;
-  const props = { className: "h-3 w-3", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const props = {
+    className: 'h-3 w-3',
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
 
   switch (icon) {
-    case "folder":
+    case 'folder':
       return (
         <svg {...props}>
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
         </svg>
       );
-    case "clock":
+    case 'clock':
       return (
         <svg {...props}>
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
         </svg>
       );
-    case "dollar":
+    case 'dollar':
       return (
         <svg {...props}>
           <line x1="12" y1="1" x2="12" y2="23" />
@@ -45,7 +53,7 @@ export function SortHeader({
   sortColumn,
   sortDirection,
   onToggle,
-  className = "",
+  className = '',
   icon,
 }: SortHeaderProps) {
   const active = sortColumn === column;
@@ -58,7 +66,7 @@ export function SortHeader({
         <HeaderIcon icon={icon} />
         {label}
         {active && (
-          <span className="text-primary">{sortDirection === "asc" ? "\u25B2" : "\u25BC"}</span>
+          <span className="text-primary">{sortDirection === 'asc' ? '\u25B2' : '\u25BC'}</span>
         )}
       </span>
     </th>

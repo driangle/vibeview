@@ -4,10 +4,10 @@ type Props = {
   onChange: (from: string, to: string) => void;
 };
 
-type Preset = "all" | "today" | "7d" | "30d";
+type Preset = 'all' | 'today' | '7d' | '30d';
 
 const selectClass =
-  "rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none cursor-pointer";
+  'rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none cursor-pointer';
 
 function startOfDay(date: Date): number {
   const d = new Date(date);
@@ -28,7 +28,7 @@ function daysAgo(n: number): number {
 }
 
 function derivePreset(from: string, to: string): Preset {
-  if (!from && !to) return "all";
+  if (!from && !to) return 'all';
 
   const now = new Date();
   const todayStart = String(startOfDay(now));
@@ -36,11 +36,11 @@ function derivePreset(from: string, to: string): Preset {
   const sevenDaysAgo = String(daysAgo(7));
   const thirtyDaysAgo = String(daysAgo(30));
 
-  if (from === todayStart && to === todayEnd) return "today";
-  if (from === sevenDaysAgo && to === todayEnd) return "7d";
-  if (from === thirtyDaysAgo && to === todayEnd) return "30d";
+  if (from === todayStart && to === todayEnd) return 'today';
+  if (from === sevenDaysAgo && to === todayEnd) return '7d';
+  if (from === thirtyDaysAgo && to === todayEnd) return '30d';
 
-  return "all";
+  return 'all';
 }
 
 export function DateRangeFilter({ from, to, onChange }: Props) {
@@ -51,16 +51,16 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
     const todayEnd = String(endOfDay(now));
 
     switch (value) {
-      case "all":
-        onChange("", "");
+      case 'all':
+        onChange('', '');
         break;
-      case "today":
+      case 'today':
         onChange(String(startOfDay(now)), todayEnd);
         break;
-      case "7d":
+      case '7d':
         onChange(String(daysAgo(7)), todayEnd);
         break;
-      case "30d":
+      case '30d':
         onChange(String(daysAgo(30)), todayEnd);
         break;
     }

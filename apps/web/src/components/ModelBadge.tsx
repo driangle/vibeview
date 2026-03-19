@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 interface ModelBadgeProps {
   model: string;
@@ -7,7 +7,7 @@ interface ModelBadgeProps {
 
 export function ModelBadge({ model, onClick }: ModelBadgeProps) {
   const className =
-    "rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-fg hover:text-primary cursor-pointer transition-colors";
+    'rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-fg hover:text-primary cursor-pointer transition-colors';
 
   if (onClick) {
     return (
@@ -25,10 +25,7 @@ export function ModelBadge({ model, onClick }: ModelBadgeProps) {
   }
 
   return (
-    <Link
-      to={`/?model=${encodeURIComponent(model)}`}
-      className={className}
-    >
+    <Link to={`/?model=${encodeURIComponent(model)}`} className={className}>
       {model}
     </Link>
   );

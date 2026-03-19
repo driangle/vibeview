@@ -1,10 +1,10 @@
-import { useCallback, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import useSWR from "swr";
-import { fetcher } from "../api";
-import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
-import type { PaginatedSessions, Session } from "../types";
-import { formatTime, projectName } from "../utils";
+import { useCallback, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import useSWR from 'swr';
+import { fetcher } from '../api';
+import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import type { PaginatedSessions, Session } from '../types';
+import { formatTime, projectName } from '../utils';
 
 interface DirectorySummary {
   project: string;
@@ -32,24 +32,21 @@ function summarizeDirectories(sessions: Session[]): DirectorySummary[] {
   }
 
   return [...map.values()].sort(
-    (a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
+    (a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime(),
   );
 }
 
 export function DirectoryList() {
   const navigate = useNavigate();
-  const { data: paginated, error, isLoading } = useSWR<PaginatedSessions>(
-    "/api/sessions",
-    fetcher,
-    { refreshInterval: 5000 }
-  );
+  const {
+    data: paginated,
+    error,
+    isLoading,
+  } = useSWR<PaginatedSessions>('/api/sessions', fetcher, { refreshInterval: 5000 });
 
   const sessions = paginated?.sessions;
 
-  const directories = useMemo(
-    () => (sessions ? summarizeDirectories(sessions) : []),
-    [sessions]
-  );
+  const directories = useMemo(() => (sessions ? summarizeDirectories(sessions) : []), [sessions]);
 
   const onSelect = useCallback(
     (index: number) => {
@@ -90,7 +87,7 @@ export function DirectoryList() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Directories</h1>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {directories.length} director{directories.length !== 1 ? "ies" : "y"}
+          {directories.length} director{directories.length !== 1 ? 'ies' : 'y'}
         </span>
       </div>
 
@@ -103,7 +100,7 @@ export function DirectoryList() {
               <Link
                 to={`/?dir=${encodeURIComponent(dir.project)}`}
                 className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50${
-                  index === selectedIndex ? " bg-blue-50 dark:bg-blue-900/30" : ""
+                  index === selectedIndex ? ' bg-blue-50 dark:bg-blue-900/30' : ''
                 }`}
               >
                 <div className="min-w-0 flex-1">
@@ -115,7 +112,7 @@ export function DirectoryList() {
                   </p>
                 </div>
                 <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
-                  {dir.sessionCount} session{dir.sessionCount !== 1 ? "s" : ""}
+                  {dir.sessionCount} session{dir.sessionCount !== 1 ? 's' : ''}
                 </span>
                 <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
                   {formatTime(dir.lastActivity)}

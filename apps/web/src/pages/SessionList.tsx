@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import useSWR from "swr";
-import { fetcher } from "../api";
-import { DateRangeFilter } from "../components/DateRangeFilter";
-import { Pagination } from "../components/Pagination";
-import { SessionTable } from "../components/SessionTable";
-import type { SortColumn, SortDirection } from "../components/SortHeader";
-import { useDebounced } from "../hooks/useDebounced";
-import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import type { PaginatedSessions, Session } from "../types";
-import { projectName } from "../utils";
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import useSWR from 'swr';
+import { fetcher } from '../api';
+import { DateRangeFilter } from '../components/DateRangeFilter';
+import { Pagination } from '../components/Pagination';
+import { SessionTable } from '../components/SessionTable';
+import type { SortColumn, SortDirection } from '../components/SortHeader';
+import { useDebounced } from '../hooks/useDebounced';
+import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import type { PaginatedSessions, Session } from '../types';
+import { projectName } from '../utils';
 
 const PAGE_SIZE = 100;
 
@@ -23,76 +23,79 @@ function buildSessionsUrl(
   page?: number,
 ): string {
   const params = new URLSearchParams();
-  if (project) params.set("project", project);
-  if (q) params.set("q", q);
-  if (from) params.set("from", from);
-  if (to) params.set("to", to);
-  if (model) params.set("model", model);
+  if (project) params.set('project', project);
+  if (q) params.set('q', q);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  if (model) params.set('model', model);
   if (page !== undefined) {
-    params.set("limit", String(PAGE_SIZE));
-    params.set("offset", String((page - 1) * PAGE_SIZE));
+    params.set('limit', String(PAGE_SIZE));
+    params.set('offset', String((page - 1) * PAGE_SIZE));
   }
   const qs = params.toString();
-  return qs ? `/api/sessions?${qs}` : "/api/sessions";
+  return qs ? `/api/sessions?${qs}` : '/api/sessions';
 }
 
 function getSortValue(session: Session, column: SortColumn): string | number {
   switch (column) {
-    case "date":
+    case 'date':
       return new Date(session.timestamp).getTime();
-    case "name":
+    case 'name':
       return (session.customTitle || session.slug || session.id).toLowerCase();
-    case "directory":
+    case 'directory':
       return session.project.toLowerCase();
-    case "messages":
+    case 'messages':
       return session.messageCount;
-    case "tokens":
+    case 'tokens':
       return session.usage.inputTokens + session.usage.outputTokens;
-    case "cost":
+    case 'cost':
       return session.usage.costUSD;
   }
 }
 
 const selectClass =
-  "rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none cursor-pointer";
+  'rounded-md border border-border bg-card px-3 py-2 text-sm text-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none cursor-pointer';
 
 export function SessionList() {
   const navigate = useNavigate();
-  const [search, setSearch] = useLocalStorage("filter:search", "");
+  const [search, setSearch] = useLocalStorage('filter:search', '');
   const debouncedSearch = useDebounced(search, 300);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [storedDir, setStoredDir] = useLocalStorage("filter:dir", "");
-  const [storedModel, setStoredModel] = useLocalStorage("filter:model", "");
-  const [storedFrom, setStoredFrom] = useLocalStorage("filter:from", "");
-  const [storedTo, setStoredTo] = useLocalStorage("filter:to", "");
+  const [storedDir, setStoredDir] = useLocalStorage('filter:dir', '');
+  const [storedModel, setStoredModel] = useLocalStorage('filter:model', '');
+  const [storedFrom, setStoredFrom] = useLocalStorage('filter:from', '');
+  const [storedTo, setStoredTo] = useLocalStorage('filter:to', '');
 
   const initialized = useRef(false);
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
     const hasUrlFilters =
-      searchParams.has("dir") || searchParams.has("model") || searchParams.has("from") || searchParams.has("to");
+      searchParams.has('dir') ||
+      searchParams.has('model') ||
+      searchParams.has('from') ||
+      searchParams.has('to');
     if (hasUrlFilters) return;
     const needsUpdate = storedDir || storedModel || storedFrom || storedTo;
     if (!needsUpdate) return;
     setSearchParams(
       (prev) => {
-        if (storedDir) prev.set("dir", storedDir);
-        if (storedModel) prev.set("model", storedModel);
-        if (storedFrom) prev.set("from", storedFrom);
-        if (storedTo) prev.set("to", storedTo);
+        if (storedDir) prev.set('dir', storedDir);
+        if (storedModel) prev.set('model', storedModel);
+        if (storedFrom) prev.set('from', storedFrom);
+        if (storedTo) prev.set('to', storedTo);
         return prev;
       },
       { replace: true },
     );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const dirFilter = searchParams.get("dir") || "";
-  const modelFilter = searchParams.get("model") || "";
-  const fromFilter = searchParams.get("from") || "";
-  const toFilter = searchParams.get("to") || "";
-  const currentPage = Number(searchParams.get("page")) || 1;
+  const dirFilter = searchParams.get('dir') || '';
+  const modelFilter = searchParams.get('model') || '';
+  const fromFilter = searchParams.get('from') || '';
+  const toFilter = searchParams.get('to') || '';
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   useEffect(() => {
     setStoredDir(dirFilter);
@@ -101,21 +104,29 @@ export function SessionList() {
     setStoredTo(toFilter);
   }, [dirFilter, modelFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>("filter:sortColumn", "date");
-  const [sortDirection, setSortDirection] = useLocalStorage<SortDirection>("filter:sortDirection", "desc");
+  const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>('filter:sortColumn', 'date');
+  const [sortDirection, setSortDirection] = useLocalStorage<SortDirection>(
+    'filter:sortDirection',
+    'desc',
+  );
 
-  const apiUrl = buildSessionsUrl(dirFilter, debouncedSearch, fromFilter, toFilter, modelFilter, currentPage);
+  const apiUrl = buildSessionsUrl(
+    dirFilter,
+    debouncedSearch,
+    fromFilter,
+    toFilter,
+    modelFilter,
+    currentPage,
+  );
   const {
     data: paginated,
     error,
     isLoading,
   } = useSWR<PaginatedSessions>(apiUrl, fetcher, { refreshInterval: 5000 });
 
-  const { data: allPaginated } = useSWR<PaginatedSessions>(
-    "/api/sessions",
-    fetcher,
-    { refreshInterval: 5000 },
-  );
+  const { data: allPaginated } = useSWR<PaginatedSessions>('/api/sessions', fetcher, {
+    refreshInterval: 5000,
+  });
 
   const sessions = paginated?.sessions;
   const total = paginated?.total ?? 0;
@@ -126,8 +137,8 @@ export function SessionList() {
     return [...sessions].sort((a, b) => {
       const aVal = getSortValue(a, sortColumn);
       const bVal = getSortValue(b, sortColumn);
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   }, [sessions, sortColumn, sortDirection]);
@@ -160,26 +171,26 @@ export function SessionList() {
 
   function toggleSort(column: SortColumn) {
     if (sortColumn === column) {
-      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortColumn(column);
-      setSortDirection(column === "date" ? "desc" : "asc");
+      setSortDirection(column === 'date' ? 'desc' : 'asc');
     }
   }
 
   function setDateRange(from: string, to: string) {
     setSearchParams((prev) => {
       if (from) {
-        prev.set("from", from);
+        prev.set('from', from);
       } else {
-        prev.delete("from");
+        prev.delete('from');
       }
       if (to) {
-        prev.set("to", to);
+        prev.set('to', to);
       } else {
-        prev.delete("to");
+        prev.delete('to');
       }
-      prev.delete("page");
+      prev.delete('page');
       return prev;
     });
   }
@@ -187,11 +198,11 @@ export function SessionList() {
   function setDirFilter(dir: string) {
     setSearchParams((prev) => {
       if (dir) {
-        prev.set("dir", dir);
+        prev.set('dir', dir);
       } else {
-        prev.delete("dir");
+        prev.delete('dir');
       }
-      prev.delete("page");
+      prev.delete('page');
       return prev;
     });
   }
@@ -199,11 +210,11 @@ export function SessionList() {
   function setModelFilter(model: string) {
     setSearchParams((prev) => {
       if (model) {
-        prev.set("model", model);
+        prev.set('model', model);
       } else {
-        prev.delete("model");
+        prev.delete('model');
       }
-      prev.delete("page");
+      prev.delete('page');
       return prev;
     });
   }
@@ -211,9 +222,9 @@ export function SessionList() {
   function setPage(page: number) {
     setSearchParams((prev) => {
       if (page <= 1) {
-        prev.delete("page");
+        prev.delete('page');
       } else {
-        prev.set("page", String(page));
+        prev.set('page', String(page));
       }
       return prev;
     });
@@ -255,11 +266,15 @@ export function SessionList() {
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-xs text-muted-fg uppercase tracking-wider">Total Tokens</div>
-              <div className="mt-1 text-2xl font-bold text-fg font-sans">{formatStatTokens(totalTokens)}</div>
+              <div className="mt-1 text-2xl font-bold text-fg font-sans">
+                {formatStatTokens(totalTokens)}
+              </div>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-xs text-muted-fg uppercase tracking-wider">Total Cost</div>
-              <div className="mt-1 text-2xl font-bold text-fg font-sans">${totalCost.toFixed(2)}</div>
+              <div className="mt-1 text-2xl font-bold text-fg font-sans">
+                ${totalCost.toFixed(2)}
+              </div>
             </div>
           </div>
         )}
@@ -267,7 +282,15 @@ export function SessionList() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -278,7 +301,7 @@ export function SessionList() {
               onChange={(e) => {
                 setSearch(e.target.value);
                 setSearchParams((prev) => {
-                  prev.delete("page");
+                  prev.delete('page');
                   return prev;
                 });
               }}
@@ -334,7 +357,15 @@ export function SessionList() {
 
         {/* Footer */}
         <div className="flex items-center gap-2 text-xs text-muted-fg">
-          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            className="h-3 w-3"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
           <span>Last updated just now</span>

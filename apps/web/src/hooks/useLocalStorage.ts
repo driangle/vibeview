@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react';
 
-const PREFIX = "vibeview:";
+const PREFIX = 'vibeview:';
 
 export function useLocalStorage<T>(
   key: string,

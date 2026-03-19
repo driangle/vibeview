@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from 'react';
 
 interface CopyableTextProps {
   text: string;
@@ -6,7 +6,7 @@ interface CopyableTextProps {
   children?: React.ReactNode;
 }
 
-export function CopyableText({ text, className = "", children }: CopyableTextProps) {
+export function CopyableText({ text, className = '', children }: CopyableTextProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -23,7 +23,7 @@ export function CopyableText({ text, className = "", children }: CopyableTextPro
       tabIndex={0}
       onClick={handleCopy}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handleCopy();
         }
@@ -32,7 +32,9 @@ export function CopyableText({ text, className = "", children }: CopyableTextPro
       title="Click to copy"
     >
       {copied && (
-        <span className="absolute right-full mr-1.5 text-green-600 dark:text-green-400">Copied!</span>
+        <span className="absolute right-full mr-1.5 text-green-600 dark:text-green-400">
+          Copied!
+        </span>
       )}
       {children ?? text}
     </span>

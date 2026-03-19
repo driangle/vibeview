@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseKeyboardNavigationOptions {
   itemCount: number;
@@ -7,8 +7,8 @@ interface UseKeyboardNavigationOptions {
   enabled?: boolean;
 }
 
-const INTERACTIVE_TAGS = new Set(["INPUT", "SELECT", "TEXTAREA"]);
-const NAV_KEYS = new Set(["ArrowDown", "ArrowUp", "Enter", "ArrowRight", "Escape", "ArrowLeft"]);
+const INTERACTIVE_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
+const NAV_KEYS = new Set(['ArrowDown', 'ArrowUp', 'Enter', 'ArrowRight', 'Escape', 'ArrowLeft']);
 
 export function useKeyboardNavigation({
   itemCount,
@@ -31,13 +31,13 @@ export function useKeyboardNavigation({
     function handleClick() {
       setActive(false);
     }
-    window.addEventListener("mousedown", handleClick);
-    return () => window.removeEventListener("mousedown", handleClick);
+    window.addEventListener('mousedown', handleClick);
+    return () => window.removeEventListener('mousedown', handleClick);
   }, [active]);
 
   const scrollToIndex = useCallback((index: number) => {
     const el = document.querySelector(`[data-row-index="${index}"]`);
-    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, []);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function useKeyboardNavigation({
       if (!NAV_KEYS.has(e.key)) return;
 
       switch (e.key) {
-        case "ArrowDown": {
+        case 'ArrowDown': {
           e.preventDefault();
           setActive(true);
           setSelectedIndex((prev) => {
@@ -59,7 +59,7 @@ export function useKeyboardNavigation({
           });
           break;
         }
-        case "ArrowUp": {
+        case 'ArrowUp': {
           e.preventDefault();
           setActive(true);
           setSelectedIndex((prev) => {
@@ -69,8 +69,8 @@ export function useKeyboardNavigation({
           });
           break;
         }
-        case "Enter":
-        case "ArrowRight": {
+        case 'Enter':
+        case 'ArrowRight': {
           if (!active) return;
           e.preventDefault();
           setSelectedIndex((current) => {
@@ -79,8 +79,8 @@ export function useKeyboardNavigation({
           });
           break;
         }
-        case "Escape":
-        case "ArrowLeft": {
+        case 'Escape':
+        case 'ArrowLeft': {
           if (!onBack) return;
           e.preventDefault();
           onBack();
@@ -89,8 +89,8 @@ export function useKeyboardNavigation({
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [enabled, itemCount, active, onSelect, onBack, scrollToIndex]);
 
   return { selectedIndex: active ? selectedIndex : -1, setSelectedIndex };

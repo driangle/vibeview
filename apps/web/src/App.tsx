@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { NavBar } from "./components/NavBar";
-import { Footer } from "./components/Footer";
-import { DirectoryList } from "./pages/DirectoryList";
-import { SessionList } from "./pages/SessionList";
-import { SessionView } from "./pages/SessionView";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { NavBar } from './components/NavBar';
+import { Footer } from './components/Footer';
+import { DirectoryList } from './pages/DirectoryList';
+import { SessionList } from './pages/SessionList';
+import { SessionView } from './pages/SessionView';
 
 export function App() {
   return (

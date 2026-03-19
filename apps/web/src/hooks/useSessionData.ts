@@ -1,25 +1,18 @@
-import { useMemo, useEffect } from "react";
-import useSWR from "swr";
-import { fetcher } from "../api";
-import type {
-  SessionDetail,
-  ContentBlock,
-  MessageResponse,
-  UsageTotals,
-} from "../types";
-import { calculateCost } from "../pricing";
-import { useSessionStream } from "./useSessionStream";
+import { useMemo, useEffect } from 'react';
+import useSWR from 'swr';
+import { fetcher } from '../api';
+import type { SessionDetail, ContentBlock, MessageResponse, UsageTotals } from '../types';
+import { calculateCost } from '../pricing';
+import { useSessionStream } from './useSessionStream';
 
-function buildToolResultMap(
-  messages: MessageResponse[],
-): Map<string, ContentBlock> {
+function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
   for (const msg of messages) {
-    if (msg.type !== "user" || !msg.message) continue;
+    if (msg.type !== 'user' || !msg.message) continue;
     const content = msg.message.content;
     if (!Array.isArray(content)) continue;
     for (const block of content) {
-      if (block.type === "tool_result" && block.tool_use_id) {
+      if (block.type === 'tool_result' && block.tool_use_id) {
         map.set(block.tool_use_id, block);
       }
     }
@@ -34,8 +27,7 @@ export function useSessionData(id: string | undefined) {
     isLoading,
   } = useSWR<SessionDetail>(id ? `/api/sessions/${id}` : null, fetcher);
 
-  const { streamedMessages, connectionStatus, addInitialUUIDs } =
-    useSessionStream(id);
+  const { streamedMessages, connectionStatus, addInitialUUIDs } = useSessionStream(id);
 
   // Register initial message UUIDs so the SSE hook deduplicates.
   useEffect(() => {
@@ -50,23 +42,20 @@ export function useSessionData(id: string | undefined) {
     return [...session.messages, ...streamedMessages];
   }, [session, streamedMessages]);
 
-  const toolResults = useMemo(
-    () => buildToolResultMap(allMessages),
-    [allMessages],
-  );
+  const toolResults = useMemo(() => buildToolResultMap(allMessages), [allMessages]);
 
   // Aggregate usage: session totals + any new streamed assistant messages.
   const liveUsage = useMemo<UsageTotals | null>(() => {
     if (!session) return null;
     const base = { ...session.usage };
     for (const msg of streamedMessages) {
-      if (msg.type === "assistant" && msg.message?.usage) {
+      if (msg.type === 'assistant' && msg.message?.usage) {
         const u = msg.message.usage;
         base.inputTokens += u.input_tokens;
         base.outputTokens += u.output_tokens;
         base.cacheCreationInputTokens += u.cache_creation_input_tokens;
         base.cacheReadInputTokens += u.cache_read_input_tokens;
-        base.costUSD += calculateCost(msg.message.model ?? "", u);
+        base.costUSD += calculateCost(msg.message.model ?? '', u);
       }
     }
     return base;
@@ -77,8 +66,8 @@ export function useSessionData(id: string | undefined) {
     const groups = new Map<string, MessageResponse[]>();
     const firstIds = new Set<string>();
     for (const msg of allMessages) {
-      if (msg.type !== "progress" || msg.data?.type !== "agent_progress") continue;
-      const agentId = String(msg.data.agentId ?? "");
+      if (msg.type !== 'progress' || msg.data?.type !== 'agent_progress') continue;
+      const agentId = String(msg.data.agentId ?? '');
       if (!agentId) continue;
       const existing = groups.get(agentId);
       if (existing) {
@@ -93,7 +82,7 @@ export function useSessionData(id: string | undefined) {
 
   // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
-    return allMessages.filter((m) => m.type !== "file-history-snapshot");
+    return allMessages.filter((m) => m.type !== 'file-history-snapshot');
   }, [allMessages]);
 
   return {

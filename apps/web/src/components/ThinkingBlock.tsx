@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 interface ThinkingBlockProps {
   thinking: string;
@@ -7,7 +7,7 @@ interface ThinkingBlockProps {
 export function ThinkingBlock({ thinking }: ThinkingBlockProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const preview = thinking.slice(0, 120).replace(/\n/g, " ");
+  const preview = thinking.slice(0, 120).replace(/\n/g, ' ');
 
   return (
     <div className="my-2 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
@@ -15,13 +15,9 @@ export function ThinkingBlock({ thinking }: ThinkingBlockProps) {
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
       >
-        <span className={`transition-transform ${expanded ? "rotate-90" : ""}`}>
-          ▶
-        </span>
+        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
         <span className="font-medium italic">Thinking</span>
-        {!expanded && (
-          <span className="truncate text-gray-400 dark:text-gray-500">{preview}…</span>
-        )}
+        {!expanded && <span className="truncate text-gray-400 dark:text-gray-500">{preview}…</span>}
       </button>
       {expanded && (
         <pre className="max-h-96 overflow-auto whitespace-pre-wrap border-t border-gray-200 dark:border-gray-700 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">

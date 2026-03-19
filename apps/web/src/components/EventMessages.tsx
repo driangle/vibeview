@@ -1,6 +1,6 @@
-import { useState } from "react";
-import type { MessageResponse } from "../types";
-import { RawJsonModal } from "./RawJsonModal";
+import { useState } from 'react';
+import type { MessageResponse } from '../types';
+import { RawJsonModal } from './RawJsonModal';
 
 function EventMessage({
   message,
@@ -27,9 +27,7 @@ function EventMessage({
           className={`cursor-pointer border-l-2 ${borderColor} py-0.5 pl-2 pr-2 text-xs ${labelColor} hover:opacity-70 text-left break-all`}
         >
           <span className="font-medium">{label}</span>
-          {detailText && (
-            <span className={`ml-1.5 ${detailColor}`}>{detailText}</span>
-          )}
+          {detailText && <span className={`ml-1.5 ${detailColor}`}>{detailText}</span>}
         </button>
       </div>
       {showJson && message.data && (
@@ -40,8 +38,8 @@ function EventMessage({
 }
 
 export function HookMessage({ message }: { message: MessageResponse }) {
-  const hookName = String(message.data?.hookName ?? "unknown");
-  const command = message.data?.command ? String(message.data.command) : "";
+  const hookName = String(message.data?.hookName ?? 'unknown');
+  const command = message.data?.command ? String(message.data.command) : '';
   const detailText = command ? `${hookName} → ${command}` : hookName;
 
   return (
@@ -57,11 +55,9 @@ export function HookMessage({ message }: { message: MessageResponse }) {
 }
 
 export function SystemMessage({ message }: { message: MessageResponse }) {
-  const label = message.type === "progress" ? "Progress" : "System";
+  const label = message.type === 'progress' ? 'Progress' : 'System';
   const detail =
-    message.data && typeof message.data === "object"
-      ? JSON.stringify(message.data)
-      : "";
+    message.data && typeof message.data === 'object' ? JSON.stringify(message.data) : '';
 
   return (
     <EventMessage

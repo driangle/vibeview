@@ -1,11 +1,11 @@
-import { useState, useCallback } from "react";
-import Markdown from "react-markdown";
-import remarkBreaks from "remark-breaks";
-import remarkGfm from "remark-gfm";
-import { CodeBlock } from "./CodeBlock";
-import { RawJsonModal } from "./RawJsonModal";
-import type { MessageSegment } from "./processMessageContent";
-import type { MessageResponse } from "../types";
+import { useState, useCallback } from 'react';
+import Markdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
+import { CodeBlock } from './CodeBlock';
+import { RawJsonModal } from './RawJsonModal';
+import type { MessageSegment } from './processMessageContent';
+import type { MessageResponse } from '../types';
 
 function TextSegment({ content }: { content: string }) {
   return (
@@ -14,8 +14,8 @@ function TextSegment({ content }: { content: string }) {
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
           code({ className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || "");
-            const code = String(children).replace(/\n$/, "");
+            const match = /language-(\w+)/.exec(className || '');
+            const code = String(children).replace(/\n$/, '');
             if (match) {
               return <CodeBlock language={match[1]}>{code}</CodeBlock>;
             }
@@ -33,13 +33,7 @@ function TextSegment({ content }: { content: string }) {
   );
 }
 
-function CaveatSegment({
-  content,
-  onClick,
-}: {
-  content: string;
-  onClick: () => void;
-}) {
+function CaveatSegment({ content, onClick }: { content: string; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -107,21 +101,13 @@ type SegmentRenderer = (
 ) => React.ReactNode;
 
 const SEGMENT_RENDERERS: Record<string, SegmentRenderer> = {
-  text: (seg, key) => (
-    <TextSegment key={key} content={(seg as { content: string }).content} />
-  ),
+  text: (seg, key) => <TextSegment key={key} content={(seg as { content: string }).content} />,
   caveat: (seg, key, onShowRaw) => (
-    <CaveatSegment
-      key={key}
-      content={(seg as { content: string }).content}
-      onClick={onShowRaw}
-    />
+    <CaveatSegment key={key} content={(seg as { content: string }).content} onClick={onShowRaw} />
   ),
   command: (seg, key, onShowRaw) => {
     const s = seg as { name: string; args: string };
-    return (
-      <CommandSegment key={key} name={s.name} args={s.args} onClick={onShowRaw} />
-    );
+    return <CommandSegment key={key} name={s.name} args={s.args} onClick={onShowRaw} />;
   },
 };
 
@@ -141,10 +127,7 @@ export function MessageContent({ segments, rawMessage }: MessageContentProps) {
         return render ? render(seg, i, openModal) : null;
       })}
       {showModal && rawMessage && (
-        <RawJsonModal
-          data={rawMessage.message}
-          onClose={() => setShowModal(false)}
-        />
+        <RawJsonModal data={rawMessage.message} onClose={() => setShowModal(false)} />
       )}
     </>
   );

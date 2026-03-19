@@ -53,7 +53,7 @@ export interface APIMessage {
 
 export interface MessageResponse {
   uuid: string;
-  type: "user" | "assistant" | "progress" | "system" | "file-history-snapshot";
+  type: 'user' | 'assistant' | 'progress' | 'system' | 'file-history-snapshot';
   timestamp: string;
   message?: APIMessage;
   data?: Record<string, unknown>;

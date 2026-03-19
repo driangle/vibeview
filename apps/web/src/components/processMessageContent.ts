@@ -13,9 +13,9 @@
 // ---------------------------------------------------------------------------
 
 export type MessageSegment =
-  | { type: "text"; content: string }
-  | { type: "caveat"; content: string }
-  | { type: "command"; name: string; args: string };
+  | { type: 'text'; content: string }
+  | { type: 'caveat'; content: string }
+  | { type: 'command'; name: string; args: string };
 
 // ---------------------------------------------------------------------------
 // Tags stripped entirely (tag + content removed)
@@ -43,7 +43,7 @@ const SEGMENT_EXTRACTORS: SegmentExtractor[] = [
     pattern:
       /<command-message>[\s\S]*?<\/command-message>\s*<command-name>([^<]*)<\/command-name>\s*<command-args>([^<]*)<\/command-args>(?:\s*<local-command-stdout>[\s\S]*?<\/local-command-stdout>)?/g,
     toSegment: (m) => ({
-      type: "command",
+      type: 'command',
       name: m[1].trim(),
       args: m[2].trim(),
     }),
@@ -53,7 +53,7 @@ const SEGMENT_EXTRACTORS: SegmentExtractor[] = [
     pattern: /<local-command-caveat>([\s\S]*?)<\/local-command-caveat>/g,
     toSegment: (m) => {
       const content = m[1].trim();
-      return content ? { type: "caveat", content } : null;
+      return content ? { type: 'caveat', content } : null;
     },
   },
 ];
@@ -70,11 +70,9 @@ const HTML_TAGS =
 
 function cleanTextSegment(text: string): string {
   let out = text;
-  out = out.replace(LEFTOVER_UNWRAP, "");
-  out = out.replace(/<\/?\w[\w-]*(?:\s[^>]*)?\/?>/g, (tag) =>
-    HTML_TAGS.test(tag) ? tag : "",
-  );
-  out = out.replace(/\n{3,}/g, "\n\n");
+  out = out.replace(LEFTOVER_UNWRAP, '');
+  out = out.replace(/<\/?\w[\w-]*(?:\s[^>]*)?\/?>/g, (tag) => (HTML_TAGS.test(tag) ? tag : ''));
+  out = out.replace(/\n{3,}/g, '\n\n');
   return out.trim();
 }
 
@@ -82,7 +80,7 @@ function cleanTextSegment(text: string): string {
 // Code block protection
 // ---------------------------------------------------------------------------
 
-const CODE_BLOCK_PLACEHOLDER = "\0CB";
+const CODE_BLOCK_PLACEHOLDER = '\0CB';
 
 function protectCodeBlocks(text: string): { text: string; blocks: string[] } {
   const blocks: string[] = [];
@@ -95,7 +93,7 @@ function protectCodeBlocks(text: string): { text: string; blocks: string[] } {
 
 function restoreCodeBlocks(text: string, blocks: string[]): string {
   return text.replace(
-    new RegExp(`${CODE_BLOCK_PLACEHOLDER}(\\d+)${CODE_BLOCK_PLACEHOLDER}`, "g"),
+    new RegExp(`${CODE_BLOCK_PLACEHOLDER}(\\d+)${CODE_BLOCK_PLACEHOLDER}`, 'g'),
     (_m, idx: string) => blocks[parseInt(idx, 10)],
   );
 }
@@ -110,7 +108,7 @@ export function processMessageContent(raw: string): MessageSegment[] {
   // Strip system tags entirely.
   let text = protected_;
   for (const re of STRIP_PATTERNS) {
-    text = text.replace(re, "");
+    text = text.replace(re, '');
   }
 
   // Collect all special segment matches with their positions.
@@ -137,7 +135,7 @@ export function processMessageContent(raw: string): MessageSegment[] {
     if (start > cursor) {
       const raw = text.slice(cursor, start);
       const cleaned = cleanTextSegment(restoreCodeBlocks(raw, blocks));
-      if (cleaned) segments.push({ type: "text", content: cleaned });
+      if (cleaned) segments.push({ type: 'text', content: cleaned });
     }
     segments.push(segment);
     cursor = end;
@@ -147,7 +145,7 @@ export function processMessageContent(raw: string): MessageSegment[] {
   if (cursor < text.length) {
     const raw = text.slice(cursor);
     const cleaned = cleanTextSegment(restoreCodeBlocks(raw, blocks));
-    if (cleaned) segments.push({ type: "text", content: cleaned });
+    if (cleaned) segments.push({ type: 'text', content: cleaned });
   }
 
   return segments;

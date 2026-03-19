@@ -1,18 +1,14 @@
-export function LiveIndicator({
-  status,
-}: {
-  status: "connecting" | "connected" | "disconnected";
-}) {
-  if (status === "disconnected") return null;
+export function LiveIndicator({ status }: { status: 'connecting' | 'connected' | 'disconnected' }) {
+  if (status === 'disconnected') return null;
 
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-700 dark:text-green-400">
       <span
         className={`inline-block h-1.5 w-1.5 rounded-full ${
-          status === "connected" ? "bg-green-500 animate-pulse" : "bg-yellow-400"
+          status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-yellow-400'
         }`}
       />
-      {status === "connected" ? "Live" : "Connecting…"}
+      {status === 'connected' ? 'Live' : 'Connecting…'}
     </span>
   );
 }
@@ -27,16 +23,12 @@ export function Pagination({
   onPageChange: (page: number) => void;
 }) {
   const buttonClass =
-    "rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40";
+    'rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
     <div className="flex items-center justify-between py-3">
       <div className="flex gap-2">
-        <button
-          onClick={() => onPageChange(0)}
-          disabled={page === 0}
-          className={buttonClass}
-        >
+        <button onClick={() => onPageChange(0)} disabled={page === 0} className={buttonClass}>
           First
         </button>
         <button
@@ -70,22 +62,16 @@ export function Pagination({
   );
 }
 
-export function FollowToggle({
-  enabled,
-  onToggle,
-}: {
-  enabled: boolean;
-  onToggle: () => void;
-}) {
+export function FollowToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
     <button
       onClick={onToggle}
       className={`fixed bottom-6 right-6 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg transition-colors ${
         enabled
-          ? "bg-blue-600 text-white hover:bg-blue-700"
-          : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+          ? 'bg-blue-600 text-white hover:bg-blue-700'
+          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
       }`}
-      title={enabled ? "Auto-follow is on" : "Auto-follow is off"}
+      title={enabled ? 'Auto-follow is on' : 'Auto-follow is off'}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +85,7 @@ export function FollowToggle({
           clipRule="evenodd"
         />
       </svg>
-      {enabled ? "Following" : "Follow"}
+      {enabled ? 'Following' : 'Follow'}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import type { UsageTotals } from "../types";
+import type { UsageTotals } from '../types';
 
 function formatTokenCount(count: number): string {
   if (count >= 1_000_000) {

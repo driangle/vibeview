@@ -1,26 +1,24 @@
-import { useState } from "react";
-import type { MessageResponse, ContentBlock } from "../types";
-import { ToolCallBlock } from "./ToolCallBlock";
-import { processMessageContent } from "./processMessageContent";
-import { MessageContent } from "./MessageContent";
+import { useState } from 'react';
+import type { MessageResponse, ContentBlock } from '../types';
+import { ToolCallBlock } from './ToolCallBlock';
+import { processMessageContent } from './processMessageContent';
+import { MessageContent } from './MessageContent';
 
 interface AgentProgressWidgetProps {
   messages: MessageResponse[];
 }
 
-function buildSubagentToolResults(
-  messages: MessageResponse[],
-): Map<string, ContentBlock> {
+function buildSubagentToolResults(messages: MessageResponse[]): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
   for (const msg of messages) {
     const inner = msg.data?.message as
       | { type: string; message?: { content: ContentBlock[] | string } }
       | undefined;
-    if (inner?.type !== "user" || !inner.message) continue;
+    if (inner?.type !== 'user' || !inner.message) continue;
     const content = inner.message.content;
     if (!Array.isArray(content)) continue;
     for (const block of content) {
-      if (block.type === "tool_result" && block.tool_use_id) {
+      if (block.type === 'tool_result' && block.tool_use_id) {
         map.set(block.tool_use_id, block);
       }
     }
@@ -37,8 +35,8 @@ function SubagentTurn({
   toolResults: Map<string, ContentBlock>;
   parentMessage: MessageResponse;
 }) {
-  if (turn.type === "user") return null;
-  if (turn.type !== "assistant" || !turn.message) return null;
+  if (turn.type === 'user') return null;
+  if (turn.type !== 'assistant' || !turn.message) return null;
 
   const content = turn.message.content;
   if (!Array.isArray(content)) return null;
@@ -46,11 +44,11 @@ function SubagentTurn({
   return (
     <>
       {content.map((block, i) => {
-        if (block.type === "tool_use") {
+        if (block.type === 'tool_use') {
           const result = block.id ? toolResults.get(block.id) : undefined;
           return <ToolCallBlock key={i} block={block} result={result} />;
         }
-        if (block.type === "text" && block.text) {
+        if (block.type === 'text' && block.text) {
           const segments = processMessageContent(block.text);
           if (segments.length === 0) return null;
           return (
@@ -74,9 +72,8 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
   if (messages.length === 0) return null;
 
   const firstData = messages[0].data;
-  const prompt = String(firstData?.prompt ?? "Agent");
-  const promptPreview =
-    prompt.length > 120 ? prompt.slice(0, 120) + "..." : prompt;
+  const prompt = String(firstData?.prompt ?? 'Agent');
+  const promptPreview = prompt.length > 120 ? prompt.slice(0, 120) + '...' : prompt;
   const toolResults = buildSubagentToolResults(messages);
 
   const turns = messages
@@ -97,11 +94,7 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
         onClick={() => setExpanded(!expanded)}
         className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs hover:bg-violet-100 dark:hover:bg-violet-900/50"
       >
-        <span
-          className={`transition-transform ${expanded ? "rotate-90" : ""}`}
-        >
-          ▶
-        </span>
+        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
         <span className="rounded bg-violet-200 dark:bg-violet-800 px-1.5 py-0.5 font-medium text-violet-800 dark:text-violet-200">
           Agent
         </span>
@@ -109,9 +102,7 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
           {messages.length}
         </span>
         {!expanded && (
-          <span className="truncate text-gray-600 dark:text-gray-400">
-            {promptPreview}
-          </span>
+          <span className="truncate text-gray-600 dark:text-gray-400">{promptPreview}</span>
         )}
       </button>
       {expanded && (
