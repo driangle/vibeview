@@ -194,6 +194,16 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		sessions = filtered
 	}
 
+	if state := r.URL.Query().Get("activityState"); state != "" {
+		filtered := make([]session.SessionMeta, 0)
+		for _, sm := range sessions {
+			if sm.ActivityState == state {
+				filtered = append(filtered, sm)
+			}
+		}
+		sessions = filtered
+	}
+
 	if q := r.URL.Query().Get("q"); q != "" {
 		query := strings.ToLower(q)
 		filtered := make([]session.SessionMeta, 0)
@@ -390,14 +400,15 @@ type ConfigResponse struct {
 
 // SessionResponse is the API representation of a session in list responses.
 type SessionResponse struct {
-	ID           string              `json:"id"`
-	Project      string              `json:"project"`
-	CustomTitle  string              `json:"customTitle"`
-	Timestamp    string              `json:"timestamp"`
-	MessageCount int                 `json:"messageCount"`
-	Model        string              `json:"model"`
-	Slug         string              `json:"slug"`
-	Usage        session.UsageTotals `json:"usage"`
+	ID            string              `json:"id"`
+	Project       string              `json:"project"`
+	CustomTitle   string              `json:"customTitle"`
+	Timestamp     string              `json:"timestamp"`
+	MessageCount  int                 `json:"messageCount"`
+	Model         string              `json:"model"`
+	Slug          string              `json:"slug"`
+	Usage         session.UsageTotals `json:"usage"`
+	ActivityState string              `json:"activityState"`
 }
 
 // PaginatedSessionsResponse wraps a page of sessions with the total count.
@@ -440,14 +451,15 @@ type MessageResponse struct {
 
 func toSessionResponse(m session.SessionMeta) SessionResponse {
 	return SessionResponse{
-		ID:           m.SessionID,
-		Project:      m.Project,
-		CustomTitle:  m.CustomTitle,
-		Timestamp:    msToISO(m.Timestamp),
-		MessageCount: m.MessageCount,
-		Model:        m.Model,
-		Slug:         m.Slug,
-		Usage:        m.Usage,
+		ID:            m.SessionID,
+		Project:       m.Project,
+		CustomTitle:   m.CustomTitle,
+		Timestamp:     msToISO(m.Timestamp),
+		MessageCount:  m.MessageCount,
+		Model:         m.Model,
+		Slug:          m.Slug,
+		Usage:         m.Usage,
+		ActivityState: m.ActivityState,
 	}
 }
 

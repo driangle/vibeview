@@ -20,6 +20,7 @@ function buildSessionsUrl(
   from: string,
   to: string,
   model: string,
+  activityState: string,
   pageSize: number,
   page?: number,
 ): string {
@@ -29,6 +30,7 @@ function buildSessionsUrl(
   if (from) params.set('from', from);
   if (to) params.set('to', to);
   if (model) params.set('model', model);
+  if (activityState) params.set('activityState', activityState);
   if (page !== undefined) {
     params.set('limit', String(pageSize));
     params.set('offset', String((page - 1) * pageSize));
@@ -68,6 +70,7 @@ export function SessionList() {
 
   const [storedDir, setStoredDir] = useLocalStorage('filter:dir', '');
   const [storedModel, setStoredModel] = useLocalStorage('filter:model', '');
+  const [storedActivity, setStoredActivity] = useLocalStorage('filter:activity', '');
   const [storedFrom, setStoredFrom] = useLocalStorage('filter:from', '');
   const [storedTo, setStoredTo] = useLocalStorage('filter:to', '');
 
@@ -78,15 +81,17 @@ export function SessionList() {
     const hasUrlFilters =
       searchParams.has('dir') ||
       searchParams.has('model') ||
+      searchParams.has('activity') ||
       searchParams.has('from') ||
       searchParams.has('to');
     if (hasUrlFilters) return;
-    const needsUpdate = storedDir || storedModel || storedFrom || storedTo;
+    const needsUpdate = storedDir || storedModel || storedActivity || storedFrom || storedTo;
     if (!needsUpdate) return;
     setSearchParams(
       (prev) => {
         if (storedDir) prev.set('dir', storedDir);
         if (storedModel) prev.set('model', storedModel);
+        if (storedActivity) prev.set('activity', storedActivity);
         if (storedFrom) prev.set('from', storedFrom);
         if (storedTo) prev.set('to', storedTo);
         return prev;
@@ -97,6 +102,7 @@ export function SessionList() {
 
   const dirFilter = searchParams.get('dir') || '';
   const modelFilter = searchParams.get('model') || '';
+  const activityFilter = searchParams.get('activity') || '';
   const fromFilter = searchParams.get('from') || '';
   const toFilter = searchParams.get('to') || '';
   const currentPage = Number(searchParams.get('page')) || 1;
@@ -104,9 +110,10 @@ export function SessionList() {
   useEffect(() => {
     setStoredDir(dirFilter);
     setStoredModel(modelFilter);
+    setStoredActivity(activityFilter);
     setStoredFrom(fromFilter);
     setStoredTo(toFilter);
-  }, [dirFilter, modelFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dirFilter, modelFilter, activityFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>(
     'filter:sortColumn',
@@ -124,6 +131,7 @@ export function SessionList() {
     fromFilter,
     toFilter,
     modelFilter,
+    activityFilter,
     pageSize,
     currentPage,
   );
@@ -234,6 +242,18 @@ export function SessionList() {
         prev.set('model', model);
       } else {
         prev.delete('model');
+      }
+      prev.delete('page');
+      return prev;
+    });
+  }
+
+  function setActivityFilter(state: string) {
+    setSearchParams((prev) => {
+      if (state) {
+        prev.set('activity', state);
+      } else {
+        prev.delete('activity');
       }
       prev.delete('page');
       return prev;
@@ -386,6 +406,17 @@ export function SessionList() {
               </option>
             ))}
           </select>
+          <select
+            value={activityFilter}
+            onChange={(e) => setActivityFilter(e.target.value)}
+            className={`w-[180px] truncate ${activityFilter ? selectActive : selectDefault}`}
+          >
+            <option value="">All states</option>
+            <option value="working">Working</option>
+            <option value="waiting_for_approval">Waiting for approval</option>
+            <option value="waiting_for_input">Waiting for input</option>
+            <option value="idle">Idle</option>
+          </select>
           <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
         </div>
 
@@ -407,10 +438,18 @@ export function SessionList() {
               onModelClick={setModelFilter}
               selectedIndex={selectedIndex}
               isLoaded={!!loaded}
-              hasFilters={!!(dirFilter || modelFilter || fromFilter || toFilter || debouncedSearch)}
+              hasFilters={
+                !!(
+                  dirFilter ||
+                  modelFilter ||
+                  activityFilter ||
+                  fromFilter ||
+                  toFilter ||
+                  debouncedSearch
+                )
+              }
               showCost={settings.showCost}
               dateFormat={settings.dateFormat}
-              recentThreshold={settings.recentThreshold}
             />
             {loaded && sortedSessions.length > 0 && (
               <Pagination

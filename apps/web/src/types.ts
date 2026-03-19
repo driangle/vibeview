@@ -13,6 +13,8 @@ export interface UsageTotals {
   costUSD: number;
 }
 
+export type ActivityState = 'working' | 'waiting_for_approval' | 'waiting_for_input' | 'idle';
+
 export interface Session {
   id: string;
   project: string;
@@ -22,6 +24,7 @@ export interface Session {
   model: string;
   slug: string;
   usage: UsageTotals;
+  activityState?: ActivityState;
 }
 
 export interface Usage {

@@ -15,7 +15,6 @@ interface SessionTableProps {
   hasFilters?: boolean;
   showCost?: boolean;
   dateFormat?: string;
-  recentThreshold?: number;
 }
 
 export function SessionTable({
@@ -30,7 +29,6 @@ export function SessionTable({
   hasFilters,
   showCost = true,
   dateFormat,
-  recentThreshold,
 }: SessionTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
@@ -121,7 +119,6 @@ export function SessionTable({
               rowIndex={index}
               showCost={showCost}
               dateFormat={dateFormat}
-              recentThreshold={recentThreshold}
             />
           ))}
           {isLoaded && sessions.length === 0 && (

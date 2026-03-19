@@ -1,7 +1,7 @@
 ---
 title: "Detect session activity states"
 id: "01kksnbj5"
-status: pending
+status: in-progress
 priority: medium
 type: feature
 tags: ["sessions", "state-detection"]

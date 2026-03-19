@@ -25,14 +25,15 @@ type UsageTotals struct {
 
 // SessionMeta holds metadata extracted from a session's history entry and JSONL file.
 type SessionMeta struct {
-	SessionID    string      `json:"sessionId"`
-	Project      string      `json:"project"`
-	CustomTitle  string      `json:"customTitle"`
-	Timestamp    int64       `json:"timestamp"` // epoch millis
-	MessageCount int         `json:"messageCount"`
-	Model        string      `json:"model"`
-	Slug         string      `json:"slug"`
-	Usage        UsageTotals `json:"usage"`
+	SessionID     string      `json:"sessionId"`
+	Project       string      `json:"project"`
+	CustomTitle   string      `json:"customTitle"`
+	Timestamp     int64       `json:"timestamp"` // epoch millis
+	MessageCount  int         `json:"messageCount"`
+	Model         string      `json:"model"`
+	Slug          string      `json:"slug"`
+	Usage         UsageTotals `json:"usage"`
+	ActivityState string      `json:"activityState"`
 
 	// FilePath is the absolute path to the JSONL file for standalone sessions.
 	// Empty for sessions discovered from ~/.claude.
@@ -74,6 +75,18 @@ func (idx *Index) SetCustomTitle(id, title string) {
 	for i := range idx.Sessions {
 		if idx.Sessions[i].SessionID == id {
 			idx.Sessions[i].CustomTitle = title
+			return
+		}
+	}
+}
+
+// SetActivityState updates the activity state for a session in the index.
+func (idx *Index) SetActivityState(id, state string) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	for i := range idx.Sessions {
+		if idx.Sessions[i].SessionID == id {
+			idx.Sessions[i].ActivityState = state
 			return
 		}
 	}
@@ -327,6 +340,8 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 		}
 	}
 
+	meta.ActivityState = DeriveActivityState(messages)
+
 	return meta
 }
 
@@ -512,6 +527,8 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 			break
 		}
 	}
+
+	meta.ActivityState = DeriveActivityState(messages)
 
 	return meta, nil
 }

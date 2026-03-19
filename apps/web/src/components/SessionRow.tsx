@@ -1,18 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { ActivityBadge } from './ActivityBadge';
 import { ModelBadge } from './ModelBadge';
 import type { Session } from '../types';
 import { projectName } from '../utils';
-
-const DEFAULT_RECENT_THRESHOLD_MS = 5 * 60 * 1000;
 
 function formatTokens(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}k`;
   return String(count);
-}
-
-function isRecent(timestamp: string, threshold = DEFAULT_RECENT_THRESHOLD_MS): boolean {
-  return Date.now() - new Date(timestamp).getTime() < threshold;
 }
 
 function formatSessionDate(timestamp: string): { date: string; relative: string } {
@@ -57,7 +52,6 @@ interface SessionRowProps {
   rowIndex?: number;
   showCost?: boolean;
   dateFormat?: string;
-  recentThreshold?: number;
 }
 
 export function SessionRow({
@@ -68,10 +62,8 @@ export function SessionRow({
   rowIndex,
   showCost = true,
   dateFormat = 'relative',
-  recentThreshold,
 }: SessionRowProps) {
   const navigate = useNavigate();
-  const recent = isRecent(session.timestamp, recentThreshold);
   const time = formatSessionDate(session.timestamp);
 
   return (
@@ -116,12 +108,7 @@ export function SessionRow({
       {/* Messages */}
       <td className="px-4 py-3 text-xs text-muted-fg text-right whitespace-nowrap">
         <span className="inline-flex items-center gap-1.5">
-          {recent && (
-            <span
-              className="h-2 w-2 shrink-0 rounded-full bg-success animate-pulse"
-              title="Active recently"
-            />
-          )}
+          <ActivityBadge state={session.activityState} />
           {session.messageCount}
         </span>
       </td>

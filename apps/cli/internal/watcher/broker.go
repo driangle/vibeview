@@ -33,9 +33,10 @@ type Broker struct {
 	index      *session.Index
 	dirSet     map[string]struct{} // encoded project dir names to filter (nil = no filter)
 
-	mu      sync.Mutex
-	clients map[string]map[*Client]struct{} // sessionID -> set of clients
-	tailers map[string]*Tailer              // sessionID -> tailer
+	mu            sync.Mutex
+	clients       map[string]map[*Client]struct{} // sessionID -> set of clients
+	tailers       map[string]*Tailer              // sessionID -> tailer
+	lastMessageAt map[string]time.Time            // sessionID -> time of last message (for idle decay)
 
 	historyWatcher *fsnotify.Watcher
 	done           chan struct{}
@@ -54,13 +55,14 @@ func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []s
 	}
 
 	b := &Broker{
-		claudeDir:  claudeDir,
-		standalone: standalone,
-		index:      index,
-		dirSet:     dirSet,
-		clients:    make(map[string]map[*Client]struct{}),
-		tailers:    make(map[string]*Tailer),
-		done:       make(chan struct{}),
+		claudeDir:     claudeDir,
+		standalone:    standalone,
+		index:         index,
+		dirSet:        dirSet,
+		clients:       make(map[string]map[*Client]struct{}),
+		tailers:       make(map[string]*Tailer),
+		lastMessageAt: make(map[string]time.Time),
+		done:          make(chan struct{}),
 	}
 
 	if !standalone {
@@ -115,6 +117,7 @@ func (b *Broker) Unsubscribe(c *Client) {
 
 	if len(clients) == 0 {
 		delete(b.clients, c.SessionID)
+		delete(b.lastMessageAt, c.SessionID)
 		if tailer, ok := b.tailers[c.SessionID]; ok {
 			tailer.Close()
 			delete(b.tailers, c.SessionID)
@@ -161,6 +164,14 @@ func (b *Broker) startTailer(sessionID string) error {
 			// Update the index when a session is renamed.
 			if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
 				b.index.SetCustomTitle(sessionID, msg.CustomTitle)
+			}
+
+			// Update activity state based on the latest message.
+			if state := session.DeriveActivityStateFromMessage(msg); state != "" {
+				b.index.SetActivityState(sessionID, state)
+				b.mu.Lock()
+				b.lastMessageAt[sessionID] = time.Now()
+				b.mu.Unlock()
 			}
 
 			data, err := json.Marshal(toMessageEvent(msg))
@@ -287,6 +298,8 @@ func (b *Broker) enrichNewSession(sessionID string) {
 	}
 }
 
+const idleDecayDuration = 5 * time.Minute
+
 func (b *Broker) pingLoop() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
@@ -296,8 +309,16 @@ func (b *Broker) pingLoop() {
 		case <-b.done:
 			return
 		case <-ticker.C:
-			event := SSEEvent{Event: "ping", Data: `{"time":"` + time.Now().UTC().Format(time.RFC3339) + `"}`}
+			now := time.Now()
+			event := SSEEvent{Event: "ping", Data: `{"time":"` + now.UTC().Format(time.RFC3339) + `"}`}
 			b.mu.Lock()
+			// Decay stale active sessions to idle.
+			for sessionID, lastMsg := range b.lastMessageAt {
+				if now.Sub(lastMsg) > idleDecayDuration {
+					b.index.SetActivityState(sessionID, session.ActivityIdle)
+					delete(b.lastMessageAt, sessionID)
+				}
+			}
 			for _, clients := range b.clients {
 				for client := range clients {
 					select {
