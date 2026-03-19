@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import useSWR from 'swr';
 import { fetcher } from '../api';
@@ -7,14 +7,51 @@ import type { AppConfig } from '../types';
 
 function ConfigLabel({ config }: { config: AppConfig }) {
   const [showModal, setShowModal] = useState(false);
+  const popoverRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!showModal) return;
+    function handleClick(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowModal(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showModal]);
 
   if (!config.standalone) {
     const dirs = config.dirs ?? [];
     return (
       <span className="flex items-center gap-2">
         {dirs.length > 0 && (
-          <span className="rounded bg-warning/15 px-2 py-0.5 font-mono text-xs text-warning">
-            {dirs.length === 1 ? dirs[0] : `${dirs.length} dirs`}
+          <span className="relative" ref={popoverRef}>
+            <button
+              onClick={() => {
+                if (dirs.length > 1) setShowModal((v) => !v);
+              }}
+              className={`rounded bg-warning/15 px-2 py-0.5 font-mono text-xs text-warning ${
+                dirs.length > 1
+                  ? 'cursor-pointer hover:bg-warning/25 transition-colors'
+                  : 'cursor-default'
+              }`}
+            >
+              {dirs.length === 1 ? dirs[0] : `${dirs.length} dirs`}
+            </button>
+            {showModal && dirs.length > 1 && (
+              <div className="absolute right-0 top-full z-50 mt-1 min-w-48 rounded-lg border border-border bg-card p-2 shadow-lg">
+                <ul className="space-y-1">
+                  {dirs.map((d) => (
+                    <li
+                      key={d}
+                      className="rounded bg-secondary px-2.5 py-1.5 font-mono text-xs text-secondary-fg"
+                    >
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </span>
         )}
         <span className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-secondary-fg">
