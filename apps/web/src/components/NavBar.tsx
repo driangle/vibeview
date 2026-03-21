@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import { fetcher } from '../api';
 import { useTheme } from '../hooks/useTheme';
 import type { AppConfig } from '../types';
+import { Modal } from './Modal';
 
 function ConfigLabel({ config }: { config: AppConfig }) {
   const [showModal, setShowModal] = useState(false);
@@ -76,32 +77,27 @@ function ConfigLabel({ config }: { config: AppConfig }) {
       </button>
 
       {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setShowModal(false)}
+        <Modal
+          onClose={() => setShowModal(false)}
+          className="w-full max-w-lg overflow-auto bg-card p-6"
         >
-          <div
-            className="mx-4 max-h-[80vh] w-full max-w-lg overflow-auto rounded-lg bg-card p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-fg">Source Paths ({paths.length})</h2>
-              <button onClick={() => setShowModal(false)} className="text-muted-fg hover:text-fg">
-                &times;
-              </button>
-            </div>
-            <ul className="space-y-1">
-              {paths.map((p) => (
-                <li
-                  key={p}
-                  className="rounded bg-secondary px-3 py-2 font-mono text-xs text-secondary-fg"
-                >
-                  {p}
-                </li>
-              ))}
-            </ul>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-fg">Source Paths ({paths.length})</h2>
+            <button onClick={() => setShowModal(false)} className="text-muted-fg hover:text-fg">
+              &times;
+            </button>
           </div>
-        </div>
+          <ul className="space-y-1">
+            {paths.map((p) => (
+              <li
+                key={p}
+                className="rounded bg-secondary px-3 py-2 font-mono text-xs text-secondary-fg"
+              >
+                {p}
+              </li>
+            ))}
+          </ul>
+        </Modal>
       )}
     </>
   );

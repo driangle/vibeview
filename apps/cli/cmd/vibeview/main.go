@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/driangle/vibeview/internal/logutil"
 	"github.com/driangle/vibeview/internal/server"
@@ -84,7 +88,18 @@ func main() {
 		go openBrowser(url)
 	}
 
-	if err := srv.ListenAndServe(*port); err != nil {
+	// Shut down cleanly on SIGINT/SIGTERM so the port is released.
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigCh
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		srv.Shutdown(ctx)
+	}()
+
+	if err := srv.ListenAndServe(*port); err != nil && err.Error() != "http: Server closed" {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}

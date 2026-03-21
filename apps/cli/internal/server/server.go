@@ -2,6 +2,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -39,6 +40,7 @@ type Server struct {
 	index        *session.Index
 	broker       *watcher.Broker
 	mux          *http.ServeMux
+	httpServer   *http.Server
 }
 
 // New creates a Server. In standalone mode, it uses the provided Index directly.
@@ -98,7 +100,14 @@ func (s *Server) routes() {
 // ListenAndServe starts the HTTP server on the given port.
 func (s *Server) ListenAndServe(port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	return http.ListenAndServe(addr, cors(s.mux))
+	s.httpServer = &http.Server{Addr: addr, Handler: cors(s.mux)}
+	return s.httpServer.ListenAndServe()
+}
+
+// Shutdown gracefully stops the HTTP server and cleans up resources.
+func (s *Server) Shutdown(ctx context.Context) error {
+	s.broker.Close()
+	return s.httpServer.Shutdown(ctx)
 }
 
 // cors wraps a handler with permissive CORS headers for local development.
