@@ -4,7 +4,7 @@ type Props = {
   onChange: (from: string, to: string) => void;
 };
 
-type Preset = 'all' | 'today' | '7d' | '30d';
+type Preset = 'all' | 'today' | '7d' | '30d' | 'custom';
 
 const selectBase =
   'rounded-md border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none';
@@ -42,7 +42,15 @@ function derivePreset(from: string, to: string): Preset {
   if (from === sevenDaysAgo && to === todayEnd) return '7d';
   if (from === thirtyDaysAgo && to === todayEnd) return '30d';
 
-  return 'all';
+  return 'custom';
+}
+
+function formatCustomLabel(from: string, to: string): string {
+  const fmt = (ms: string) =>
+    new Date(Number(ms)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const fromDate = fmt(from);
+  const toDate = fmt(to);
+  return fromDate === toDate ? fromDate : `${fromDate} – ${toDate}`;
 }
 
 export function DateRangeFilter({ from, to, onChange }: Props) {
@@ -65,6 +73,8 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
       case '30d':
         onChange(String(daysAgo(30)), todayEnd);
         break;
+      case 'custom':
+        break;
     }
   }
 
@@ -78,6 +88,7 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
       <option value="today">Today</option>
       <option value="7d">Last 7 days</option>
       <option value="30d">Last 30 days</option>
+      {preset === 'custom' && <option value="custom">{formatCustomLabel(from, to)}</option>}
     </select>
   );
 }

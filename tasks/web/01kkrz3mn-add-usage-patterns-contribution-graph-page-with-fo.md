@@ -1,7 +1,7 @@
 ---
 title: "Add usage patterns contribution graph page with folder filtering"
 id: "01kkrz3mn"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "analytics", "visualization"]
@@ -16,13 +16,13 @@ Add a page/section to the site that visualizes usage patterns over time using a 
 
 ## Tasks
 
-- [ ] Design the data model and API endpoint for aggregated usage data (activity counts per day, grouped by folder)
-- [ ] Build the contribution graph component with a calendar heatmap layout (cells colored by activity intensity)
-- [ ] Add time range selector to toggle between day, week, and month views
-- [ ] Add folder filter dropdown/picker to narrow the graph to a specific directory
-- [ ] Create the usage patterns page and integrate it into the site navigation
-- [ ] Add hover tooltips showing date and activity count for each cell
-- [ ] Add a color legend indicating activity intensity levels
+- [x] Design the data model and API endpoint for aggregated usage data (activity counts per day, grouped by folder)
+- [x] Build the contribution graph component with a calendar heatmap layout (cells colored by activity intensity)
+- [x] Add time range selector to toggle between day, week, and month views
+- [x] Add folder filter dropdown/picker to narrow the graph to a specific directory
+- [x] Create the usage patterns page and integrate it into the site navigation
+- [x] Add hover tooltips showing date and activity count for each cell
+- [x] Add a color legend indicating activity intensity levels
 
 ## Acceptance Criteria
 

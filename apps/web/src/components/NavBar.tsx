@@ -189,6 +189,18 @@ export function NavBar() {
         >
           Directories
         </NavLink>
+        <NavLink
+          to="/activity"
+          className={({ isActive }) =>
+            `text-sm font-medium transition-colors ${
+              isActive
+                ? 'text-primary border-b-2 border-primary pb-[13px] pt-[15px]'
+                : 'text-muted-fg hover:text-fg'
+            }`
+          }
+        >
+          Activity
+        </NavLink>
         <div className="ml-auto flex items-center gap-2">
           {config && <ConfigLabel config={config} />}
           <NavLink

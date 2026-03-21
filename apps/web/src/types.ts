@@ -85,6 +85,16 @@ export interface SearchResponse {
   total: number;
 }
 
+export interface ActivityDay {
+  date: string;
+  count: number;
+}
+
+export interface ActivityResponse {
+  days: ActivityDay[];
+  projects: string[];
+}
+
 export interface SortSettings {
   column: string;
   direction: string;

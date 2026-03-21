@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -91,6 +92,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
+	s.mux.HandleFunc("GET /api/activity", s.handleActivity)
 	s.mux.HandleFunc("GET /api/search", s.handleSearch)
 
 	// Serve embedded SPA for all other routes.
@@ -397,6 +399,52 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
+	allSessions := s.index.GetSessions()
+
+	// Always build the full projects list so the filter dropdown stays visible.
+	projectSet := make(map[string]struct{})
+	for _, sm := range allSessions {
+		if sm.Project != "" {
+			projectSet[sm.Project] = struct{}{}
+		}
+	}
+	projects := make([]string, 0, len(projectSet))
+	for p := range projectSet {
+		projects = append(projects, p)
+	}
+	sort.Strings(projects)
+
+	// Apply project filter only for day counts.
+	sessions := allSessions
+	if project := r.URL.Query().Get("project"); project != "" {
+		filtered := make([]session.SessionMeta, 0)
+		for _, sm := range sessions {
+			if strings.Contains(sm.Project, project) {
+				filtered = append(filtered, sm)
+			}
+		}
+		sessions = filtered
+	}
+
+	dayCounts := make(map[string]int)
+	for _, sm := range sessions {
+		if sm.Timestamp == 0 {
+			continue
+		}
+		day := time.UnixMilli(sm.Timestamp).UTC().Format("2006-01-02")
+		dayCounts[day]++
+	}
+
+	days := make([]ActivityDayResponse, 0, len(dayCounts))
+	for date, count := range dayCounts {
+		days = append(days, ActivityDayResponse{Date: date, Count: count})
+	}
+	sort.Slice(days, func(i, j int) bool { return days[i].Date < days[j].Date })
+
+	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, Projects: projects})
+}
+
 // --- Response Types ---
 
 // ConfigResponse is the API representation of the server configuration.
@@ -405,6 +453,18 @@ type ConfigResponse struct {
 	Standalone bool     `json:"standalone"`
 	Paths      []string `json:"paths,omitempty"`
 	Dirs       []string `json:"dirs,omitempty"`
+}
+
+// ActivityDayResponse is a single day's session count.
+type ActivityDayResponse struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+// ActivityResponse is the API representation of daily activity data.
+type ActivityResponse struct {
+	Days     []ActivityDayResponse `json:"days"`
+	Projects []string              `json:"projects"`
 }
 
 // SessionResponse is the API representation of a session in list responses.
