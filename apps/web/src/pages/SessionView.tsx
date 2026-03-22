@@ -6,6 +6,7 @@ import { ModelBadge } from '../components/ModelBadge';
 import { CostDisplay } from '../components/CostDisplay';
 import { CopyableText } from '../components/CopyableText';
 import { LiveIndicator, Pagination, FollowToggle } from '../components/SessionControls';
+import { WorkingIndicator } from '../components/WorkingIndicator';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSessionData } from '../hooks/useSessionData';
@@ -193,6 +194,7 @@ export function SessionView() {
             />
           </div>
         ))}
+        {(liveActivityState ?? session.activityState) === 'working' && <WorkingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 

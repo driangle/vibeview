@@ -1,7 +1,7 @@
 ---
 title: "Show working progress indicator in SessionView conversation"
 id: "01km3x63w"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "sessions"]
@@ -16,11 +16,11 @@ When viewing a session's conversation in `SessionView`, show a visual progress i
 
 ## Tasks
 
-- [ ] Detect `activityState === 'working'` from the session data already available via `useSessionData` (which exposes `liveActivityState`)
-- [ ] Create a `WorkingIndicator` component that renders an animated progress message (e.g., pulsing dot + "Claude is working..." text)
-- [ ] Render `WorkingIndicator` at the bottom of the conversation message list in `SessionView` when the session is in working state
-- [ ] Ensure the indicator is visible when auto-scrolled to the latest message (follows the "tip" of the conversation)
-- [ ] Hide the indicator when `activityState` transitions away from `'working'`
+- [x] Detect `activityState === 'working'` from the session data already available via `useSessionData` (which exposes `liveActivityState`)
+- [x] Create a `WorkingIndicator` component that renders an animated progress message (e.g., pulsing dot + "Claude is working..." text)
+- [x] Render `WorkingIndicator` at the bottom of the conversation message list in `SessionView` when the session is in working state
+- [x] Ensure the indicator is visible when auto-scrolled to the latest message (follows the "tip" of the conversation)
+- [x] Hide the indicator when `activityState` transitions away from `'working'`
 
 ## Acceptance Criteria
 

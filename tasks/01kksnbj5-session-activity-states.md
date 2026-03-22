@@ -1,7 +1,7 @@
 ---
 title: "Detect session activity states"
 id: "01kksnbj5"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["sessions", "state-detection"]
@@ -23,13 +23,13 @@ Derive and expose a session activity state so users can see at a glance whether 
 
 ## Tasks
 
-- [ ] Add an `ActivityState` type/enum with values: `working`, `waiting_for_approval`, `waiting_for_input`, `idle`
-- [ ] Implement state derivation logic in the session package that examines the last few messages and their timestamps to determine the current state
-- [ ] Add an `activityState` field to `SessionMeta` and populate it during session indexing/enrichment
-- [ ] Update the `/api/sessions` response to include the `activityState` field
-- [ ] Keep activity state up to date for live sessions via the file tailer/watcher
-- [ ] Display the activity state in the web UI session table with appropriate visual indicators (e.g. colored badges)
-- [ ] Add an optional filter on the sessions list to filter by activity state
+- [x] Add an `ActivityState` type/enum with values: `working`, `waiting_for_approval`, `waiting_for_input`, `idle`
+- [x] Implement state derivation logic in the session package that examines the last few messages and their timestamps to determine the current state
+- [x] Add an `activityState` field to `SessionMeta` and populate it during session indexing/enrichment
+- [x] Update the `/api/sessions` response to include the `activityState` field
+- [x] Keep activity state up to date for live sessions via the file tailer/watcher
+- [x] Display the activity state in the web UI session table with appropriate visual indicators (e.g. colored badges)
+- [x] Add an optional filter on the sessions list to filter by activity state
 
 ## Acceptance Criteria
 
