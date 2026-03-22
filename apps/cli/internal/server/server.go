@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/pidcheck"
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/session"
 	"github.com/driangle/vibeview/internal/settings"
@@ -56,7 +57,16 @@ func New(cfg Config) (*Server, error) {
 		}
 	}
 
-	broker, err := watcher.NewBroker(cfg.ClaudeDir, idx, cfg.Standalone, cfg.Dirs)
+	// Set up PID-based process checking for non-standalone mode.
+	var checker session.ProcessChecker
+	if !cfg.Standalone {
+		if c := pidcheck.NewChecker(cfg.ClaudeDir); c != nil {
+			checker = c
+			idx.SetProcessChecker(c)
+		}
+	}
+
+	broker, err := watcher.NewBroker(cfg.ClaudeDir, idx, cfg.Standalone, cfg.Dirs, checker)
 	if err != nil {
 		return nil, fmt.Errorf("start broker: %w", err)
 	}

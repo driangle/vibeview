@@ -18,8 +18,8 @@ export function RawJsonModal({ data, onClose }: RawJsonModalProps) {
   }, [jsonString]);
 
   return (
-    <Modal onClose={onClose} className="w-full max-w-2xl bg-white dark:bg-gray-800">
-      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+    <Modal onClose={onClose} className="flex flex-col w-full max-w-2xl bg-white dark:bg-gray-800">
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Raw message</span>
         <div className="flex items-center gap-1">
           <button
@@ -67,7 +67,9 @@ export function RawJsonModal({ data, onClose }: RawJsonModalProps) {
           </button>
         </div>
       </div>
-      <pre className="overflow-auto p-4 text-xs text-gray-700 dark:text-gray-300">{jsonString}</pre>
+      <pre className="min-h-0 flex-1 overflow-auto p-4 text-xs text-gray-700 dark:text-gray-300">
+        {jsonString}
+      </pre>
     </Modal>
   );
 }

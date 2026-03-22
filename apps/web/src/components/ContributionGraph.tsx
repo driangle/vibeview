@@ -33,11 +33,12 @@ const MONTH_LABELS = [
 ];
 const DAY_LABELS = ['Mon', '', 'Wed', '', 'Fri', '', ''];
 
-function intensityLevel(count: number): number {
-  if (count === 0) return 0;
-  if (count <= 2) return 1;
-  if (count <= 4) return 2;
-  if (count <= 7) return 3;
+function intensityLevel(count: number, max: number): number {
+  if (count === 0 || max === 0) return 0;
+  const ratio = count / max;
+  if (ratio <= 0.25) return 1;
+  if (ratio <= 0.5) return 2;
+  if (ratio <= 0.75) return 3;
   return 4;
 }
 
@@ -267,6 +268,13 @@ export function ContributionGraph({
     [days, view],
   );
   const monthCells = useMemo(() => (view === 'month' ? buildMonthGrid(days) : null), [days, view]);
+  const maxCount = useMemo(() => {
+    if (view === 'day') return Math.max(0, ...days.map((d) => d.count));
+    if (view === 'week' && weekYears)
+      return Math.max(0, ...weekYears.flatMap((y) => y.cells.map((c) => c.count)));
+    if (view === 'month' && monthCells) return Math.max(0, ...monthCells.map((c) => c.count));
+    return 0;
+  }, [days, view, weekYears, monthCells]);
   const { tooltip, show, hide } = useTooltip();
 
   const handleClick = useCallback(
@@ -342,7 +350,7 @@ export function ContributionGraph({
                       const cell = week.find((c) => c.dayOfWeek === di);
                       if (!cell)
                         return <div key={di} style={{ height: cellSize, width: cellSize }} />;
-                      const level = intensityLevel(cell.count);
+                      const level = intensityLevel(cell.count, maxCount);
                       const tip = `${formatDate(cell.date)}: ${cell.count} session${cell.count !== 1 ? 's' : ''}`;
                       return (
                         <div
@@ -411,7 +419,7 @@ export function ContributionGraph({
               </div>
               <div className="flex" style={{ gap }}>
                 {yearData.cells.map((cell, i) => {
-                  const level = intensityLevel(cell.count);
+                  const level = intensityLevel(cell.count, maxCount);
                   return (
                     <div
                       key={i}
@@ -493,7 +501,7 @@ export function ContributionGraph({
                   </div>
                 );
               }
-              const level = intensityLevel(cell.count);
+              const level = intensityLevel(cell.count, maxCount);
               return (
                 <div
                   key={monthIdx}

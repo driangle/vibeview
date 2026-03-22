@@ -1,7 +1,7 @@
 ---
 title: "Incorporate PID-based process detection into activity state logic"
 id: "01km3xj29"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["sessions", "activity"]

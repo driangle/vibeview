@@ -31,6 +31,7 @@ type Broker struct {
 	claudeDir  string
 	standalone bool
 	index      *session.Index
+	pidChecker session.ProcessChecker
 	dirSet     map[string]struct{} // encoded project dir names to filter (nil = no filter)
 
 	mu            sync.Mutex
@@ -45,7 +46,8 @@ type Broker struct {
 
 // NewBroker creates a new SSE broker that watches for file changes.
 // In standalone mode, history watching is skipped.
-func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []string) (*Broker, error) {
+// pidChecker may be nil, in which case PID-based liveness detection is disabled.
+func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []string, pidChecker session.ProcessChecker) (*Broker, error) {
 	var dirSet map[string]struct{}
 	if len(dirs) > 0 {
 		dirSet = make(map[string]struct{}, len(dirs))
@@ -58,6 +60,7 @@ func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []s
 		claudeDir:     claudeDir,
 		standalone:    standalone,
 		index:         index,
+		pidChecker:    pidChecker,
 		dirSet:        dirSet,
 		clients:       make(map[string]map[*Client]struct{}),
 		tailers:       make(map[string]*Tailer),
@@ -317,6 +320,15 @@ func (b *Broker) pingLoop() {
 				if now.Sub(lastMsg) > idleDecayDuration {
 					b.index.SetActivityState(sessionID, session.ActivityIdle)
 					delete(b.lastMessageAt, sessionID)
+				}
+			}
+			// Check process liveness for tracked active sessions.
+			if b.pidChecker != nil {
+				for sessionID := range b.lastMessageAt {
+					if !b.pidChecker.IsProcessAlive(sessionID) {
+						b.index.SetActivityState(sessionID, session.ActivityIdle)
+						delete(b.lastMessageAt, sessionID)
+					}
 				}
 			}
 			for _, clients := range b.clients {

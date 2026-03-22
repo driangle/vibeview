@@ -40,10 +40,23 @@ type SessionMeta struct {
 	FilePath string `json:"-"`
 }
 
+// ProcessChecker checks whether a Claude Code process is still running.
+type ProcessChecker interface {
+	IsProcessAlive(sessionID string) bool
+}
+
 // Index holds all discovered sessions. It is safe for concurrent access.
 type Index struct {
-	mu       sync.RWMutex
-	Sessions []SessionMeta
+	mu         sync.RWMutex
+	Sessions   []SessionMeta
+	pidChecker ProcessChecker
+}
+
+// SetProcessChecker sets the PID-based process checker used during enrichment.
+func (idx *Index) SetProcessChecker(c ProcessChecker) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	idx.pidChecker = c
 }
 
 // GetSessions returns a snapshot of all sessions.
@@ -255,7 +268,7 @@ func (idx *Index) enrichRange(claudeDir string, snapshot []SessionMeta, from, to
 				results[i] = result{meta: meta, exists: false}
 				continue
 			}
-			results[i] = result{meta: enrichSession(claudeDir, meta), exists: true}
+			results[i] = result{meta: enrichSession(claudeDir, meta, idx.pidChecker), exists: true}
 		}
 
 		// If every item was skipped, no index update needed.
@@ -295,7 +308,8 @@ func (idx *Index) enrichRange(claudeDir string, snapshot []SessionMeta, from, to
 }
 
 // enrichSession reads a session's JSONL file and populates derived fields.
-func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
+// If checker is non-nil, it overrides non-idle states for dead processes.
+func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) SessionMeta {
 	sessionPath := SessionFilePath(claudeDir, meta.Project, meta.SessionID)
 	f, err := os.Open(sessionPath)
 	if err != nil {
@@ -342,6 +356,13 @@ func enrichSession(claudeDir string, meta SessionMeta) SessionMeta {
 
 	meta.ActivityState = DeriveActivityState(messages)
 
+	// If the process is dead, force idle regardless of message heuristics.
+	if checker != nil && meta.ActivityState != ActivityIdle {
+		if !checker.IsProcessAlive(meta.SessionID) {
+			meta.ActivityState = ActivityIdle
+		}
+	}
+
 	return meta
 }
 
@@ -361,7 +382,7 @@ func (idx *Index) EnrichSession(claudeDir string, sessionID string) bool {
 		if idx.Sessions[i].SessionID != sessionID {
 			continue
 		}
-		enriched := enrichSession(claudeDir, idx.Sessions[i])
+		enriched := enrichSession(claudeDir, idx.Sessions[i], idx.pidChecker)
 		idx.Sessions[i] = enriched
 		return enriched.Slug != ""
 	}

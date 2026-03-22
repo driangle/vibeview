@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { MessageResponse, ContentBlock } from '../types';
 import { ThinkingBlock } from './ThinkingBlock';
 import { ToolCallBlock } from './ToolCallBlock';
@@ -5,6 +6,7 @@ import { AgentProgressWidget } from './AgentProgressWidget';
 import { processMessageContent } from './processMessageContent';
 import { MessageContent } from './MessageContent';
 import { HookMessage, SystemMessage } from './EventMessages';
+import { RawJsonModal } from './RawJsonModal';
 
 function isHookMessage(msg: MessageResponse): boolean {
   return msg.type === 'progress' && msg.data?.type === 'hook_progress';
@@ -19,6 +21,7 @@ interface MessageBubbleProps {
   toolResults: Map<string, ContentBlock>;
   agentGroups: Map<string, MessageResponse[]>;
   agentGroupFirstIds: Set<string>;
+  isLastMessage?: boolean;
 }
 
 function formatTimestamp(ts: string): string {
@@ -28,7 +31,31 @@ function formatTimestamp(ts: string): string {
   });
 }
 
+function RawJsonButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      title="View raw JSON"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="h-3.5 w-3.5"
+      >
+        <path
+          fillRule="evenodd"
+          d="M6.28 5.22a.75.75 0 010 1.06L2.56 10l3.72 3.72a.75.75 0 01-1.06 1.06L.97 10.53a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0zm7.44 0a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 010-1.06zM11.377 2.011a.75.75 0 01.612.867l-2.5 14.5a.75.75 0 01-1.478-.255l2.5-14.5a.75.75 0 01.866-.612z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </button>
+  );
+}
+
 function UserMessage({ message }: { message: MessageResponse }) {
+  const [showRaw, setShowRaw] = useState(false);
   const content = message.message?.content;
   let text = '';
 
@@ -60,10 +87,12 @@ function UserMessage({ message }: { message: MessageResponse }) {
             <MessageContent segments={specialSegments} rawMessage={message} />
           </div>
         )}
-        <div className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
+        <div className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-400 dark:text-gray-500">
+          <RawJsonButton onClick={() => setShowRaw(true)} />
           {formatTimestamp(message.timestamp)}
         </div>
       </div>
+      {showRaw && <RawJsonModal data={message.message} onClose={() => setShowRaw(false)} />}
     </div>
   );
 }
@@ -71,10 +100,13 @@ function UserMessage({ message }: { message: MessageResponse }) {
 function AssistantMessage({
   message,
   toolResults,
+  isLastMessage,
 }: {
   message: MessageResponse;
   toolResults: Map<string, ContentBlock>;
+  isLastMessage?: boolean;
 }) {
+  const [showRaw, setShowRaw] = useState(false);
   const content = message.message?.content;
   if (!Array.isArray(content)) return null;
 
@@ -110,8 +142,14 @@ function AssistantMessage({
               if (segments.length === 0) return null;
               return <MessageContent key={index} segments={segments} rawMessage={message} />;
             }
-            if (block.type === 'thinking' && block.thinking) {
-              return <ThinkingBlock key={index} thinking={block.thinking} />;
+            if (block.type === 'thinking') {
+              return (
+                <ThinkingBlock
+                  key={index}
+                  thinking={block.thinking}
+                  isActive={!block.thinking && isLastMessage}
+                />
+              );
             }
             return null;
           });
@@ -126,6 +164,7 @@ function AssistantMessage({
           );
         })}
         <div className="mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+          <RawJsonButton onClick={() => setShowRaw(true)} />
           <span>{formatTimestamp(message.timestamp)}</span>
           {message.message?.model && (
             <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">
@@ -133,6 +172,7 @@ function AssistantMessage({
             </span>
           )}
         </div>
+        {showRaw && <RawJsonModal data={message.message} onClose={() => setShowRaw(false)} />}
       </div>
     </div>
   );
@@ -143,6 +183,7 @@ export function MessageBubble({
   toolResults,
   agentGroups,
   agentGroupFirstIds,
+  isLastMessage,
 }: MessageBubbleProps) {
   if (message.type === 'file-history-snapshot') return null;
 
@@ -156,7 +197,9 @@ export function MessageBubble({
   }
 
   if (message.type === 'assistant' && message.message) {
-    return <AssistantMessage message={message} toolResults={toolResults} />;
+    return (
+      <AssistantMessage message={message} toolResults={toolResults} isLastMessage={isLastMessage} />
+    );
   }
 
   if (isAgentProgressMessage(message)) {

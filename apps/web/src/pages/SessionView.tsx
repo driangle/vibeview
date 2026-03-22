@@ -191,6 +191,7 @@ export function SessionView() {
               toolResults={toolResults}
               agentGroups={agentGroups}
               agentGroupFirstIds={agentGroupFirstIds}
+              isLastMessage={index === paginatedMessages.length - 1}
             />
           </div>
         ))}
