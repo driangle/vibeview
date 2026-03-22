@@ -1,7 +1,7 @@
 ---
 title: "Render timeline nodes with phase icons and badges"
 id: "01kma9rd3"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["timeline", "frontend"]
@@ -17,13 +17,13 @@ Render the interactive nodes along the timeline path — each representing one e
 
 ## Tasks
 
-- [ ] Create `components/timeline/TimelineNode.tsx` — renders an SVG group (`<g>`) at the node's layout position
-- [ ] Implement node sizing: circle radius based on token count bucket (S/M/L/XL)
-- [ ] Add phase-specific icons inside nodes (e.g., magnifying glass for Research, pencil for Coding, bug for Debugging)
-- [ ] Implement badge overlays as small positioned indicators: red dot (error), brain icon (deep thinking), fork icon (subagent), pause icon (approval gate)
-- [ ] Style nodes with phase colors — fill or stroke matching the parent phase region
-- [ ] Add subtle entry animation for nodes appearing during live sessions
-- [ ] Handle edge case of very small cycles (single short text message) — render as minimal dots
+- [x] Create `components/timeline/TimelineNode.tsx` — renders an SVG group (`<g>`) at the node's layout position
+- [x] Implement node sizing: circle radius based on token count bucket (S/M/L/XL)
+- [x] Add phase-specific icons inside nodes (e.g., magnifying glass for Research, pencil for Coding, bug for Debugging)
+- [x] Implement badge overlays as small positioned indicators: red dot (error), brain icon (deep thinking), fork icon (subagent), pause icon (approval gate)
+- [x] Style nodes with phase colors — fill or stroke matching the parent phase region
+- [ ] Add subtle entry animation for nodes appearing during live sessions (deferred to integration)
+- [x] Handle edge case of very small cycles (single short text message) — render as minimal dots (S size = radius 8)
 
 ## Acceptance Criteria
 
