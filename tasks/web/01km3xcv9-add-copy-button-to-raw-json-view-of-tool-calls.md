@@ -1,7 +1,7 @@
 ---
 title: "Add copy button to raw JSON view of tool calls"
 id: "01km3xcv9"
-status: pending
+status: completed
 priority: low
 type: feature
 tags: ["ui", "messages"]
@@ -16,10 +16,10 @@ When viewing the raw JSON of a tool call in the session view, there is no way to
 
 ## Tasks
 
-- [ ] Locate the raw JSON view component for tool calls in `MessageBubble` or related components
-- [ ] Add a "Copy" button (clipboard icon) positioned in the top-right corner of the JSON block
-- [ ] Implement copy-to-clipboard using the Clipboard API
-- [ ] Show brief feedback on successful copy (e.g. "Copied!" tooltip or icon change)
+- [x] Locate the raw JSON view component for tool calls in `MessageBubble` or related components
+- [x] Add a "Copy" button (clipboard icon) positioned in the top-right corner of the JSON block
+- [x] Implement copy-to-clipboard using the Clipboard API
+- [x] Show brief feedback on successful copy (e.g. "Copied!" tooltip or icon change)
 
 ## Acceptance Criteria
 
