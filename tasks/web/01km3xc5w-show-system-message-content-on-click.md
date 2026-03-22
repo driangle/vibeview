@@ -1,7 +1,7 @@
 ---
 title: "Show system message content on click"
 id: "01km3xc5w"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "messages"]
@@ -16,11 +16,11 @@ When a "System" type message appears in the session view, clicking it currently 
 
 ## Tasks
 
-- [ ] Identify how system messages are rendered in `MessageBubble` and why click has no effect
-- [ ] Add an expandable/collapsible content area for system messages
-- [ ] Display the raw message content (text blocks) when expanded
-- [ ] Ensure the collapsed state shows a brief summary or "System message" label
-- [ ] Style the expanded content consistently with other message types
+- [x] Identify how system messages are rendered in `MessageBubble` and why click has no effect
+- [x] Add an expandable/collapsible content area for system messages
+- [x] Display the raw message content (text blocks) when expanded
+- [x] Ensure the collapsed state shows a brief summary or "System message" label
+- [x] Style the expanded content consistently with other message types
 
 ## Acceptance Criteria
 

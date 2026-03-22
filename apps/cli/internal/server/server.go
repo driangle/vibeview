@@ -511,6 +511,7 @@ type MessageResponse struct {
 	Type        string             `json:"type"`
 	Timestamp   string             `json:"timestamp"`
 	Message     *claude.APIMessage `json:"message,omitempty"`
+	Content     string             `json:"content,omitempty"`
 	Data        map[string]any     `json:"data,omitempty"`
 	Snapshot    map[string]any     `json:"snapshot,omitempty"`
 	CustomTitle string             `json:"customTitle,omitempty"`
@@ -538,6 +539,7 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 		Type:        string(msg.Type),
 		Timestamp:   msToISO(msg.Timestamp.Int64()),
 		Message:     msg.Message,
+		Content:     msg.Content,
 		Data:        msg.Data,
 		Snapshot:    msg.Snapshot,
 		CustomTitle: msg.CustomTitle,

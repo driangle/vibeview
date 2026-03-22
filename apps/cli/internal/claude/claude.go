@@ -87,6 +87,9 @@ type Message struct {
 	// Present on user/assistant messages.
 	Message *APIMessage `json:"message,omitempty"`
 
+	// Present on system messages (top-level content string).
+	Content string `json:"content,omitempty"`
+
 	// Present on progress messages.
 	Data      map[string]any `json:"data,omitempty"`
 	ToolUseID string         `json:"toolUseID,omitempty"`
@@ -104,7 +107,18 @@ type Message struct {
 	TotalCostUSD float64 `json:"total_cost_usd,omitempty"`
 }
 
-// UnmarshalJSON handles toolUseResult being either a ToolUseResult object or a plain string.
+// knownMessageKeys lists JSON keys that map to named struct fields and should
+// not be duplicated into the catch-all Data map.
+var knownMessageKeys = map[string]bool{
+	"type": true, "uuid": true, "parentUuid": true, "sessionId": true,
+	"timestamp": true, "cwd": true, "gitBranch": true, "isSidechain": true,
+	"isMeta": true, "version": true, "message": true, "content": true,
+	"data": true, "toolUseID": true, "snapshot": true, "customTitle": true,
+	"toolUseResult": true, "total_cost_usd": true,
+}
+
+// UnmarshalJSON handles toolUseResult being either a ToolUseResult object or a plain string,
+// and captures unknown top-level fields into Data so system/progress metadata isn't lost.
 func (m *Message) UnmarshalJSON(data []byte) error {
 	// Use an alias to avoid infinite recursion.
 	type messageAlias Message
@@ -117,6 +131,23 @@ func (m *Message) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*m = Message(raw.messageAlias)
+
+	// Capture unknown top-level fields into Data for system/progress messages.
+	var allFields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &allFields); err == nil {
+		for key, val := range allFields {
+			if knownMessageKeys[key] {
+				continue
+			}
+			if m.Data == nil {
+				m.Data = make(map[string]any)
+			}
+			var v any
+			if json.Unmarshal(val, &v) == nil {
+				m.Data[key] = v
+			}
+		}
+	}
 
 	if len(raw.ToolUseResultRaw) == 0 || string(raw.ToolUseResultRaw) == "null" {
 		return nil

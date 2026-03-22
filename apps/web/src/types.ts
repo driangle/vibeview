@@ -60,6 +60,7 @@ export interface MessageResponse {
   type: 'user' | 'assistant' | 'progress' | 'system' | 'file-history-snapshot' | 'custom-title';
   timestamp: string;
   message?: APIMessage;
+  content?: string;
   data?: Record<string, unknown>;
   snapshot?: Record<string, unknown>;
   customTitle?: string;
