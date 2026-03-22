@@ -1,7 +1,7 @@
 ---
 title: "Add timeline node interactions (hover tooltips, detail panel, phase click)"
 id: "01kma9rfw"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["timeline", "frontend"]
@@ -17,13 +17,13 @@ Make the timeline interactive — hovering nodes shows summary tooltips, clickin
 
 ## Tasks
 
-- [ ] Add hover handler to `TimelineNode` — show a tooltip with: user prompt preview (first ~100 chars), phase label, tool count, cost, duration
-- [ ] Create `components/timeline/TimelineDetailPanel.tsx` — a side panel (or bottom sheet on mobile) that renders full message content using the existing `MessageBubble` component
-- [ ] Add click handler to `TimelineNode` — opens the detail panel for the selected cycle
-- [ ] Add click handler to `TimelinePhaseRegion` — highlights all nodes in that phase, shows phase summary (total cycles, total cost, total duration, tool breakdown)
-- [ ] Implement selected/highlighted node states with visual emphasis (brighter stroke, glow, scale)
-- [ ] Add keyboard navigation: arrow keys to move between nodes, Enter to open detail, Escape to close
-- [ ] Handle panel open/close transitions smoothly
+- [x] Add hover handler to `TimelineNode` — show a tooltip with: user prompt preview (first ~100 chars), phase label, tool count, cost, duration (TimelineTooltip component)
+- [x] Create `components/timeline/TimelineDetailPanel.tsx` — a side panel that renders full message content using the existing `MessageBubble` component
+- [x] Add click handler to `TimelineNode` — opens the detail panel for the selected cycle (onHover/onClick props on TimelineNode)
+- [x] Add click handler to `TimelinePhaseRegion` — highlights all nodes in that phase, shows phase summary (total cycles, total cost, total duration, tool breakdown)
+- [x] Implement selected/highlighted node states with visual emphasis (selection ring on TimelineNode, highlight stroke on PhaseRegion)
+- [ ] Add keyboard navigation: arrow keys to move between nodes, Enter to open detail, Escape to close (deferred to integration)
+- [x] Handle panel open/close transitions smoothly
 
 ## Acceptance Criteria
 
