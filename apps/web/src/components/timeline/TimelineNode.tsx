@@ -5,7 +5,7 @@ interface TimelineNodeProps {
   cycle: TimelineCycle;
   layout: NodeLayout;
   isSelected?: boolean;
-  onHover?: (cycle: TimelineCycle | null) => void;
+  onHover?: (cycle: TimelineCycle | null, event?: React.PointerEvent<SVGGElement>) => void;
   onClick?: (cycle: TimelineCycle) => void;
 }
 
@@ -184,7 +184,7 @@ export function TimelineNode({ cycle, layout, isSelected, onHover, onClick }: Ti
     <g
       transform={`translate(${x}, ${y})`}
       style={{ cursor: 'pointer' }}
-      onPointerEnter={() => onHover?.(cycle)}
+      onPointerEnter={(e) => onHover?.(cycle, e)}
       onPointerLeave={() => onHover?.(null)}
       onClick={() => onClick?.(cycle)}
     >

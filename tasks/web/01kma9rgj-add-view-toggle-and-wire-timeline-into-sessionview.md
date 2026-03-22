@@ -1,7 +1,7 @@
 ---
 title: "Add view toggle and wire timeline into SessionView"
 id: "01kma9rgj"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["timeline", "frontend"]
@@ -17,12 +17,12 @@ Integrate the timeline into the existing SessionView page with a toggle control 
 
 ## Tasks
 
-- [ ] Add a `[List View] [Timeline View]` toggle control to the SessionView header
-- [ ] Conditionally render either the existing paginated message list or the `SessionTimeline` component based on toggle state
-- [ ] Persist the selected view in user settings (using existing settings system)
-- [ ] Pass `useSessionData` output through `buildTimeline()` to produce `TimelineData` for the timeline view
-- [ ] Ensure live streaming updates work in timeline mode (new cycles appear, layout extends)
-- [ ] Handle empty state — show a placeholder when session has no messages yet
+- [x] Add a `[List View] [Timeline View]` toggle control to the SessionView header
+- [x] Conditionally render either the existing paginated message list or the `SessionTimeline` component based on toggle state
+- [x] Persist the selected view in user settings (using `useLocalStorage` hook)
+- [x] Pass `useSessionData` output through `buildTimeline()` to produce `TimelineData` for the timeline view
+- [x] Ensure live streaming updates work in timeline mode (useMemo re-runs on messages change)
+- [x] Handle empty state — show a placeholder when session has no messages yet
 
 ## Acceptance Criteria
 

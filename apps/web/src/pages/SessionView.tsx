@@ -7,9 +7,13 @@ import { CostDisplay } from '../components/CostDisplay';
 import { CopyableText } from '../components/CopyableText';
 import { LiveIndicator, Pagination, FollowToggle } from '../components/SessionControls';
 import { WorkingIndicator } from '../components/WorkingIndicator';
+import { TimelineView } from '../components/timeline/TimelineView';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSessionData } from '../hooks/useSessionData';
+
+type SessionViewMode = 'list' | 'timeline';
 
 function projectName(project: string): string {
   const parts = project.split('/').filter(Boolean);
@@ -24,6 +28,7 @@ export function SessionView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { settings, isLoaded } = useSettings();
+  const [viewMode, setViewMode] = useLocalStorage<SessionViewMode>('sessionViewMode', 'list');
   const [userPage, setUserPage] = useState<number | null>(null);
   const [followMode, setFollowMode] = useState(false);
 
@@ -129,15 +134,41 @@ export function SessionView() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8" ref={containerRef} onScroll={handleScroll}>
+    <div
+      className={viewMode === 'timeline' ? 'flex h-full flex-col' : 'mx-auto max-w-4xl p-8'}
+      ref={viewMode === 'list' ? containerRef : undefined}
+      onScroll={viewMode === 'list' ? handleScroll : undefined}
+    >
       {/* Header */}
-      <div className="mb-6">
+      <div className={viewMode === 'timeline' ? 'shrink-0 px-8 pt-8 pb-4' : 'mb-6'}>
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {liveCustomTitle || session.customTitle || session.slug || session.id}
           </h1>
           <ActivityBadge state={liveActivityState ?? session.activityState} />
           <LiveIndicator status={connectionStatus} />
+
+          {/* View toggle */}
+          <div className="ml-auto flex rounded-lg bg-secondary/15 p-0.5 text-xs">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`rounded-md px-2.5 py-1 transition-colors ${
+                viewMode === 'list' ? 'bg-card text-fg shadow-sm' : 'text-secondary hover:text-fg'
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`rounded-md px-2.5 py-1 transition-colors ${
+                viewMode === 'timeline'
+                  ? 'bg-card text-fg shadow-sm'
+                  : 'text-secondary hover:text-fg'
+              }`}
+            >
+              Timeline
+            </button>
+          </div>
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
           <CopyableText text={session.id} className="select-all font-mono text-xs" />
@@ -165,65 +196,76 @@ export function SessionView() {
         {liveUsage && <CostDisplay usage={liveUsage} />}
       </div>
 
-      {/* Pagination (top) */}
-      {totalPages > 1 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          onJumpToLatest={() => {
-            setPage(totalPages - 1);
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          }}
+      {viewMode === 'timeline' ? (
+        <TimelineView
+          messages={displayMessages}
+          toolResults={toolResults}
+          agentGroups={agentGroups}
+          agentGroupFirstIds={agentGroupFirstIds}
         />
-      )}
-
-      {/* Messages */}
-      <div className="space-y-4 py-4">
-        {paginatedMessages.map((msg, index) => (
-          <div
-            key={msg.uuid}
-            data-row-index={index}
-            className={`rounded-lg transition-colors ${selectedIndex === index ? 'ring-2 ring-blue-500' : ''}`}
-          >
-            <MessageBubble
-              message={msg}
-              toolResults={toolResults}
-              agentGroups={agentGroups}
-              agentGroupFirstIds={agentGroupFirstIds}
-              isLastMessage={index === paginatedMessages.length - 1}
+      ) : (
+        <>
+          {/* Pagination (top) */}
+          {totalPages > 1 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              onJumpToLatest={() => {
+                setPage(totalPages - 1);
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }}
             />
+          )}
+
+          {/* Messages */}
+          <div className="space-y-4 py-4">
+            {paginatedMessages.map((msg, index) => (
+              <div
+                key={msg.uuid}
+                data-row-index={index}
+                className={`rounded-lg transition-colors ${selectedIndex === index ? 'ring-2 ring-blue-500' : ''}`}
+              >
+                <MessageBubble
+                  message={msg}
+                  toolResults={toolResults}
+                  agentGroups={agentGroups}
+                  agentGroupFirstIds={agentGroupFirstIds}
+                  isLastMessage={index === paginatedMessages.length - 1}
+                />
+              </div>
+            ))}
+            {(liveActivityState ?? session.activityState) === 'working' && <WorkingIndicator />}
+            <div ref={messagesEndRef} />
           </div>
-        ))}
-        {(liveActivityState ?? session.activityState) === 'working' && <WorkingIndicator />}
-        <div ref={messagesEndRef} />
-      </div>
 
-      {/* Pagination (bottom) */}
-      {totalPages > 1 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          onJumpToLatest={() => {
-            setPage(totalPages - 1);
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          }}
-        />
+          {/* Pagination (bottom) */}
+          {totalPages > 1 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              onJumpToLatest={() => {
+                setPage(totalPages - 1);
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
+          )}
+
+          {/* Auto-follow toggle */}
+          <FollowToggle
+            enabled={followMode}
+            onToggle={() => {
+              setFollowMode((prev) => {
+                if (!prev) {
+                  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }
+                return !prev;
+              });
+            }}
+          />
+        </>
       )}
-
-      {/* Auto-follow toggle */}
-      <FollowToggle
-        enabled={followMode}
-        onToggle={() => {
-          setFollowMode((prev) => {
-            if (!prev) {
-              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }
-            return !prev;
-          });
-        }}
-      />
     </div>
   );
 }
