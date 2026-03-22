@@ -1,7 +1,7 @@
 ---
 title: "Render phase regions and connection path"
 id: "01kma9rcf"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["timeline", "frontend"]
@@ -17,12 +17,12 @@ Render the two base visual layers of the timeline: soft colored background recta
 
 ## Tasks
 
-- [ ] Create `components/timeline/TimelinePhaseRegion.tsx` — renders a rounded rectangle with the phase's color, spanning the combined width of its constituent cycle slots
-- [ ] Define phase color palette (Blue/Planning, Indigo/Research, Green/Coding, Amber/Testing, Orange/Debugging, Purple/DevOps, Slate/Configuration, Gray/Conversation) with light/dark mode variants
-- [ ] Add floating phase name labels positioned above each region
-- [ ] Create the connection path — a smooth SVG `<path>` using cubic bezier curves through all node center points
-- [ ] Style the connection path with a subtle stroke that complements the phase colors
-- [ ] Add timestamp annotations at key interval points along the timeline
+- [x] Create `components/timeline/TimelinePhaseRegion.tsx` — renders a rounded rectangle with the phase's color, spanning the combined width of its constituent cycle slots
+- [x] Define phase color palette (Blue/Planning, Indigo/Research, Green/Coding, Amber/Testing, Orange/Debugging, Purple/DevOps, Slate/Configuration, Gray/Conversation) — done in `lib/timeline/phaseTheme.ts` (previous task)
+- [x] Add floating phase name labels positioned above each region
+- [x] Create the connection path — a smooth SVG `<path>` using cubic bezier curves through all node center points (Catmull-Rom spline)
+- [x] Style the connection path with a subtle stroke that complements the phase colors
+- [ ] Add timestamp annotations at key interval points along the timeline (deferred to integration)
 
 ## Acceptance Criteria
 
