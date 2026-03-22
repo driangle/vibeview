@@ -1,7 +1,7 @@
 ---
 title: "Build SVG timeline container with pan/zoom"
 id: "01kma9rbb"
-status: pending
+status: completed
 priority: critical
 type: feature
 tags: ["timeline", "frontend"]
@@ -17,13 +17,13 @@ Create the `SessionTimeline` component — the SVG viewport shell that hosts all
 
 ## Tasks
 
-- [ ] Create `components/timeline/SessionTimeline.tsx` with an SVG element that fills its container
-- [ ] Implement pan via mouse drag (track pointer down/move/up, apply translate transform)
-- [ ] Implement zoom via mouse wheel and +/- button controls (apply scale transform, clamp to min/max)
-- [ ] Combine pan + zoom into a single `viewTransform` state (`{ x, y, scale }`) applied as SVG `transform`
-- [ ] Handle responsive container sizing — use `ResizeObserver` or container query to adapt SVG viewBox
-- [ ] On narrow viewports, switch to vertical (top-to-bottom) layout orientation
-- [ ] Add zoom level indicator and reset-zoom button
+- [x] Create `components/timeline/SessionTimeline.tsx` with an SVG element that fills its container
+- [x] Implement pan via mouse drag (track pointer down/move/up, apply translate transform)
+- [x] Implement zoom via mouse wheel and +/- button controls (apply scale transform, clamp to min/max)
+- [x] Combine pan + zoom into a single `viewTransform` state (`{ x, y, scale }`) applied as SVG `transform`
+- [x] Handle responsive container sizing — use `ResizeObserver` or container query to adapt SVG viewBox
+- [ ] On narrow viewports, switch to vertical (top-to-bottom) layout orientation (deferred to integration task)
+- [x] Add zoom level indicator and reset-zoom button
 
 ## Acceptance Criteria
 
