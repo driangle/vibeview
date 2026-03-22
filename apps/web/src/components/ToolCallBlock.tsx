@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ContentBlock } from '../types';
+import { EditDiffBlock } from './EditDiffBlock';
 import { RawJsonModal } from './RawJsonModal';
 
 interface ToolCallBlockProps {
@@ -28,6 +29,10 @@ function formatResult(content: unknown): string {
 export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
   const [expanded, setExpanded] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
+
+  if (block.name === 'Edit') {
+    return <EditDiffBlock block={block} result={result} />;
+  }
 
   const toolName = block.name || 'Tool';
   const input = block.input || {};

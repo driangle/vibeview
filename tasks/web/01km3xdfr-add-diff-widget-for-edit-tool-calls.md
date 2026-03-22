@@ -1,7 +1,7 @@
 ---
 title: "Add diff widget for Edit tool calls"
 id: "01km3xdfr"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "messages", "tool-calls"]
@@ -35,13 +35,13 @@ Add a specialized widget for "Edit" tool calls that shows a side-by-side or inli
 
 ## Tasks
 
-- [ ] Detect Edit tool calls by `name === "Edit"` in the tool call rendering logic
-- [ ] Extract `file_path`, `old_string`, `new_string`, and `replace_all` from the input
-- [ ] Render a diff view showing removed lines (old_string) and added lines (new_string)
-- [ ] Show the file path as a header above the diff
-- [ ] Indicate `replace_all` when true (e.g. a small badge or note)
-- [ ] Show the tool result status (success/failure) below the diff
-- [ ] Keep the raw JSON view available as a fallback toggle
+- [x] Detect Edit tool calls by `name === "Edit"` in the tool call rendering logic
+- [x] Extract `file_path`, `old_string`, `new_string`, and `replace_all` from the input
+- [x] Render a diff view showing removed lines (old_string) and added lines (new_string)
+- [x] Show the file path as a header above the diff
+- [x] Indicate `replace_all` when true (e.g. a small badge or note)
+- [x] Show the tool result status (success/failure) below the diff
+- [x] Keep the raw JSON view available as a fallback toggle
 
 ## Acceptance Criteria
 
