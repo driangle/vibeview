@@ -428,12 +428,14 @@ func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dayCounts := make(map[string]int)
+	hourCounts := make(map[int]int)
 	for _, sm := range sessions {
 		if sm.Timestamp == 0 {
 			continue
 		}
-		day := time.UnixMilli(sm.Timestamp).UTC().Format("2006-01-02")
-		dayCounts[day]++
+		t := time.UnixMilli(sm.Timestamp).UTC()
+		dayCounts[t.Format("2006-01-02")]++
+		hourCounts[t.Hour()]++
 	}
 
 	days := make([]ActivityDayResponse, 0, len(dayCounts))
@@ -442,7 +444,12 @@ func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Slice(days, func(i, j int) bool { return days[i].Date < days[j].Date })
 
-	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, Projects: projects})
+	hours := make([]ActivityHourResponse, 24)
+	for h := 0; h < 24; h++ {
+		hours[h] = ActivityHourResponse{Hour: h, Count: hourCounts[h]}
+	}
+
+	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, Hours: hours, Projects: projects})
 }
 
 // --- Response Types ---
@@ -461,10 +468,17 @@ type ActivityDayResponse struct {
 	Count int    `json:"count"`
 }
 
+// ActivityHourResponse is a single hour's session count.
+type ActivityHourResponse struct {
+	Hour  int `json:"hour"`
+	Count int `json:"count"`
+}
+
 // ActivityResponse is the API representation of daily activity data.
 type ActivityResponse struct {
-	Days     []ActivityDayResponse `json:"days"`
-	Projects []string              `json:"projects"`
+	Days     []ActivityDayResponse  `json:"days"`
+	Hours    []ActivityHourResponse `json:"hours"`
+	Projects []string               `json:"projects"`
 }
 
 // SessionResponse is the API representation of a session in list responses.

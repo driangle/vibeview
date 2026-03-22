@@ -91,8 +91,14 @@ export interface ActivityDay {
   count: number;
 }
 
+export interface ActivityHour {
+  hour: number;
+  count: number;
+}
+
 export interface ActivityResponse {
   days: ActivityDay[];
+  hours: ActivityHour[];
   projects: string[];
 }
 
