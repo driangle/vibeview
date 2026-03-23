@@ -15,12 +15,6 @@ function formatDuration(ms: number): string {
   return remaining > 0 ? `${minutes}m ${remaining}s` : `${minutes}m`;
 }
 
-function formatCost(usd: number): string {
-  if (usd === 0) return '$0.00';
-  if (usd < 0.01) return '<$0.01';
-  return `$${usd.toFixed(2)}`;
-}
-
 export function TimelineTooltip({ cycle, position }: TimelineTooltipProps) {
   const theme = getPhaseTheme(cycle.phase);
   const toolCount = cycle.features.toolNames.size;
@@ -43,7 +37,6 @@ export function TimelineTooltip({ cycle, position }: TimelineTooltipProps) {
             {toolCount} tool{toolCount !== 1 ? 's' : ''}
           </span>
         )}
-        {cycle.costUSD > 0 && <span>{formatCost(cycle.costUSD)}</span>}
         {cycle.durationMs > 0 && <span>{formatDuration(cycle.durationMs)}</span>}
       </div>
 

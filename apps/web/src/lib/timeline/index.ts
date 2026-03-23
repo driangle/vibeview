@@ -1,5 +1,12 @@
 export { buildTimeline } from './buildTimeline';
-export { classifyPhase } from './classifyPhase';
+export {
+  classifyPhase,
+  addPhaseRule,
+  setPhaseRules,
+  resetPhaseRules,
+  getPhaseRules,
+} from './classifyPhase';
+export type { PhaseRule } from './classifyPhase';
 export { computeLayout } from './layoutEngine';
 export { getPhaseTheme } from './phaseTheme';
 export type { PhaseTheme } from './phaseTheme';

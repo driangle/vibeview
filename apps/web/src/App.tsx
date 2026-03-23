@@ -12,9 +12,9 @@ export function App() {
   return (
     <BrowserRouter>
       <SettingsProvider>
-        <div className="flex min-h-screen flex-col bg-bg">
+        <div className="flex h-dvh flex-col bg-bg">
           <NavBar />
-          <main className="flex-1">
+          <main className="min-h-0 flex-1 overflow-auto">
             <Routes>
               <Route path="/" element={<SessionList />} />
               <Route path="/directories" element={<DirectoryList />} />

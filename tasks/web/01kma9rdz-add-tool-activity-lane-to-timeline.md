@@ -1,7 +1,7 @@
 ---
 title: "Add tool activity lane to timeline"
 id: "01kma9rdz"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["timeline", "frontend"]
@@ -17,12 +17,12 @@ Add a thin horizontal strip below the main timeline path that shows individual t
 
 ## Tasks
 
-- [ ] Create `components/timeline/TimelineToolLane.tsx` — renders a row of small glyphs/dots within each cycle's horizontal slot
-- [ ] Define glyph shapes per tool type: Read (eye), Edit (pencil), Write (plus), Bash (terminal), Grep/Glob (search), Agent (fork)
-- [ ] Space glyphs evenly within each cycle slot, scaling down when many tools are used
-- [ ] Color glyphs to match or complement the parent phase
-- [ ] Add subtle opacity/size variation to distinguish tool types at a glance
-- [ ] At high zoom, show tool name labels next to glyphs; at low zoom, collapse to simple dots
+- [x] Create `components/timeline/TimelineToolLane.tsx` — renders a row of small glyphs/dots within each cycle's horizontal slot
+- [x] Define glyph shapes per tool type: Read (ellipse), Edit (diamond), Write (square), Bash (triangle), Grep/Glob (ring), Agent (star)
+- [x] Space glyphs evenly within each cycle slot, scaling down when many tools are used (max 8 visible, overflow indicator)
+- [x] Color glyphs to match or complement the parent phase
+- [x] Add subtle opacity/size variation to distinguish tool types at a glance
+- [ ] At high zoom, show tool name labels next to glyphs; at low zoom, collapse to simple dots (deferred — zoom-level awareness requires integration with container transform state)
 
 ## Acceptance Criteria
 

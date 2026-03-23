@@ -37,11 +37,12 @@ export interface TimelineCycle {
   badges: CycleBadges;
   features: CycleFeatures;
   userMessage: MessageResponse | null;
-  assistantMessage: MessageResponse | null;
+  assistantMessages: MessageResponse[];
   auxiliaryMessages: MessageResponse[];
   promptPreview: string;
   filesTouched: string[];
   costUSD: number;
+  totalTokens: number;
   durationMs: number;
   startTime: string;
   endTime: string;

@@ -135,12 +135,18 @@ export function SessionView() {
 
   return (
     <div
-      className={viewMode === 'timeline' ? 'flex h-full flex-col' : 'mx-auto max-w-4xl p-8'}
+      className={
+        viewMode === 'timeline' ? 'flex h-full flex-col overflow-hidden' : 'mx-auto max-w-4xl p-8'
+      }
       ref={viewMode === 'list' ? containerRef : undefined}
       onScroll={viewMode === 'list' ? handleScroll : undefined}
     >
       {/* Header */}
-      <div className={viewMode === 'timeline' ? 'shrink-0 px-8 pt-8 pb-4' : 'mb-6'}>
+      <div
+        className={
+          viewMode === 'timeline' ? 'mx-auto w-full max-w-4xl shrink-0 px-8 pt-8 pb-4' : 'mb-6'
+        }
+      >
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {liveCustomTitle || session.customTitle || session.slug || session.id}
@@ -153,7 +159,7 @@ export function SessionView() {
             <button
               onClick={() => setViewMode('list')}
               className={`rounded-md px-2.5 py-1 transition-colors ${
-                viewMode === 'list' ? 'bg-card text-fg shadow-sm' : 'text-secondary hover:text-fg'
+                viewMode === 'list' ? 'bg-card text-fg shadow-sm' : 'text-fg/50 hover:text-fg'
               }`}
             >
               List
@@ -161,9 +167,7 @@ export function SessionView() {
             <button
               onClick={() => setViewMode('timeline')}
               className={`rounded-md px-2.5 py-1 transition-colors ${
-                viewMode === 'timeline'
-                  ? 'bg-card text-fg shadow-sm'
-                  : 'text-secondary hover:text-fg'
+                viewMode === 'timeline' ? 'bg-card text-fg shadow-sm' : 'text-fg/50 hover:text-fg'
               }`}
             >
               Timeline

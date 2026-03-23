@@ -6,6 +6,7 @@ import { SessionTimeline } from './SessionTimeline';
 import { TimelinePhaseRegion } from './TimelinePhaseRegion';
 import { TimelineConnectionPath } from './TimelineConnectionPath';
 import { TimelineNode } from './TimelineNode';
+import { TimelineToolLane } from './TimelineToolLane';
 import { TimelineTooltip } from './TimelineTooltip';
 import { TimelineDetailPanel } from './TimelineDetailPanel';
 
@@ -26,6 +27,7 @@ export function TimelineView({
   const { cycles, phases, layout } = timeline;
 
   const [hoveredCycle, setHoveredCycle] = useState<TimelineCycle | null>(null);
+  const [glyphTooltip, setGlyphTooltip] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<TimelineCycle | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<TPhase | null>(null);
@@ -33,7 +35,21 @@ export function TimelineView({
   const handleNodeHover = useCallback(
     (cycle: TimelineCycle | null, e?: React.PointerEvent<SVGGElement>) => {
       setHoveredCycle(cycle);
+      setGlyphTooltip(null);
       if (cycle && e) {
+        setTooltipPos({ x: e.clientX, y: e.clientY });
+      } else {
+        setTooltipPos(null);
+      }
+    },
+    [],
+  );
+
+  const handleGlyphHover = useCallback(
+    (summary: string | null, e?: React.PointerEvent<SVGGElement>) => {
+      setGlyphTooltip(summary);
+      setHoveredCycle(null);
+      if (summary && e) {
         setTooltipPos({ x: e.clientX, y: e.clientY });
       } else {
         setTooltipPos(null);
@@ -79,7 +95,10 @@ export function TimelineView({
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* Timeline */}
-      <SessionTimeline viewportHeight={layout.config.viewportHeight}>
+      <SessionTimeline
+        contentWidth={layout.totalWidth}
+        contentHeight={layout.config.viewportHeight}
+      >
         {/* Phase regions (bottom layer) */}
         {phases.map((phase, i) => (
           <TimelinePhaseRegion
@@ -93,6 +112,14 @@ export function TimelineView({
 
         {/* Connection path */}
         <TimelineConnectionPath nodes={layout.nodes} />
+
+        {/* Tool activity lane */}
+        <TimelineToolLane
+          cycles={cycles}
+          nodeLayouts={layout.nodes}
+          config={layout.config}
+          onGlyphHover={handleGlyphHover}
+        />
 
         {/* Nodes (top layer) */}
         {cycles.map((cycle, i) => (
@@ -127,8 +154,16 @@ export function TimelineView({
         />
       )}
 
-      {/* Tooltip */}
+      {/* Tooltips */}
       {hoveredCycle && tooltipPos && <TimelineTooltip cycle={hoveredCycle} position={tooltipPos} />}
+      {glyphTooltip && tooltipPos && (
+        <div
+          className="pointer-events-none fixed z-50 max-w-[300px] rounded-lg bg-card px-3 py-2 text-xs text-fg shadow-lg ring-1 ring-fg/10"
+          style={{ left: tooltipPos.x, top: tooltipPos.y - 8, transform: 'translate(-50%, -100%)' }}
+        >
+          {glyphTooltip}
+        </div>
+      )}
     </div>
   );
 }

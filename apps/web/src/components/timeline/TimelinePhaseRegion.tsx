@@ -40,10 +40,9 @@ export function TimelinePhaseRegion({
         x={x + width / 2}
         y={y + LABEL_OFFSET_Y}
         textAnchor="middle"
-        fontSize={11}
-        fontWeight={500}
-        fill={theme.fill}
-        opacity={0.8}
+        fontSize={12}
+        fontWeight={600}
+        fill={theme.stroke}
       >
         {theme.label}
       </text>

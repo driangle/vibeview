@@ -1,3 +1,4 @@
+import { useState, useCallback, useRef } from 'react';
 import type { TimelineCycle, TimelinePhase } from '../../lib/timeline/types';
 import type { ContentBlock } from '../../types';
 import { getPhaseTheme } from '../../lib/timeline/phaseTheme';
@@ -29,16 +30,17 @@ function formatDuration(ms: number): string {
   return `${minutes}m`;
 }
 
-function formatCost(usd: number): string {
-  if (usd === 0) return '$0.00';
-  return `$${usd.toFixed(2)}`;
+function formatTokens(tokens: number): string {
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
+  if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(1)}k`;
+  return String(tokens);
 }
 
 function PhaseSummary({ phase, cycles }: { phase: TimelinePhase; cycles: TimelineCycle[] }) {
   const theme = getPhaseTheme(phase.phase);
   const phaseCycles = cycles.slice(phase.startCycleIndex, phase.endCycleIndex + 1);
-  const totalCost = phaseCycles.reduce((sum, c) => sum + c.costUSD, 0);
   const totalDuration = phaseCycles.reduce((sum, c) => sum + c.durationMs, 0);
+  const totalTokens = phaseCycles.reduce((sum, c) => sum + c.totalTokens, 0);
 
   // Tool breakdown
   const toolCounts = new Map<string, number>();
@@ -60,27 +62,27 @@ function PhaseSummary({ phase, cycles }: { phase: TimelinePhase; cycles: Timelin
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-lg bg-secondary/10 p-2">
+        <div className="rounded-lg bg-fg/8 p-2">
           <div className="text-lg font-semibold text-fg">{phaseCycles.length}</div>
-          <div className="text-xs text-secondary">cycles</div>
+          <div className="text-xs text-fg/60">cycles</div>
         </div>
-        <div className="rounded-lg bg-secondary/10 p-2">
-          <div className="text-lg font-semibold text-fg">{formatCost(totalCost)}</div>
-          <div className="text-xs text-secondary">cost</div>
+        <div className="rounded-lg bg-fg/8 p-2">
+          <div className="text-lg font-semibold text-fg">{formatTokens(totalTokens)}</div>
+          <div className="text-xs text-fg/60">tokens</div>
         </div>
-        <div className="rounded-lg bg-secondary/10 p-2">
+        <div className="rounded-lg bg-fg/8 p-2">
           <div className="text-lg font-semibold text-fg">{formatDuration(totalDuration)}</div>
-          <div className="text-xs text-secondary">duration</div>
+          <div className="text-xs text-fg/60">duration</div>
         </div>
       </div>
 
       {sortedTools.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-medium text-secondary">Tool usage</h4>
+          <h4 className="mb-2 text-xs font-medium text-fg/60">Tool usage</h4>
           <div className="flex flex-wrap gap-2">
             {sortedTools.map(([tool, count]) => (
-              <span key={tool} className="rounded-full bg-secondary/15 px-2.5 py-1 text-xs text-fg">
-                {tool} <span className="text-secondary">{count}x</span>
+              <span key={tool} className="rounded-full bg-fg/10 px-2.5 py-1 text-xs text-fg">
+                {tool} <span className="text-fg/50">{count}x</span>
               </span>
             ))}
           </div>
@@ -90,11 +92,47 @@ function PhaseSummary({ phase, cycles }: { phase: TimelinePhase; cycles: Timelin
   );
 }
 
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 800;
+const DEFAULT_WIDTH = 384;
+
 export function TimelineDetailPanel(props: TimelineDetailPanelProps) {
   const { onClose } = props;
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  const handleDragStart = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      dragRef.current = { startX: e.clientX, startWidth: width };
+      const target = e.currentTarget as Element;
+      target.setPointerCapture(e.pointerId);
+    },
+    [width],
+  );
+
+  const handleDrag = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    const delta = dragRef.current.startX - e.clientX;
+    setWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragRef.current.startWidth + delta)));
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    dragRef.current = null;
+  }, []);
 
   return (
-    <div className="flex h-full w-80 flex-col border-l border-fg/10 bg-bg lg:w-96">
+    <div className="relative flex h-full flex-col border-l border-fg/10 bg-bg" style={{ width }}>
+      {/* Resize handle */}
+      <div
+        className="absolute top-0 -left-1 z-10 flex h-full w-2 cursor-col-resize items-center justify-center hover:bg-primary/10 active:bg-primary/20"
+        onPointerDown={handleDragStart}
+        onPointerMove={handleDrag}
+        onPointerUp={handleDragEnd}
+      >
+        <div className="h-8 w-0.5 rounded-full bg-fg/20" />
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-fg/10 px-4 py-3">
         <h2 className="text-sm font-semibold text-fg">
@@ -131,15 +169,16 @@ export function TimelineDetailPanel(props: TimelineDetailPanelProps) {
                 agentGroupFirstIds={props.agentGroupFirstIds}
               />
             )}
-            {/* Render assistant message */}
-            {props.cycle.assistantMessage && (
+            {/* Render assistant messages */}
+            {props.cycle.assistantMessages.map((msg) => (
               <MessageBubble
-                message={props.cycle.assistantMessage}
+                key={msg.uuid}
+                message={msg}
                 toolResults={props.toolResults}
                 agentGroups={props.agentGroups}
                 agentGroupFirstIds={props.agentGroupFirstIds}
               />
-            )}
+            ))}
           </div>
         )}
       </div>

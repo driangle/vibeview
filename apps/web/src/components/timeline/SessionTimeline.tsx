@@ -8,22 +8,44 @@ interface ViewTransform {
 
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 3;
-const ZOOM_STEP = 0.15;
+const ZOOM_STEP = 0.03;
+const FIT_PADDING = 40;
 
 interface SessionTimelineProps {
-  viewportHeight: number;
+  contentWidth: number;
+  contentHeight: number;
   children: ReactNode;
 }
 
-export function SessionTimeline({ viewportHeight, children }: SessionTimelineProps) {
+function computeFitTransform(
+  containerW: number,
+  containerH: number,
+  contentW: number,
+  contentH: number,
+): ViewTransform {
+  if (containerW === 0 || containerH === 0 || contentW === 0 || contentH === 0) {
+    return { x: 0, y: 0, scale: 1 };
+  }
+
+  const scaleX = (containerW - FIT_PADDING * 2) / contentW;
+  const scaleY = (containerH - FIT_PADDING * 2) / contentH;
+  const scale = Math.min(Math.min(scaleX, scaleY), MAX_SCALE);
+
+  // Center content vertically, align left with padding horizontally
+  const scaledW = contentW * scale;
+  const scaledH = contentH * scale;
+  const x = Math.max(FIT_PADDING, (containerW - scaledW) / 2);
+  const y = Math.max(FIT_PADDING, (containerH - scaledH) / 2);
+
+  return { x, y, scale };
+}
+
+export function SessionTimeline({ contentWidth, contentHeight, children }: SessionTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [transform, setTransform] = useState<ViewTransform>({
-    x: 0,
-    y: 0,
-    scale: 1,
-  });
+  const [transform, setTransform] = useState<ViewTransform>({ x: 0, y: 0, scale: 1 });
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
 
@@ -44,6 +66,15 @@ export function SessionTimeline({ viewportHeight, children }: SessionTimelinePro
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  // Fit to view on first render (once container size is known)
+  useEffect(() => {
+    if (hasInitialized || containerSize.width === 0 || contentWidth === 0) return;
+    setTransform(
+      computeFitTransform(containerSize.width, containerSize.height, contentWidth, contentHeight),
+    );
+    setHasInitialized(true);
+  }, [containerSize, contentWidth, contentHeight, hasInitialized]);
 
   // Pan handlers
   const handlePointerDown = useCallback(
@@ -88,7 +119,6 @@ export function SessionTimeline({ viewportHeight, children }: SessionTimelinePro
         MAX_SCALE,
         Math.max(MIN_SCALE, t.scale + direction * ZOOM_STEP * t.scale),
       );
-      // Zoom toward cursor: adjust pan so point under cursor stays fixed
       const svgRect = svgRef.current?.getBoundingClientRect();
       if (svgRect) {
         const cursorX = e.clientX - svgRect.left;
@@ -119,8 +149,10 @@ export function SessionTimeline({ viewportHeight, children }: SessionTimelinePro
   }, []);
 
   const resetZoom = useCallback(() => {
-    setTransform({ x: 0, y: 0, scale: 1 });
-  }, []);
+    setTransform(
+      computeFitTransform(containerSize.width, containerSize.height, contentWidth, contentHeight),
+    );
+  }, [containerSize, contentWidth, contentHeight]);
 
   const scalePercent = Math.round(transform.scale * 100);
 
@@ -129,7 +161,7 @@ export function SessionTimeline({ viewportHeight, children }: SessionTimelinePro
       <svg
         ref={svgRef}
         width={containerSize.width || '100%'}
-        height={containerSize.height || viewportHeight}
+        height={containerSize.height || contentHeight}
         className={`select-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -145,21 +177,21 @@ export function SessionTimeline({ viewportHeight, children }: SessionTimelinePro
       <div className="absolute right-3 bottom-3 flex items-center gap-1 rounded-lg bg-card/90 p-1 shadow-sm backdrop-blur-sm">
         <button
           onClick={zoomOut}
-          className="rounded px-2 py-0.5 text-sm text-secondary hover:bg-secondary/30 hover:text-fg"
+          className="rounded px-2 py-0.5 text-sm text-fg/60 hover:bg-fg/10 hover:text-fg"
           title="Zoom out"
         >
           -
         </button>
         <button
           onClick={resetZoom}
-          className="min-w-[3rem] rounded px-1 py-0.5 text-center text-xs text-secondary hover:bg-secondary/30 hover:text-fg"
-          title="Reset zoom"
+          className="min-w-[3rem] rounded px-1 py-0.5 text-center text-xs text-fg/60 hover:bg-fg/10 hover:text-fg"
+          title="Fit to view"
         >
           {scalePercent}%
         </button>
         <button
           onClick={zoomIn}
-          className="rounded px-2 py-0.5 text-sm text-secondary hover:bg-secondary/30 hover:text-fg"
+          className="rounded px-2 py-0.5 text-sm text-fg/60 hover:bg-fg/10 hover:text-fg"
           title="Zoom in"
         >
           +

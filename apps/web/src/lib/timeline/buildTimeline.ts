@@ -34,7 +34,7 @@ function extractFileExtension(filePath: string): string {
 }
 
 function extractFeatures(
-  assistantMsg: MessageResponse | null,
+  assistantMsgs: MessageResponse[],
   auxiliaryMsgs: MessageResponse[],
 ): CycleFeatures {
   const toolNames = new Set<string>();
@@ -46,8 +46,8 @@ function extractFeatures(
   let hasErrors = false;
   let hasSubagents = false;
 
-  // Extract from assistant message content blocks
-  if (assistantMsg) {
+  // Extract from ALL assistant message content blocks
+  for (const assistantMsg of assistantMsgs) {
     for (const block of getContentBlocks(assistantMsg)) {
       if (block.type === 'thinking' && block.thinking) {
         thinkingTokens += block.thinking.length;
@@ -105,21 +105,29 @@ function extractFeatures(
   };
 }
 
-function computeSize(msg: MessageResponse | null): CycleSize {
-  if (!msg?.message?.usage) return 'S';
-  const usage = msg.message.usage;
-  const total = usage.input_tokens + usage.output_tokens;
-  if (total >= 20_000) return 'XL';
-  if (total >= 5_000) return 'L';
-  if (total >= 1_000) return 'M';
+function computeTotalTokens(msgs: MessageResponse[]): number {
+  let total = 0;
+  for (const msg of msgs) {
+    if (msg.message?.usage) {
+      total += msg.message.usage.input_tokens + msg.message.usage.output_tokens;
+    }
+  }
+  return total;
+}
+
+function computeSize(totalTokens: number): CycleSize {
+  if (totalTokens >= 20_000) return 'XL';
+  if (totalTokens >= 5_000) return 'L';
+  if (totalTokens >= 1_000) return 'M';
   return 'S';
 }
 
-function computeBadges(features: CycleFeatures, assistantMsg: MessageResponse | null): CycleBadges {
-  // Approval gate: assistant's last content block is a tool_use (waiting for approval)
+function computeBadges(features: CycleFeatures, assistantMsgs: MessageResponse[]): CycleBadges {
+  // Approval gate: last assistant message's last content block is a tool_use
   let approvalGate = false;
-  if (assistantMsg) {
-    const blocks = getContentBlocks(assistantMsg);
+  const lastMsg = assistantMsgs[assistantMsgs.length - 1];
+  if (lastMsg) {
+    const blocks = getContentBlocks(lastMsg);
     if (blocks.length > 0 && blocks[blocks.length - 1].type === 'tool_use') {
       approvalGate = true;
     }
@@ -146,9 +154,14 @@ function extractPromptPreview(userMsg: MessageResponse | null): string {
   return '';
 }
 
-function computeCost(assistantMsg: MessageResponse | null): number {
-  if (!assistantMsg?.message?.usage) return 0;
-  return assistantMsg.message.usage.costUSD ?? 0;
+function computeCost(assistantMsgs: MessageResponse[]): number {
+  let cost = 0;
+  for (const msg of assistantMsgs) {
+    if (msg.message?.usage?.costUSD) {
+      cost += msg.message.usage.costUSD;
+    }
+  }
+  return cost;
 }
 
 function computeDuration(messages: MessageResponse[]): {
@@ -172,7 +185,7 @@ function computeDuration(messages: MessageResponse[]): {
 
 interface RawCycle {
   userMessage: MessageResponse | null;
-  assistantMessage: MessageResponse | null;
+  assistantMessages: MessageResponse[];
   auxiliaryMessages: MessageResponse[];
 }
 
@@ -186,7 +199,7 @@ function groupIntoCycles(messages: MessageResponse[]): RawCycle[] {
       if (current) cycles.push(current);
       current = {
         userMessage: msg,
-        assistantMessage: null,
+        assistantMessages: [],
         auxiliaryMessages: [],
       };
     } else if (msg.type === 'assistant') {
@@ -194,19 +207,19 @@ function groupIntoCycles(messages: MessageResponse[]): RawCycle[] {
         // Session starts with assistant message (no user prompt yet)
         current = {
           userMessage: null,
-          assistantMessage: msg,
+          assistantMessages: [msg],
           auxiliaryMessages: [],
         };
       } else {
-        // Keep the latest assistant message (tool loops produce multiple)
-        current.assistantMessage = msg;
+        // Accumulate all assistant messages (tool loops produce multiple)
+        current.assistantMessages.push(msg);
       }
     } else {
       // user (tool_result only), progress, system, file-history-snapshot, custom-title
       if (!current) {
         current = {
           userMessage: null,
-          assistantMessage: null,
+          assistantMessages: [],
           auxiliaryMessages: [msg],
         };
       } else {
@@ -220,12 +233,13 @@ function groupIntoCycles(messages: MessageResponse[]): RawCycle[] {
 }
 
 function finalizeCycle(raw: RawCycle, index: number): TimelineCycle {
-  const features = extractFeatures(raw.assistantMessage, raw.auxiliaryMessages);
+  const features = extractFeatures(raw.assistantMessages, raw.auxiliaryMessages);
   const phase = classifyPhase(features);
-  const size = computeSize(raw.assistantMessage);
-  const badges = computeBadges(features, raw.assistantMessage);
+  const totalTokens = computeTotalTokens(raw.assistantMessages);
+  const size = computeSize(totalTokens);
+  const badges = computeBadges(features, raw.assistantMessages);
 
-  const allMessages = [raw.userMessage, raw.assistantMessage, ...raw.auxiliaryMessages].filter(
+  const allMessages = [raw.userMessage, ...raw.assistantMessages, ...raw.auxiliaryMessages].filter(
     (m): m is MessageResponse => m !== null,
   );
 
@@ -238,11 +252,12 @@ function finalizeCycle(raw: RawCycle, index: number): TimelineCycle {
     badges,
     features,
     userMessage: raw.userMessage,
-    assistantMessage: raw.assistantMessage,
+    assistantMessages: raw.assistantMessages,
     auxiliaryMessages: raw.auxiliaryMessages,
     promptPreview: extractPromptPreview(raw.userMessage),
     filesTouched: [...features.filePaths],
-    costUSD: computeCost(raw.assistantMessage),
+    costUSD: computeCost(raw.assistantMessages),
+    totalTokens,
     durationMs,
     startTime,
     endTime,
