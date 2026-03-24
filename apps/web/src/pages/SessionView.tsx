@@ -160,7 +160,7 @@ function SessionSidebar({
   }, []);
 
   return (
-    <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-6 overflow-y-auto print:hidden">
+    <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-6 overflow-y-auto print:hidden lg:sticky lg:top-0 lg:self-start lg:max-h-[100vh]">
       <div className="space-y-8">
         {/* Raw Session File */}
         {filePath && (
