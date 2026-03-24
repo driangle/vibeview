@@ -48,10 +48,18 @@ function formatCost(usd: number): string {
 
 function formatDuration(messages: MessageResponse[]): string | null {
   if (messages.length < 2) return null;
-  const first = new Date(messages[0].timestamp).getTime();
-  const last = new Date(messages[messages.length - 1].timestamp).getTime();
+  let first = NaN;
+  let last = NaN;
+  for (let i = 0; i < messages.length; i++) {
+    const t = new Date(messages[i].timestamp).getTime();
+    if (Number.isFinite(t)) { first = t; break; }
+  }
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const t = new Date(messages[i].timestamp).getTime();
+    if (Number.isFinite(t)) { last = t; break; }
+  }
   const diffMs = last - first;
-  if (diffMs <= 0) return null;
+  if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
 
   const seconds = Math.floor(diffMs / 1000);
   const hours = Math.floor(seconds / 3600);
@@ -417,7 +425,8 @@ export function SessionView() {
                 {title}
               </h1>
               <p className="text-muted-fg mt-1 text-sm italic">
-                {projectName(session.project)} &middot; {displayMessages.length} message
+                {formatDate(session.timestamp)} &middot; {projectName(session.project)} &middot;{' '}
+                {displayMessages.length} message
                 {displayMessages.length !== 1 ? 's' : ''}
                 {formatDuration(displayMessages) && (
                   <> &middot; {formatDuration(displayMessages)}</>
