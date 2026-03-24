@@ -33,7 +33,8 @@ export function useSessionData(id: string | undefined) {
     isLoading,
   } = useSWR<SessionDetail>(id ? `/api/sessions/${id}` : null, fetcher);
 
-  const { streamedMessages, connectionStatus, addInitialUUIDs } = useSessionStream(id);
+  const { streamedMessages, connectionStatus, serverActivityState, addInitialUUIDs } =
+    useSessionStream(id);
 
   // Register initial message UUIDs so the SSE hook deduplicates.
   useEffect(() => {
@@ -78,8 +79,11 @@ export function useSessionData(id: string | undefined) {
     return null;
   }, [streamedMessages]);
 
-  // Derive live activity state from the latest streamed message.
+  // Derive live activity state from streamed messages and server-pushed updates.
+  // Server-pushed state (from idle decay / process checks) takes priority when
+  // present — it is cleared automatically when a new message arrives.
   const liveActivityState = useMemo<ActivityState | undefined>(() => {
+    if (serverActivityState) return serverActivityState;
     if (streamedMessages.length === 0) return undefined;
     // Walk backwards to find the last semantically meaningful message.
     for (let i = streamedMessages.length - 1; i >= 0; i--) {
@@ -102,7 +106,7 @@ export function useSessionData(id: string | undefined) {
       }
     }
     return undefined;
-  }, [streamedMessages]);
+  }, [streamedMessages, serverActivityState]);
 
   // Group agent_progress messages by agentId.
   const { agentGroups, agentGroupFirstIds } = useMemo(() => {

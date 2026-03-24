@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { MessageResponse } from '../types';
+import type { ActivityState, MessageResponse } from '../types';
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 
@@ -8,6 +8,8 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000];
 export function useSessionStream(sessionId: string | undefined) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  // Server-pushed activity state (from idle decay / process liveness checks).
+  const [serverActivityState, setServerActivityState] = useState<ActivityState | null>(null);
   const seenUUIDs = useRef(new Set<string>());
 
   useEffect(() => {
@@ -34,7 +36,15 @@ export function useSessionStream(sessionId: string | undefined) {
         const msg: MessageResponse = JSON.parse(e.data);
         if (seenUUIDs.current.has(msg.uuid)) return;
         seenUUIDs.current.add(msg.uuid);
+        // A new message invalidates any server-pushed state — the client
+        // will derive the latest state from the message itself.
+        setServerActivityState(null);
         setMessages((prev) => [...prev, msg]);
+      });
+
+      es.addEventListener('activity_state', (e) => {
+        const data: { state: ActivityState } = JSON.parse(e.data);
+        setServerActivityState(data.state);
       });
 
       es.addEventListener('ping', () => {
@@ -66,5 +76,10 @@ export function useSessionStream(sessionId: string | undefined) {
     }
   }, []);
 
-  return { streamedMessages: messages, connectionStatus: status, addInitialUUIDs };
+  return {
+    streamedMessages: messages,
+    connectionStatus: status,
+    serverActivityState,
+    addInitialUUIDs,
+  };
 }

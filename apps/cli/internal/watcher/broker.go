@@ -316,10 +316,12 @@ func (b *Broker) pingLoop() {
 			event := SSEEvent{Event: "ping", Data: `{"time":"` + now.UTC().Format(time.RFC3339) + `"}`}
 			b.mu.Lock()
 			// Decay stale active sessions to idle.
+			var idledSessions []string
 			for sessionID, lastMsg := range b.lastMessageAt {
 				if now.Sub(lastMsg) > idleDecayDuration {
 					b.index.SetActivityState(sessionID, session.ActivityIdle)
 					delete(b.lastMessageAt, sessionID)
+					idledSessions = append(idledSessions, sessionID)
 				}
 			}
 			// Check process liveness for tracked active sessions.
@@ -328,6 +330,20 @@ func (b *Broker) pingLoop() {
 					if !b.pidChecker.IsProcessAlive(sessionID) {
 						b.index.SetActivityState(sessionID, session.ActivityIdle)
 						delete(b.lastMessageAt, sessionID)
+						idledSessions = append(idledSessions, sessionID)
+					}
+				}
+			}
+			// Notify connected clients when their session becomes idle.
+			for _, sessionID := range idledSessions {
+				idleEvent := SSEEvent{
+					Event: "activity_state",
+					Data:  `{"state":"idle"}`,
+				}
+				for client := range b.clients[sessionID] {
+					select {
+					case client.Events <- idleEvent:
+					default:
 					}
 				}
 			}
