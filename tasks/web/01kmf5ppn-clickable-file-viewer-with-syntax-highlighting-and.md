@@ -1,7 +1,7 @@
 ---
 title: "Clickable file viewer with syntax highlighting and copy path"
 id: "01kmf5ppn"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "sidebar", "file-viewer"]
@@ -17,12 +17,12 @@ Make files listed in the sidebar (Context File and Files Touched) clickable to v
 
 ## Tasks
 
-- [ ] Add a "copy path" button next to each file entry in the sidebar (Context File section and Files Touched section)
-- [ ] Make file entries clickable — clicking opens a file content viewer panel
-- [ ] Build a `FileViewer` component that displays file content with syntax highlighting based on file extension
-- [ ] Add a "Raw" toggle in the file viewer to switch between formatted and plain text views
-- [ ] Source file content from tool_result blocks in the session data (content returned by Read/Write/Edit tools)
-- [ ] Handle missing content gracefully (e.g. file was touched but content not available in session data)
+- [x] Add a "copy path" button next to each file entry in the sidebar (Context File section and Files Touched section)
+- [x] Make file entries clickable — clicking opens a file content viewer panel
+- [x] Build a `FileViewer` component that displays file content with syntax highlighting based on file extension
+- [x] Add a "Raw" toggle in the file viewer to switch between formatted and plain text views
+- [x] Source file content from tool_result blocks in the session data (content returned by Read/Write/Edit tools)
+- [x] Handle missing content gracefully (e.g. file was touched but content not available in session data)
 
 ## Acceptance Criteria
 

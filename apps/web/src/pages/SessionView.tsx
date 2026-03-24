@@ -9,7 +9,17 @@ import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSessionData } from '../hooks/useSessionData';
 import { FilesTouched } from '../components/FilesTouched';
-import type { MessageResponse, UsageTotals } from '../types';
+import { FileViewer } from '../components/FileViewer';
+import {
+  SidebarSection,
+  ToolUsageSummary,
+  BashCommandsList,
+  ErrorsSummary,
+  SubagentsSummary,
+  WorktreesSummary,
+} from '../components/SessionInsights';
+import type { FileOperation } from '../components/FileViewer';
+import type { ContentBlock, MessageResponse, UsageTotals } from '../types';
 
 function projectName(project: string): string {
   const parts = project.split('/').filter(Boolean);
@@ -33,6 +43,23 @@ function formatTokenCount(count: number): string {
 
 function formatCost(usd: number): string {
   return `$${usd.toFixed(2)}`;
+}
+
+function formatDuration(messages: MessageResponse[]): string | null {
+  if (messages.length < 2) return null;
+  const first = new Date(messages[0].timestamp).getTime();
+  const last = new Date(messages[messages.length - 1].timestamp).getTime();
+  const diffMs = last - first;
+  if (diffMs <= 0) return null;
+
+  const seconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
 }
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
@@ -73,6 +100,9 @@ function SessionSidebar({
   timestamp,
   sessionId,
   messages,
+  toolResults,
+  agentGroups,
+  onNavigateToMessage,
 }: {
   filePath?: string;
   project: string;
@@ -80,42 +110,106 @@ function SessionSidebar({
   timestamp: string;
   sessionId: string;
   messages: MessageResponse[];
+  toolResults: Map<string, ContentBlock>;
+  agentGroups: Map<string, MessageResponse[]>;
+  onNavigateToMessage: (uuid: string) => void;
 }) {
+  const [viewerFile, setViewerFile] = useState<{
+    path: string;
+    operations: FileOperation[];
+  } | null>(null);
+
+  const handleFileClick = useCallback((path: string, operations: FileOperation[]) => {
+    setViewerFile({ path, operations });
+  }, []);
+
+  const handleCommandClick = useCallback((command: string, output: string | null) => {
+    const content = output ? `$ ${command}\n\n${output}` : `$ ${command}`;
+    setViewerFile({ path: 'Command', operations: [{ type: 'read', content, timestamp: '' }] });
+  }, []);
+
+  const handleCopyPath = useCallback(async (e: React.MouseEvent, path: string) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(path);
+  }, []);
+
   return (
     <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-6 overflow-y-auto">
       <div className="space-y-8">
-        {/* Context Files */}
+        {/* Raw Session File */}
         {filePath && (
-          <div>
-            <h3 className="font-headline text-[11px] font-bold uppercase tracking-widest text-muted-fg mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">attach_file</span>
-              Context File
-            </h3>
-            <div className="space-y-2">
-              <div className="p-3 bg-card border border-border rounded-lg flex items-center gap-3 hover:bg-bg transition-colors cursor-pointer group">
-                <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
-                  description
+          <SidebarSection id="raw-session-file" icon="attach_file" title="Raw Session File">
+            <button
+              onClick={() => handleFileClick(filePath, [])}
+              className="w-full p-3 bg-card border border-border rounded-lg flex items-center gap-3 hover:bg-bg transition-colors cursor-pointer group text-left"
+            >
+              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
+                description
+              </span>
+              <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+                <span className="text-xs font-medium text-fg truncate">
+                  {filePath.split('/').pop()}
                 </span>
-                <div className="flex flex-col overflow-hidden">
-                  <span className="text-xs font-medium text-fg truncate">
-                    {filePath.split('/').pop()}
-                  </span>
-                  <span className="text-[10px] text-muted-fg font-mono">{filePath}</span>
-                </div>
+                <span className="text-[10px] text-muted-fg font-mono truncate">{filePath}</span>
               </div>
-            </div>
-          </div>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => handleCopyPath(e, filePath)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(filePath);
+                  }
+                }}
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-muted-fg hover:text-fg transition-all shrink-0"
+                title="Copy path"
+              >
+                <span className="material-symbols-outlined text-xs">content_copy</span>
+              </span>
+            </button>
+          </SidebarSection>
         )}
 
         {/* Files Touched */}
-        <FilesTouched messages={messages} />
+        <FilesTouched
+          messages={messages}
+          toolResults={toolResults}
+          onFileClick={handleFileClick}
+          onNavigateToMessage={onNavigateToMessage}
+        />
+
+        {/* Tool Usage */}
+        <ToolUsageSummary messages={messages} />
+
+        {/* Bash Commands */}
+        <BashCommandsList
+          messages={messages}
+          toolResults={toolResults}
+          onCommandClick={handleCommandClick}
+          onNavigateToMessage={onNavigateToMessage}
+        />
+
+        {/* Worktrees */}
+        <WorktreesSummary
+          messages={messages}
+          toolResults={toolResults}
+          onNavigateToMessage={onNavigateToMessage}
+        />
+
+        {/* Subagents */}
+        <SubagentsSummary agentGroups={agentGroups} onNavigateToMessage={onNavigateToMessage} />
+
+        {/* Errors */}
+        <ErrorsSummary
+          messages={messages}
+          toolResults={toolResults}
+          onNavigateToMessage={onNavigateToMessage}
+        />
 
         {/* Metadata */}
-        <div className="pt-4 border-t border-border">
-          <h3 className="font-headline text-[11px] font-bold uppercase tracking-widest text-muted-fg mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">info</span>
-            Metadata
-          </h3>
+        <SidebarSection id="metadata" icon="info" title="Metadata">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-[11px] font-headline text-muted-fg uppercase">Project</span>
@@ -146,8 +240,16 @@ function SessionSidebar({
               />
             </div>
           </div>
-        </div>
+        </SidebarSection>
       </div>
+
+      {viewerFile && (
+        <FileViewer
+          filePath={viewerFile.path}
+          operations={viewerFile.operations}
+          onClose={() => setViewerFile(null)}
+        />
+      )}
     </aside>
   );
 }
@@ -190,6 +292,30 @@ export function SessionView() {
   const paginatedMessages = displayMessages.slice(
     page * settings.messagesPerPage,
     (page + 1) * settings.messagesPerPage,
+  );
+
+  const [highlightUuid, setHighlightUuid] = useState<string | null>(null);
+  const highlightTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const navigateToMessage = useCallback(
+    (uuid: string) => {
+      const msgIndex = displayMessages.findIndex((m) => m.uuid === uuid);
+      if (msgIndex === -1) return;
+      const targetPage = Math.floor(msgIndex / settings.messagesPerPage);
+      setFollowMode(false);
+      setUserPage(targetPage);
+
+      // Highlight and scroll after page renders
+      setHighlightUuid(uuid);
+      clearTimeout(highlightTimeout.current);
+      highlightTimeout.current = setTimeout(() => setHighlightUuid(null), 2000);
+
+      requestAnimationFrame(() => {
+        const el = containerRef.current?.querySelector(`[data-message-uuid="${uuid}"]`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    },
+    [displayMessages, settings.messagesPerPage],
   );
 
   const onBack = useCallback(() => {
@@ -291,6 +417,9 @@ export function SessionView() {
               <p className="text-muted-fg mt-1 text-sm italic">
                 {projectName(session.project)} &middot; {displayMessages.length} message
                 {displayMessages.length !== 1 ? 's' : ''}
+                {formatDuration(displayMessages) && (
+                  <> &middot; {formatDuration(displayMessages)}</>
+                )}
               </p>
             </div>
             {liveUsage && <InlineMetrics usage={liveUsage} />}
@@ -319,7 +448,8 @@ export function SessionView() {
                 <div
                   key={msg.uuid}
                   data-row-index={index}
-                  className={`rounded-lg transition-colors ${selectedIndex === index ? 'ring-2 ring-primary' : ''}`}
+                  data-message-uuid={msg.uuid}
+                  className={`rounded-lg transition-colors duration-700 ${selectedIndex === index ? 'ring-2 ring-primary' : ''} ${highlightUuid === msg.uuid ? 'ring-2 ring-primary bg-primary/5' : ''}`}
                 >
                   <MessageBubble
                     message={msg}
@@ -371,6 +501,9 @@ export function SessionView() {
         timestamp={session.timestamp}
         sessionId={session.id}
         messages={displayMessages}
+        toolResults={toolResults}
+        agentGroups={agentGroups}
+        onNavigateToMessage={navigateToMessage}
       />
     </div>
   );
