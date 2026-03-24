@@ -365,6 +365,7 @@ type messageEvent struct {
 	UUID        string             `json:"uuid"`
 	Type        string             `json:"type"`
 	Timestamp   string             `json:"timestamp"`
+	IsMeta      bool               `json:"isMeta,omitempty"`
 	Message     *claude.APIMessage `json:"message,omitempty"`
 	Data        map[string]any     `json:"data,omitempty"`
 	Snapshot    map[string]any     `json:"snapshot,omitempty"`
@@ -380,6 +381,7 @@ func toMessageEvent(msg claude.Message) messageEvent {
 		UUID:        msg.UUID,
 		Type:        string(msg.Type),
 		Timestamp:   ts,
+		IsMeta:      msg.IsMeta,
 		Message:     msg.Message,
 		Data:        msg.Data,
 		Snapshot:    msg.Snapshot,

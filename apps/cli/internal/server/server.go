@@ -534,6 +534,7 @@ type MessageResponse struct {
 	UUID        string             `json:"uuid"`
 	Type        string             `json:"type"`
 	Timestamp   string             `json:"timestamp"`
+	IsMeta      bool               `json:"isMeta,omitempty"`
 	Message     *claude.APIMessage `json:"message,omitempty"`
 	Content     string             `json:"content,omitempty"`
 	Data        map[string]any     `json:"data,omitempty"`
@@ -562,6 +563,7 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 		UUID:        msg.UUID,
 		Type:        string(msg.Type),
 		Timestamp:   msToISO(msg.Timestamp.Int64()),
+		IsMeta:      msg.IsMeta,
 		Message:     msg.Message,
 		Content:     msg.Content,
 		Data:        msg.Data,

@@ -54,6 +54,64 @@ function RawJsonButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+function getMessageText(message: MessageResponse): string {
+  const content = message.message?.content;
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .filter((b) => b.type === 'text' && b.text)
+      .map((b) => b.text!)
+      .join('\n');
+  }
+  return '';
+}
+
+function extractSkillExpansionName(message: MessageResponse): string | null {
+  const text = getMessageText(message);
+  const match = text.match(/^Base directory for this skill:.*\/skills\/([^\s/]+)/);
+  return match ? match[1] : null;
+}
+
+function SkillLoadedMessage({
+  message,
+  skillName,
+}: {
+  message: MessageResponse;
+  skillName: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
+
+  const text = getMessageText(message);
+
+  return (
+    <div className="my-1 rounded-lg border border-violet-200 dark:border-violet-800/50 bg-violet-50 dark:bg-violet-900/20">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-800/30 transition-colors"
+      >
+        <span className="material-symbols-outlined text-sm">magic_button</span>
+        <span className="font-medium">Skill loaded</span>
+        <span className="text-violet-400 dark:text-violet-500 font-mono">/{skillName}</span>
+        <span className={`ml-auto transition-transform text-[10px] ${expanded ? 'rotate-90' : ''}`}>
+          ▶
+        </span>
+      </button>
+      {expanded && (
+        <div className="border-t border-violet-200 dark:border-violet-800/50">
+          <pre className="max-h-96 overflow-auto whitespace-pre-wrap px-3 py-2 text-xs text-violet-700 dark:text-violet-300">
+            {text}
+          </pre>
+          <div className="flex justify-end px-3 py-1 border-t border-violet-200 dark:border-violet-800/50">
+            <RawJsonButton onClick={() => setShowRaw(true)} />
+          </div>
+        </div>
+      )}
+      {showRaw && <RawJsonModal data={message.message} onClose={() => setShowRaw(false)} />}
+    </div>
+  );
+}
+
 function UserMessage({ message }: { message: MessageResponse }) {
   const [showRaw, setShowRaw] = useState(false);
   const content = message.message?.content;
@@ -207,6 +265,15 @@ export function MessageBubble({
     if (Array.isArray(content) && content.every((b) => b.type === 'tool_result')) {
       return null;
     }
+
+    // Skill expansion messages (isMeta user messages injected by the harness)
+    if (message.isMeta) {
+      const skillName = extractSkillExpansionName(message);
+      if (skillName) {
+        return <SkillLoadedMessage message={message} skillName={skillName} />;
+      }
+    }
+
     return <UserMessage message={message} />;
   }
 

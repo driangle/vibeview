@@ -66,6 +66,7 @@ export interface MessageResponse {
     | 'file-history-snapshot'
     | 'custom-title';
   timestamp: string;
+  isMeta?: boolean;
   message?: APIMessage;
   content?: string;
   data?: Record<string, unknown>;

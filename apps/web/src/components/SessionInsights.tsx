@@ -5,6 +5,7 @@ import {
   extractBashCommands,
   extractErrors,
   extractWorktrees,
+  extractSkills,
   resolveResultText,
 } from '../lib/extractors';
 import type { SubagentInfo } from '../lib/extractors';
@@ -119,6 +120,36 @@ export function ToolUsageSummary({ messages }: { messages: MessageResponse[] }) 
             {name}
             <span className="text-muted-fg">&times;{count}</span>
           </span>
+        ))}
+      </div>
+    </SidebarSection>
+  );
+}
+
+export function SkillsSummary({
+  messages,
+  onNavigateToMessage,
+}: {
+  messages: MessageResponse[];
+  onNavigateToMessage: (uuid: string) => void;
+}) {
+  const skills = useMemo(() => extractSkills(messages), [messages]);
+
+  if (skills.length === 0) return null;
+
+  const total = skills.reduce((s, t) => s + t.count, 0);
+
+  return (
+    <SidebarSection id="skills" icon="magic_button" title="Skills" count={total}>
+      <div className="space-y-1">
+        {skills.map(({ name, count, messageUuid }) => (
+          <div key={name} className="flex items-center gap-1 group">
+            <span className="flex-1 min-w-0 inline-flex items-center gap-1 text-[11px] font-medium text-fg bg-card border border-border rounded-md px-2.5 py-1.5 truncate">
+              /{name}
+              {count > 1 && <span className="text-muted-fg">&times;{count}</span>}
+            </span>
+            <LocateButton onClick={() => onNavigateToMessage(messageUuid)} />
+          </div>
         ))}
       </div>
     </SidebarSection>
@@ -282,9 +313,7 @@ export function SubagentsSummary({
 }) {
   if (subagents.length === 0) return null;
 
-  const turnCounts = subagents.map((a) =>
-    a.source === 'agent_progress' ? a.turns.length : 1,
-  );
+  const turnCounts = subagents.map((a) => (a.source === 'agent_progress' ? a.turns.length : 1));
   const totalTurns = turnCounts.reduce((s, c) => s + c, 0);
   const sorted = [...turnCounts].sort((a, b) => a - b);
   const medianTurns =
@@ -306,11 +335,7 @@ export function SubagentsSummary({
       </div>
       <div className="space-y-1.5">
         {subagents.map((agent) => (
-          <AgentCard
-            key={agent.agentId}
-            agent={agent}
-            onNavigateToMessage={onNavigateToMessage}
-          />
+          <AgentCard key={agent.agentId} agent={agent} onNavigateToMessage={onNavigateToMessage} />
         ))}
       </div>
     </SidebarSection>

@@ -13,6 +13,7 @@ import { FileViewer } from '../components/FileViewer';
 import {
   SidebarSection,
   ToolUsageSummary,
+  SkillsSummary,
   BashCommandsList,
   ErrorsSummary,
   SubagentsSummary,
@@ -69,11 +70,17 @@ function formatDuration(messages: MessageResponse[]): string | null {
   let last = NaN;
   for (let i = 0; i < messages.length; i++) {
     const t = new Date(messages[i].timestamp).getTime();
-    if (Number.isFinite(t)) { first = t; break; }
+    if (Number.isFinite(t)) {
+      first = t;
+      break;
+    }
   }
   for (let i = messages.length - 1; i >= 0; i--) {
     const t = new Date(messages[i].timestamp).getTime();
-    if (Number.isFinite(t)) { last = t; break; }
+    if (Number.isFinite(t)) {
+      last = t;
+      break;
+    }
   }
   const diffMs = last - first;
   if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
@@ -208,6 +215,9 @@ function SessionSidebar({
 
         {/* Tool Usage */}
         <ToolUsageSummary messages={messages} />
+
+        {/* Skills */}
+        <SkillsSummary messages={messages} onNavigateToMessage={onNavigateToMessage} />
 
         {/* Bash Commands */}
         <BashCommandsList
@@ -457,15 +467,11 @@ export function SessionView() {
                 </button>
               </div>
             </div>
-            <h1 className="text-xl font-headline font-medium tracking-tight text-fg">
-              {title}
-            </h1>
+            <h1 className="text-xl font-headline font-medium tracking-tight text-fg">{title}</h1>
             <p className="text-muted-fg text-xs">
               {formatDate(session.timestamp)} &middot; {projectName(session.project)} &middot;{' '}
               {displayMessages.length} message{displayMessages.length !== 1 ? 's' : ''}
-              {formatDuration(displayMessages) && (
-                <> &middot; {formatDuration(displayMessages)}</>
-              )}
+              {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
             </p>
           </div>
         </section>

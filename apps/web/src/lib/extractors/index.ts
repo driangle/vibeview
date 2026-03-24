@@ -14,12 +14,21 @@ export { extractErrors, hasErrorResults } from './errors';
 export type { ErrorEntry } from './errors';
 
 // Files touched
-export { extractFiles, extractFilePathSet, extractFileExtensions, resolveFileOperations } from './files';
+export {
+  extractFiles,
+  extractFilePathSet,
+  extractFileExtensions,
+  resolveFileOperations,
+} from './files';
 export type { FileContentEntry, FilesByCategory, FilesResult } from './files';
 
 // Worktrees
 export { extractWorktrees } from './worktrees';
 export type { WorktreeEntry } from './worktrees';
+
+// Skills
+export { extractSkills } from './skills';
+export type { SkillEntry } from './skills';
 
 // Subagents
 export { extractSubagents, hasSubagents } from './subagents';
