@@ -403,10 +403,10 @@ export function SessionView() {
         onScroll={handleScroll}
       >
         {/* Session Header */}
-        <section className="p-8 border-b border-border bg-card">
-          <div className="max-w-3xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
+        <section className="px-8 py-4 border-b border-border bg-card">
+          <div className="max-w-3xl mx-auto space-y-2">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
                 <CopyableText
                   text={session.id}
                   className="font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-tertiary-container text-tertiary-container-fg rounded cursor-pointer"
@@ -421,19 +421,18 @@ export function SessionView() {
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-headline font-medium tracking-tight text-fg">
-                {title}
-              </h1>
-              <p className="text-muted-fg mt-1 text-sm italic">
-                {formatDate(session.timestamp)} &middot; {projectName(session.project)} &middot;{' '}
-                {displayMessages.length} message
-                {displayMessages.length !== 1 ? 's' : ''}
-                {formatDuration(displayMessages) && (
-                  <> &middot; {formatDuration(displayMessages)}</>
-                )}
-              </p>
+              {liveUsage && <InlineMetrics usage={liveUsage} />}
             </div>
-            {liveUsage && <InlineMetrics usage={liveUsage} />}
+            <h1 className="text-xl font-headline font-medium tracking-tight text-fg">
+              {title}
+            </h1>
+            <p className="text-muted-fg text-xs">
+              {formatDate(session.timestamp)} &middot; {projectName(session.project)} &middot;{' '}
+              {displayMessages.length} message{displayMessages.length !== 1 ? 's' : ''}
+              {formatDuration(displayMessages) && (
+                <> &middot; {formatDuration(displayMessages)}</>
+              )}
+            </p>
           </div>
         </section>
 
