@@ -52,10 +52,7 @@ function SubagentTurn({
           const segments = processMessageContent(block.text);
           if (segments.length === 0) return null;
           return (
-            <div
-              key={i}
-              className="rounded bg-white dark:bg-gray-900 px-3 py-2 text-xs text-gray-800 dark:text-gray-300"
-            >
+            <div key={i} className="rounded bg-card px-3 py-2 text-xs text-fg">
               <MessageContent segments={segments} rawMessage={parentMessage} />
             </div>
           );
@@ -89,36 +86,39 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
     );
 
   return (
-    <div className="my-2 rounded border border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/30">
+    <div className="ml-12 border border-info/25 bg-info/5 rounded overflow-hidden shadow-sm">
+      {/* Header bar */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-violet-100 dark:hover:bg-violet-900/50"
+        className="w-full bg-info/10 px-3 py-1.5 flex items-center justify-between border-b border-info/25 hover:bg-info/20 transition-colors"
       >
-        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
-        <span className="rounded bg-violet-200 dark:bg-violet-800 px-1.5 py-0.5 font-medium text-violet-800 dark:text-violet-200">
-          Agent
+        <span className="font-headline text-[10px] text-info flex items-center gap-2">
+          <span className="material-symbols-outlined text-xs">smart_toy</span>
+          AGENT
         </span>
-        <span className="rounded bg-violet-100 dark:bg-violet-800/50 px-1.5 py-0.5 font-mono text-violet-600 dark:text-violet-300">
-          {messages.length}
+        <span className="text-[10px] font-headline text-info flex items-center gap-2">
+          <span className="rounded bg-info/15 px-1.5 py-0.5 font-mono">
+            {messages.length} turns
+          </span>
         </span>
-        {!expanded && (
-          <span className="truncate text-gray-600 dark:text-gray-400">{promptPreview}</span>
-        )}
       </button>
+
+      {/* Preview body */}
+      <div className="p-4 bg-info/5 font-mono text-xs text-muted-fg space-y-1">
+        <div className="text-info font-bold">&gt; {promptPreview}</div>
+      </div>
+
+      {/* Expanded conversation */}
       {expanded && (
-        <div className="border-t border-violet-200 dark:border-violet-700">
-          <div className="px-3 py-2">
-            <div className="mb-2 text-xs font-medium text-violet-600 dark:text-violet-400">
-              Prompt
-            </div>
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-white dark:bg-gray-900 p-2 text-xs text-gray-800 dark:text-gray-300">
+        <div className="border-t border-info/25">
+          <div className="px-4 py-3">
+            <div className="mb-1 text-xs font-headline font-bold text-info uppercase">Prompt</div>
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-card p-2 text-xs text-fg">
               {prompt}
             </pre>
           </div>
-          <div className="border-t border-violet-200 dark:border-violet-700 px-3 py-2 space-y-2">
-            <div className="text-xs font-medium text-violet-600 dark:text-violet-400">
-              Conversation
-            </div>
+          <div className="border-t border-info/25 px-4 py-3 space-y-2">
+            <div className="text-xs font-headline font-bold text-info uppercase">Conversation</div>
             {turns.map(({ turn, parentMessage }, i) => (
               <SubagentTurn
                 key={i}
@@ -129,6 +129,16 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Expand toggle */}
+      {!expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full px-4 py-1.5 text-[10px] font-headline text-info hover:text-fg hover:bg-info/10 transition-colors text-center uppercase tracking-wider border-t border-info/25"
+        >
+          Show details
+        </button>
       )}
     </div>
   );

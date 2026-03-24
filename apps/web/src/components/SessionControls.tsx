@@ -78,25 +78,16 @@ export function FollowToggle({ enabled, onToggle }: { enabled: boolean; onToggle
   return (
     <button
       onClick={onToggle}
-      className={`fixed bottom-6 right-6 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg transition-colors ${
+      className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-headline font-medium shadow-lg transition-colors ${
         enabled
-          ? 'bg-blue-600 text-white hover:bg-blue-700'
-          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+          ? 'bg-primary text-primary-fg hover:opacity-90'
+          : 'bg-muted text-muted-fg hover:bg-secondary'
       }`}
       title={enabled ? 'Auto-follow is on' : 'Auto-follow is off'}
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        className="h-4 w-4"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z"
-          clipRule="evenodd"
-        />
-      </svg>
+      <span className="material-symbols-outlined text-lg">
+        {enabled ? 'arrow_downward' : 'vertical_align_bottom'}
+      </span>
       {enabled ? 'Following' : 'Follow'}
     </button>
   );

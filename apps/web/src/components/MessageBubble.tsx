@@ -35,7 +35,7 @@ function RawJsonButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="rounded p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      className="rounded p-0.5 text-muted-fg hover:text-fg transition-colors"
       title="View raw JSON"
     >
       <svg
@@ -75,19 +75,21 @@ function UserMessage({ message }: { message: MessageResponse }) {
   const specialSegments = segments.filter((s) => s.type !== 'text');
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="max-w-[80%]">
+    <div className="flex justify-end">
+      <div className="max-w-[85%]">
         {textSegments.length > 0 && (
-          <div className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">
-            <MessageContent segments={textSegments} rawMessage={message} />
+          <div className="bg-primary text-primary-fg p-5 rounded-xl shadow-sm">
+            <div className="text-[15px] leading-relaxed">
+              <MessageContent segments={textSegments} rawMessage={message} />
+            </div>
           </div>
         )}
         {specialSegments.length > 0 && (
-          <div className="text-sm">
+          <div className="text-sm mt-2">
             <MessageContent segments={specialSegments} rawMessage={message} />
           </div>
         )}
-        <div className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-400 dark:text-gray-500">
+        <div className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-fg">
           <RawJsonButton onClick={() => setShowRaw(true)} />
           {formatTimestamp(message.timestamp)}
         </div>
@@ -126,54 +128,67 @@ function AssistantMessage({
   }
 
   return (
-    <div className="flex justify-start">
-      <div className="max-w-[80%]">
-        {groups.map((group, gi) => {
-          if (group.type === 'tool') {
-            return group.blocks.map(({ block, index }) => {
-              const result = block.id ? toolResults.get(block.id) : undefined;
-              return <ToolCallBlock key={index} block={block} result={result} />;
-            });
-          }
-          // Render non-tool blocks inside the message bubble
-          const rendered = group.blocks.map(({ block, index }) => {
-            if (block.type === 'text' && block.text) {
-              const segments = processMessageContent(block.text);
-              if (segments.length === 0) return null;
-              return <MessageContent key={index} segments={segments} rawMessage={message} />;
-            }
-            if (block.type === 'thinking') {
-              return (
-                <ThinkingBlock
-                  key={index}
-                  thinking={block.thinking}
-                  isActive={!block.thinking && isLastMessage}
-                />
-              );
-            }
-            return null;
+    <div className="space-y-4">
+      {groups.map((group, gi) => {
+        if (group.type === 'tool') {
+          return group.blocks.map(({ block, index }) => {
+            const result = block.id ? toolResults.get(block.id) : undefined;
+            return <ToolCallBlock key={index} block={block} result={result} />;
           });
-          if (rendered.every((r) => r === null)) return null;
-          return (
-            <div
-              key={gi}
-              className="rounded-lg bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700"
-            >
-              {rendered}
-            </div>
-          );
-        })}
-        <div className="mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-          <RawJsonButton onClick={() => setShowRaw(true)} />
-          <span>{formatTimestamp(message.timestamp)}</span>
-          {message.message?.model && (
-            <span className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">
-              {message.message.model}
-            </span>
-          )}
-        </div>
-        {showRaw && <RawJsonModal data={message.message} onClose={() => setShowRaw(false)} />}
+        }
+
+        // Separate thinking blocks from text blocks
+        const thinkingBlocks = group.blocks.filter(({ block }) => block.type === 'thinking');
+        const textBlocks = group.blocks.filter(({ block }) => block.type !== 'thinking');
+
+        return (
+          <div key={gi} className="space-y-4">
+            {/* Thinking blocks with their own styling */}
+            {thinkingBlocks.map(({ block, index }) => (
+              <ThinkingBlock
+                key={index}
+                thinking={block.thinking}
+                isActive={!block.thinking && isLastMessage}
+              />
+            ))}
+
+            {/* Text content with assistant avatar */}
+            {textBlocks.length > 0 && (
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-primary-fg text-sm">
+                    smart_toy
+                  </span>
+                </div>
+                <div className="flex-1 rounded-xl bg-card shadow-sm ring-1 ring-border p-5 text-fg space-y-3">
+                  {textBlocks.map(({ block, index }) => {
+                    if (block.type === 'text' && block.text) {
+                      const segments = processMessageContent(block.text);
+                      if (segments.length === 0) return null;
+                      return (
+                        <div key={index} className="text-[15px] leading-relaxed">
+                          <MessageContent segments={segments} rawMessage={message} />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div className="ml-12 flex items-center gap-2 text-xs text-muted-fg">
+        <RawJsonButton onClick={() => setShowRaw(true)} />
+        <span>{formatTimestamp(message.timestamp)}</span>
+        {message.message?.model && (
+          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-muted-fg">
+            {message.message.model}
+          </span>
+        )}
       </div>
+      {showRaw && <RawJsonModal data={message.message} onClose={() => setShowRaw(false)} />}
     </div>
   );
 }
@@ -188,7 +203,6 @@ export function MessageBubble({
   if (message.type === 'file-history-snapshot') return null;
 
   if (message.type === 'user' && message.message) {
-    // Skip user messages that only contain tool_result blocks (shown inline with tool calls)
     const content = message.message.content;
     if (Array.isArray(content) && content.every((b) => b.type === 'tool_result')) {
       return null;
@@ -203,7 +217,6 @@ export function MessageBubble({
   }
 
   if (isAgentProgressMessage(message)) {
-    // Only render the widget on the first message of each agent group.
     if (!agentGroupFirstIds.has(message.uuid)) return null;
     const agentId = String(message.data?.agentId ?? '');
     const group = agentGroups.get(agentId);

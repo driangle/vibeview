@@ -53,7 +53,7 @@ function computeDiff(oldStr: string, newStr: string): DiffLine[] {
 const lineStyles: Record<DiffLine['type'], string> = {
   removed: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
   added: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
-  same: 'text-gray-700 dark:text-gray-300',
+  same: 'text-muted-fg',
 };
 
 const linePrefix: Record<DiffLine['type'], string> = {
@@ -87,60 +87,90 @@ export function EditDiffBlock({ block, result }: EditDiffBlockProps) {
   const isSuccess = result ? !result.is_error : null;
 
   return (
-    <div className="my-2 rounded border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/30">
+    <div className="ml-12 border border-border bg-surface-dim rounded overflow-hidden shadow-sm">
+      {/* Terminal header bar */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50"
+        className="w-full bg-muted px-3 py-1.5 flex items-center justify-between border-b border-border hover:bg-secondary transition-colors"
       >
-        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
-        <span className="rounded bg-amber-200 dark:bg-amber-800 px-1.5 py-0.5 font-mono font-medium text-amber-800 dark:text-amber-200">
-          Edit
-        </span>
-        {!expanded && <span className="truncate text-gray-600 dark:text-gray-400">{filePath}</span>}
-      </button>
-      {expanded && (
-        <div className="border-t border-amber-200 dark:border-amber-700">
-          <div className="flex items-center gap-2 px-3 py-2">
-            <span className="font-mono text-xs font-medium text-gray-700 dark:text-gray-300">
-              {filePath}
+        <span className="font-headline text-[10px] text-muted-fg flex items-center gap-2">
+          <span className="material-symbols-outlined text-xs">edit_note</span>
+          EDIT
+          <span className="text-fg font-mono">{filePath}</span>
+          {replaceAll && (
+            <span className="rounded bg-info/20 px-1.5 py-0.5 text-[10px] font-medium text-info">
+              replace all
             </span>
-            {replaceAll && (
-              <span className="rounded bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300">
-                replace all
+          )}
+        </span>
+        <span
+          className={`text-[10px] font-headline uppercase ${
+            result ? (isSuccess ? 'text-success' : 'text-destructive') : 'text-muted-fg'
+          }`}
+        >
+          Status: {result ? (isSuccess ? 'Success' : 'Error') : 'Pending'}
+        </span>
+      </button>
+
+      {/* Diff preview (always shown) */}
+      <div className="max-h-48 overflow-auto">
+        <pre className="text-xs leading-5">
+          {diffLines.slice(0, expanded ? undefined : 10).map((line, i) => (
+            <div key={i} className={`px-3 ${lineStyles[line.type]}`}>
+              <span className="mr-2 inline-block w-3 select-none opacity-60">
+                {linePrefix[line.type]}
               </span>
-            )}
-          </div>
-          <div className="max-h-96 overflow-auto border-t border-amber-200 dark:border-amber-700">
-            <pre className="text-xs leading-5">
-              {diffLines.map((line, i) => (
-                <div key={i} className={`px-3 ${lineStyles[line.type]}`}>
-                  <span className="mr-2 inline-block w-3 select-none opacity-60">
-                    {linePrefix[line.type]}
-                  </span>
-                  {line.text}
-                </div>
-              ))}
-            </pre>
-          </div>
-          {result && (
-            <div className="border-t border-amber-200 dark:border-amber-700 px-3 py-2">
-              <span
-                className={`text-xs ${isSuccess ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-              >
+              {line.text}
+            </div>
+          ))}
+        </pre>
+      </div>
+
+      {/* Expanded content */}
+      {expanded && (
+        <div className="border-t border-border">
+          {diffLines.length > 10 && (
+            <div className="max-h-48 overflow-auto">
+              <pre className="text-xs leading-5">
+                {diffLines.slice(10).map((line, i) => (
+                  <div key={i + 10} className={`px-3 ${lineStyles[line.type]}`}>
+                    <span className="mr-2 inline-block w-3 select-none opacity-60">
+                      {linePrefix[line.type]}
+                    </span>
+                    {line.text}
+                  </div>
+                ))}
+              </pre>
+            </div>
+          )}
+          {result && resultText && (
+            <div className="border-t border-border px-3 py-2">
+              <span className={`text-xs ${isSuccess ? 'text-success' : 'text-destructive'}`}>
                 {resultText}
               </span>
             </div>
           )}
-          <div className="border-t border-amber-200 dark:border-amber-700 px-3 py-2">
+          <div className="border-t border-border px-4 py-2">
             <button
               onClick={() => setShowRawJson(true)}
-              className="rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="rounded bg-muted px-2 py-1 text-xs text-muted-fg transition-colors hover:bg-secondary"
             >
               View raw JSON
             </button>
           </div>
         </div>
       )}
+
+      {/* Expand toggle */}
+      {!expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full px-4 py-1.5 text-[10px] font-headline text-muted-fg hover:text-fg hover:bg-muted/50 transition-colors text-center uppercase tracking-wider border-t border-border"
+        >
+          Show details
+        </button>
+      )}
+
       {showRawJson && (
         <RawJsonModal
           data={result ? { tool_use: block, tool_result: result } : block}

@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
@@ -6,6 +7,7 @@
 @theme {
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --font-sans: 'Inter', system-ui, sans-serif;
+  --font-headline: 'Space Grotesk', system-ui, sans-serif;
 
   --color-bg: var(--bg);
   --color-fg: var(--fg);
@@ -27,6 +29,12 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-fg: var(--tertiary-fg);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-tertiary-container-fg: var(--tertiary-container-fg);
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
 }
 
 /* Light theme */
@@ -36,7 +44,7 @@
   --card: hsl(0 0% 100%);
   --card-fg: hsl(220 20% 10%);
   --popover: hsl(0 0% 100%);
-  --primary: hsl(142 60% 40%);
+  --primary: hsl(220 100% 55%);
   --primary-fg: hsl(0 0% 100%);
   --secondary: hsl(220 14% 93%);
   --secondary-fg: hsl(220 16% 36%);
@@ -47,10 +55,16 @@
   --destructive: hsl(0 70% 50%);
   --border-color: hsl(220 14% 88%);
   --input: hsl(220 14% 88%);
-  --ring: hsl(142 60% 40%);
+  --ring: hsl(220 100% 55%);
   --success: hsl(142 60% 40%);
   --warning: hsl(35 90% 50%);
   --info: hsl(200 80% 45%);
+  --tertiary: hsl(270 80% 60%);
+  --tertiary-fg: hsl(0 0% 100%);
+  --tertiary-container: hsl(270 60% 96%);
+  --tertiary-container-fg: hsl(270 80% 35%);
+  --surface: hsl(0 0% 99%);
+  --surface-dim: hsl(210 40% 96%);
 }
 
 /* Dark theme */
@@ -60,8 +74,8 @@
   --card: hsl(220 18% 10%);
   --card-fg: hsl(210 20% 90%);
   --popover: hsl(220 18% 12%);
-  --primary: hsl(142 60% 50%);
-  --primary-fg: hsl(220 20% 7%);
+  --primary: hsl(220 100% 60%);
+  --primary-fg: hsl(0 0% 100%);
   --secondary: hsl(220 16% 16%);
   --secondary-fg: hsl(210 20% 80%);
   --muted: hsl(220 14% 14%);
@@ -71,10 +85,16 @@
   --destructive: hsl(0 70% 55%);
   --border-color: hsl(220 14% 18%);
   --input: hsl(220 14% 18%);
-  --ring: hsl(142 60% 50%);
+  --ring: hsl(220 100% 60%);
   --success: hsl(142 60% 50%);
   --warning: hsl(35 90% 55%);
   --info: hsl(200 80% 55%);
+  --tertiary: hsl(270 80% 65%);
+  --tertiary-fg: hsl(0 0% 100%);
+  --tertiary-container: hsl(270 30% 15%);
+  --tertiary-container-fg: hsl(270 60% 75%);
+  --surface: hsl(220 18% 9%);
+  --surface-dim: hsl(220 16% 12%);
 }
 
 @layer base {
@@ -98,5 +118,14 @@
   select,
   [role='button'] {
     cursor: pointer;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+    vertical-align: middle;
   }
 }
