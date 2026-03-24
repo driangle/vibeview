@@ -8,7 +8,8 @@ import { WorkingIndicator } from '../components/WorkingIndicator';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSessionData } from '../hooks/useSessionData';
-import type { UsageTotals } from '../types';
+import { FilesTouched } from '../components/FilesTouched';
+import type { MessageResponse, UsageTotals } from '../types';
 
 function projectName(project: string): string {
   const parts = project.split('/').filter(Boolean);
@@ -71,12 +72,14 @@ function SessionSidebar({
   model,
   timestamp,
   sessionId,
+  messages,
 }: {
   filePath?: string;
   project: string;
   model: string;
   timestamp: string;
   sessionId: string;
+  messages: MessageResponse[];
 }) {
   return (
     <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-6 overflow-y-auto">
@@ -103,6 +106,9 @@ function SessionSidebar({
             </div>
           </div>
         )}
+
+        {/* Files Touched */}
+        <FilesTouched messages={messages} />
 
         {/* Metadata */}
         <div className="pt-4 border-t border-border">
@@ -265,9 +271,12 @@ export function SessionView() {
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <span className="font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-tertiary-container text-tertiary-container-fg rounded">
+                <CopyableText
+                  text={session.id}
+                  className="font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-tertiary-container text-tertiary-container-fg rounded cursor-pointer"
+                >
                   ID: {session.id.slice(0, 8).toUpperCase()}
-                </span>
+                </CopyableText>
                 <ActivityBadge state={activityState} />
                 {connectionStatus !== 'disconnected' && (
                   <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-primary rounded">
@@ -361,6 +370,7 @@ export function SessionView() {
         model={session.model}
         timestamp={session.timestamp}
         sessionId={session.id}
+        messages={displayMessages}
       />
     </div>
   );

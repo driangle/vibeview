@@ -1,7 +1,7 @@
 ---
 title: "Add Files Touched sidebar section to SessionView"
 id: "01kmf5k8r"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["ui", "sidebar"]
@@ -16,12 +16,12 @@ Add a "Files Touched" section to the `SessionSidebar` in `SessionView` that show
 
 ## Tasks
 
-- [ ] Extract file paths from `displayMessages` tool_use blocks, categorizing by tool name: `Edit`/`Write` → "Written", `Read` → "Read"
-- [ ] Deduplicate file paths within each category
-- [ ] Add a "Files Touched" section to `SessionSidebar` below the existing "Context File" section
-- [ ] Display files grouped under "Written" and "Read" headings with count badges
-- [ ] Show filename only, with full path in a tooltip or secondary line
-- [ ] Make groups collapsible — "Written" open by default, "Read" collapsed when >5 files
+- [x] Extract file paths from `displayMessages` tool_use blocks, categorizing by tool name: `Edit`/`Write` → "Written", `Read` → "Read"
+- [x] Deduplicate file paths within each category
+- [x] Add a "Files Touched" section to `SessionSidebar` below the existing "Context File" section
+- [x] Display files grouped under "Written" and "Read" headings with count badges
+- [x] Show filename only, with full path in a tooltip or secondary line
+- [x] Make groups collapsible — "Written" open by default, "Read" collapsed when >5 files
 
 ## Acceptance Criteria
 
