@@ -18,7 +18,11 @@ import (
 	"github.com/driangle/vibeview/internal/session"
 )
 
+var version = "dev"
+
 func main() {
+	versionFlag := flag.Bool("version", false, "print version and exit")
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -31,6 +35,11 @@ func main() {
 	dirsFlag := flag.String("dirs", "", "comma-separated project directory names to filter (under ~/.claude/projects/)")
 	logLevel := flag.String("log-level", "warn", "log level: debug, warn, error")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("vibeview %s\n", version)
+		return
+	}
 
 	logutil.SetLevel(logutil.ParseLevel(*logLevel))
 
@@ -62,11 +71,11 @@ func main() {
 		cfg.Index = idx
 		cfg.Standalone = true
 		cfg.Paths = paths
-		fmt.Printf("vibeview (standalone)\n")
+		fmt.Printf("vibeview %s (standalone)\n", version)
 		fmt.Printf("  port:   %d\n", *port)
 		fmt.Printf("  files:  %v\n", paths)
 	} else {
-		fmt.Printf("vibeview\n")
+		fmt.Printf("vibeview %s\n", version)
 		fmt.Printf("  port:      %d\n", *port)
 		fmt.Printf("  claude-dir: %s\n", *claudeDir)
 		fmt.Printf("  open:      %t\n", *open)

@@ -1,0 +1,54 @@
+version: 2
+
+project_name: vibeview
+
+before:
+  hooks:
+    - cmd: make web
+    - cmd: bash -c "rm -rf apps/cli/internal/spa/dist && cp -r apps/web/dist apps/cli/internal/spa/dist"
+
+builds:
+  - dir: apps/cli
+    main: ./cmd/vibeview
+    binary: vibeview
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: linux
+        goarch: arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - repository:
+      owner: driangle
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: "https://github.com/driangle/vibeview"
+    description: "A local viewer for Claude Code sessions"
+    license: "MIT"
+    install: |
+      bin.install "vibeview"
+    test: |
+      system "#{bin}/vibeview", "-version"
