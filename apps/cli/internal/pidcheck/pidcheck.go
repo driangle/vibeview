@@ -57,11 +57,15 @@ func (c *Checker) IsProcessAlive(sessionID string) bool {
 
 	c.mu.RLock()
 	entry, ok := c.entries[sessionID]
+	hasEntries := len(c.entries) > 0
 	c.mu.RUnlock()
 
 	if !ok {
-		// No PID entry found — fail-open, assume alive.
-		return true
+		// No PID entry for this session. If we have entries for other sessions,
+		// this session's process has moved on (reused for another session) or
+		// exited — treat as not alive. If we have no entries at all (scan
+		// failed or empty directory), fail-open and assume alive.
+		return !hasEntries
 	}
 
 	alive, err := isProcessRunning(entry.PID)

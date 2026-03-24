@@ -58,7 +58,7 @@ func TestScanPIDFiles(t *testing.T) {
 	}
 }
 
-func TestIsProcessAlive_NoEntry(t *testing.T) {
+func TestIsProcessAlive_NoEntry_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
 	sessionsDir := filepath.Join(dir, "sessions")
 	if err := os.MkdirAll(sessionsDir, 0755); err != nil {
@@ -70,9 +70,33 @@ func TestIsProcessAlive_NoEntry(t *testing.T) {
 		t.Fatal("expected non-nil Checker")
 	}
 
-	// No PID entry for this session — should fail-open (return true).
+	// No PID entries at all — fail-open (return true).
 	if !c.IsProcessAlive("nonexistent-session") {
-		t.Error("expected fail-open (true) for missing session entry")
+		t.Error("expected fail-open (true) when no PID entries exist")
+	}
+}
+
+func TestIsProcessAlive_NoEntry_OtherEntriesExist(t *testing.T) {
+	dir := t.TempDir()
+	sessionsDir := filepath.Join(dir, "sessions")
+	if err := os.MkdirAll(sessionsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Another session has a PID entry, but not the one we're checking.
+	writePIDFile(t, sessionsDir, PIDEntry{
+		PID:       os.Getpid(),
+		SessionID: "other-session",
+	})
+
+	c := NewChecker(dir)
+	if c == nil {
+		t.Fatal("expected non-nil Checker")
+	}
+
+	// Entries exist for other sessions but not this one — process has moved on.
+	if c.IsProcessAlive("old-session") {
+		t.Error("expected false when session has no PID entry but other entries exist")
 	}
 }
 

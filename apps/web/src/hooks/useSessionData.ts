@@ -84,6 +84,9 @@ export function useSessionData(id: string | undefined) {
     // Walk backwards to find the last semantically meaningful message.
     for (let i = streamedMessages.length - 1; i >= 0; i--) {
       const msg = streamedMessages[i];
+      if (msg.type === 'result') {
+        return 'idle';
+      }
       if (msg.type === 'assistant' && msg.message) {
         const content = msg.message.content;
         if (Array.isArray(content) && content.some((b) => b.type === 'tool_use')) {
