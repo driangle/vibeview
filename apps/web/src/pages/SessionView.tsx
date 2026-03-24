@@ -20,6 +20,7 @@ import {
 } from '../components/SessionInsights';
 import type { FileOperation } from '../components/FileViewer';
 import type { ContentBlock, MessageResponse, UsageTotals } from '../types';
+import type { SubagentInfo } from '../lib/extractors';
 
 function projectName(project: string): string {
   const parts = project.split('/').filter(Boolean);
@@ -101,7 +102,7 @@ function SessionSidebar({
   sessionId,
   messages,
   toolResults,
-  agentGroups,
+  subagents,
   onNavigateToMessage,
 }: {
   filePath?: string;
@@ -111,7 +112,7 @@ function SessionSidebar({
   sessionId: string;
   messages: MessageResponse[];
   toolResults: Map<string, ContentBlock>;
-  agentGroups: Map<string, MessageResponse[]>;
+  subagents: SubagentInfo[];
   onNavigateToMessage: (uuid: string) => void;
 }) {
   const [viewerFile, setViewerFile] = useState<{
@@ -199,7 +200,7 @@ function SessionSidebar({
         />
 
         {/* Subagents */}
-        <SubagentsSummary agentGroups={agentGroups} onNavigateToMessage={onNavigateToMessage} />
+        <SubagentsSummary subagents={subagents} onNavigateToMessage={onNavigateToMessage} />
 
         {/* Errors */}
         <ErrorsSummary
@@ -282,6 +283,7 @@ export function SessionView() {
     liveCustomTitle,
     liveActivityState,
     displayMessages,
+    subagents,
     agentGroups,
     agentGroupFirstIds,
   } = useSessionData(id);
@@ -502,7 +504,7 @@ export function SessionView() {
         sessionId={session.id}
         messages={displayMessages}
         toolResults={toolResults}
-        agentGroups={agentGroups}
+        subagents={subagents}
         onNavigateToMessage={navigateToMessage}
       />
     </div>

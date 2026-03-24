@@ -1,16 +1,13 @@
 import { useState, useMemo } from 'react';
 import type { ContentBlock, MessageResponse } from '../types';
-
-interface ToolCount {
-  name: string;
-  count: number;
-}
-
-interface ErrorEntry {
-  toolName: string;
-  snippet: string;
-  messageUuid: string;
-}
+import {
+  extractToolCounts,
+  extractBashCommands,
+  extractErrors,
+  extractWorktrees,
+  resolveResultText,
+} from '../lib/extractors';
+import type { SubagentInfo } from '../lib/extractors';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -42,98 +39,6 @@ export function LocateButton({ onClick }: { onClick: (e: React.MouseEvent) => vo
       <span className="material-symbols-outlined text-[10px]">my_location</span>
     </button>
   );
-}
-
-function extractToolCounts(messages: MessageResponse[]): ToolCount[] {
-  const counts = new Map<string, number>();
-
-  for (const msg of messages) {
-    const content = msg.message?.content;
-    if (!Array.isArray(content)) continue;
-    for (const block of content) {
-      if (block.type === 'tool_use' && block.name) {
-        counts.set(block.name, (counts.get(block.name) || 0) + 1);
-      }
-    }
-  }
-
-  return Array.from(counts.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-}
-
-interface BashCommandEntry {
-  command: string;
-  toolUseId: string;
-  messageUuid: string;
-}
-
-function extractBashCommands(messages: MessageResponse[]): BashCommandEntry[] {
-  const commands: BashCommandEntry[] = [];
-
-  for (const msg of messages) {
-    const content = msg.message?.content;
-    if (!Array.isArray(content)) continue;
-    for (const block of content) {
-      if (block.type === 'tool_use' && block.name === 'Bash' && block.input && block.id) {
-        const cmd = block.input.command;
-        if (typeof cmd === 'string')
-          commands.push({ command: cmd, toolUseId: block.id, messageUuid: msg.uuid });
-      }
-    }
-  }
-
-  return commands;
-}
-
-function resolveResultText(result: ContentBlock | undefined): string | null {
-  if (!result) return null;
-  const c = result.content;
-  if (typeof c === 'string') return c;
-  if (Array.isArray(c)) {
-    const textBlock = (c as Array<{ type: string; text?: string }>).find(
-      (b) => b.type === 'text' && b.text,
-    );
-    if (textBlock?.text) return textBlock.text;
-  }
-  return null;
-}
-
-function extractErrors(
-  messages: MessageResponse[],
-  toolResults: Map<string, ContentBlock>,
-): ErrorEntry[] {
-  const errors: ErrorEntry[] = [];
-
-  for (const msg of messages) {
-    const content = msg.message?.content;
-    if (!Array.isArray(content)) continue;
-    for (const block of content) {
-      if (block.type !== 'tool_use' || !block.id || !block.name) continue;
-
-      const result = toolResults.get(block.id);
-      if (!result?.is_error) continue;
-
-      let snippet = '';
-      const c = result.content;
-      if (typeof c === 'string') {
-        snippet = c;
-      } else if (Array.isArray(c)) {
-        const textBlock = (c as Array<{ type: string; text?: string }>).find(
-          (b) => b.type === 'text' && b.text,
-        );
-        if (textBlock?.text) snippet = textBlock.text;
-      }
-
-      errors.push({
-        toolName: block.name,
-        snippet: snippet.slice(0, 200),
-        messageUuid: msg.uuid,
-      });
-    }
-  }
-
-  return errors;
 }
 
 function useCollapsed(key: string, defaultValue = true): [boolean, () => void] {
@@ -319,18 +224,16 @@ export function ErrorsSummary({
 }
 
 function AgentCard({
-  id,
-  messages,
+  agent,
   onNavigateToMessage,
 }: {
-  id: string;
-  messages: MessageResponse[];
+  agent: SubagentInfo;
   onNavigateToMessage: (uuid: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const prompt = String(messages[0]?.data?.prompt ?? 'Agent');
+  const prompt = agent.prompt || 'Agent';
   const preview = prompt.length > 80 ? prompt.slice(0, 80) + '...' : prompt;
-  const firstUuid = messages[0]?.uuid;
+  const turnCount = agent.source === 'agent_progress' ? agent.turns.length : 1;
 
   return (
     <div className="bg-card border border-border rounded-md overflow-hidden group">
@@ -341,14 +244,14 @@ function AgentCard({
         >
           <p className="text-[11px] text-fg line-clamp-2">{preview}</p>
           <span className="text-[10px] text-muted-fg">
-            {messages.length} turn{messages.length !== 1 ? 's' : ''}
+            {agent.source === 'agent_progress'
+              ? `${turnCount} turn${turnCount !== 1 ? 's' : ''}`
+              : agent.description || 'background agent'}
           </span>
         </button>
-        {firstUuid && (
-          <div className="pt-2 pr-1">
-            <LocateButton onClick={() => onNavigateToMessage(firstUuid)} />
-          </div>
-        )}
+        <div className="pt-2 pr-1">
+          <LocateButton onClick={() => onNavigateToMessage(agent.firstMessageUuid)} />
+        </div>
       </div>
       {expanded && (
         <div className="border-t border-border px-2.5 py-2 max-h-64 overflow-y-auto">
@@ -363,7 +266,7 @@ function AgentCard({
           <div className="text-[10px] font-headline font-bold text-muted-fg uppercase mb-1">
             Agent ID
           </div>
-          <span className="text-[10px] text-muted-fg font-mono">{id}</span>
+          <span className="text-[10px] text-muted-fg font-mono">{agent.agentId}</span>
         </div>
       )}
     </div>
@@ -371,19 +274,17 @@ function AgentCard({
 }
 
 export function SubagentsSummary({
-  agentGroups,
+  subagents,
   onNavigateToMessage,
 }: {
-  agentGroups: Map<string, MessageResponse[]>;
+  subagents: SubagentInfo[];
   onNavigateToMessage: (uuid: string) => void;
 }) {
-  const agents = useMemo(() => {
-    return Array.from(agentGroups.entries()).map(([id, msgs]) => ({ id, messages: msgs }));
-  }, [agentGroups]);
+  if (subagents.length === 0) return null;
 
-  if (agents.length === 0) return null;
-
-  const turnCounts = agents.map((a) => a.messages.length);
+  const turnCounts = subagents.map((a) =>
+    a.source === 'agent_progress' ? a.turns.length : 1,
+  );
   const totalTurns = turnCounts.reduce((s, c) => s + c, 0);
   const sorted = [...turnCounts].sort((a, b) => a - b);
   const medianTurns =
@@ -392,7 +293,7 @@ export function SubagentsSummary({
       : sorted[Math.floor(sorted.length / 2)];
 
   return (
-    <SidebarSection id="subagents" icon="groups" title="Subagents" count={agents.length}>
+    <SidebarSection id="subagents" icon="groups" title="Subagents" count={subagents.length}>
       <div className="flex justify-center gap-6 mb-3">
         <div className="flex flex-col items-center">
           <span className="text-[10px] text-muted-fg font-headline uppercase">Total turns</span>
@@ -404,57 +305,16 @@ export function SubagentsSummary({
         </div>
       </div>
       <div className="space-y-1.5">
-        {agents.map((agent) => (
+        {subagents.map((agent) => (
           <AgentCard
-            key={agent.id}
-            id={agent.id}
-            messages={agent.messages}
+            key={agent.agentId}
+            agent={agent}
             onNavigateToMessage={onNavigateToMessage}
           />
         ))}
       </div>
     </SidebarSection>
   );
-}
-
-interface WorktreeEntry {
-  name: string;
-  path: string;
-  branch: string;
-  messageUuid: string;
-}
-
-function extractWorktrees(
-  messages: MessageResponse[],
-  toolResults: Map<string, ContentBlock>,
-): WorktreeEntry[] {
-  const worktrees: WorktreeEntry[] = [];
-
-  for (const msg of messages) {
-    const content = msg.message?.content;
-    if (!Array.isArray(content)) continue;
-    for (const block of content) {
-      if (block.type !== 'tool_use' || block.name !== 'EnterWorktree' || !block.input || !block.id)
-        continue;
-
-      const name = String(block.input.name || '');
-      const result = toolResults.get(block.id);
-      let path = '';
-      let branch = '';
-
-      if (result) {
-        const text = typeof result.content === 'string' ? result.content : '';
-        const pathMatch = text.match(/worktree at ([^\s]+)/);
-        const branchMatch = text.match(/on branch ([^\s.]+)/);
-        if (pathMatch) path = pathMatch[1];
-        if (branchMatch) branch = branchMatch[1];
-      }
-
-      worktrees.push({ name, path, branch, messageUuid: msg.uuid });
-    }
-  }
-
-  return worktrees;
 }
 
 export function WorktreesSummary({

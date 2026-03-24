@@ -10,6 +10,8 @@ import type {
 } from '../types';
 import { calculateCost } from '../pricing';
 import { useSessionStream } from './useSessionStream';
+import { extractSubagents } from '../lib/extractors';
+import type { SubagentInfo } from '../lib/extractors';
 
 function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
@@ -108,24 +110,24 @@ export function useSessionData(id: string | undefined) {
     return undefined;
   }, [streamedMessages, serverActivityState]);
 
-  // Group agent_progress messages by agentId.
+  // Extract subagent info from both old (agent_progress) and new (Agent tool_use) formats.
+  const subagents = useMemo<SubagentInfo[]>(
+    () => extractSubagents(allMessages, toolResults),
+    [allMessages, toolResults],
+  );
+
+  // Keep agentGroups/agentGroupFirstIds for AgentProgressWidget (old-format rendering).
   const { agentGroups, agentGroupFirstIds } = useMemo(() => {
     const groups = new Map<string, MessageResponse[]>();
     const firstIds = new Set<string>();
-    for (const msg of allMessages) {
-      if (msg.type !== 'progress' || msg.data?.type !== 'agent_progress') continue;
-      const agentId = String(msg.data.agentId ?? '');
-      if (!agentId) continue;
-      const existing = groups.get(agentId);
-      if (existing) {
-        existing.push(msg);
-      } else {
-        groups.set(agentId, [msg]);
-        firstIds.add(msg.uuid);
+    for (const agent of subagents) {
+      if (agent.source === 'agent_progress') {
+        groups.set(agent.agentId, agent.turns);
+        firstIds.add(agent.firstMessageUuid);
       }
     }
     return { agentGroups: groups, agentGroupFirstIds: firstIds };
-  }, [allMessages]);
+  }, [subagents]);
 
   // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
@@ -144,6 +146,7 @@ export function useSessionData(id: string | undefined) {
     liveCustomTitle,
     liveActivityState,
     displayMessages,
+    subagents,
     agentGroups,
     agentGroupFirstIds,
   };

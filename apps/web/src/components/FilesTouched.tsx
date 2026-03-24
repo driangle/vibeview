@@ -2,126 +2,13 @@ import { useState, useMemo, useCallback } from 'react';
 import type { FileOperation } from './FileViewer';
 import { SidebarSection, LocateButton } from './SessionInsights';
 import type { ContentBlock, MessageResponse } from '../types';
+import { extractFiles, resolveFileOperations } from '../lib/extractors';
 
 interface FilesTouchedProps {
   messages: MessageResponse[];
   toolResults: Map<string, ContentBlock>;
   onFileClick: (filePath: string, operations: FileOperation[]) => void;
   onNavigateToMessage: (uuid: string) => void;
-}
-
-interface FilesByCategory {
-  written: string[];
-  read: string[];
-}
-
-interface FileContentEntry {
-  toolUseId: string;
-  toolName: string;
-  filePath: string;
-  input: Record<string, unknown>;
-  timestamp: string;
-  messageUuid: string;
-}
-
-const WRITE_TOOLS = new Set(['Edit', 'Write']);
-const READ_TOOLS = new Set(['Read']);
-
-function extractFilePaths(messages: MessageResponse[]): {
-  categories: FilesByCategory;
-  entries: FileContentEntry[];
-} {
-  const written = new Set<string>();
-  const read = new Set<string>();
-  const entries: FileContentEntry[] = [];
-
-  for (const msg of messages) {
-    const content = msg.message?.content;
-    if (!Array.isArray(content)) continue;
-
-    for (const block of content) {
-      if (block.type !== 'tool_use' || !block.name || !block.input) continue;
-
-      const filePath = block.input.file_path as string | undefined;
-      if (!filePath) continue;
-
-      if (WRITE_TOOLS.has(block.name)) {
-        written.add(filePath);
-      } else if (READ_TOOLS.has(block.name)) {
-        read.add(filePath);
-      }
-
-      if (block.id) {
-        entries.push({
-          toolUseId: block.id,
-          toolName: block.name,
-          filePath,
-          input: block.input,
-          timestamp: msg.timestamp,
-          messageUuid: msg.uuid,
-        });
-      }
-    }
-  }
-
-  return {
-    categories: {
-      written: Array.from(written).sort(),
-      read: Array.from(read).sort(),
-    },
-    entries,
-  };
-}
-
-/** Strip `cat -n` line number prefixes like "     1→" from each line. */
-function stripLineNumbers(text: string): string {
-  return text.replace(/^ *\d+→/gm, '');
-}
-
-function extractResultText(result: ContentBlock): string | null {
-  const c = result.content;
-  if (typeof c === 'string') return c;
-  if (Array.isArray(c)) {
-    const textBlock = (c as Array<{ type: string; text?: string }>).find(
-      (b) => b.type === 'text' && b.text,
-    );
-    if (textBlock?.text) return textBlock.text;
-  }
-  return null;
-}
-
-function resolveFileOperations(
-  filePath: string,
-  entries: FileContentEntry[],
-  toolResults: Map<string, ContentBlock>,
-): FileOperation[] {
-  const ops: FileOperation[] = [];
-
-  for (const entry of entries) {
-    if (entry.filePath !== filePath) continue;
-
-    if (entry.toolName === 'Write') {
-      const content = entry.input.content;
-      if (typeof content === 'string') {
-        ops.push({ type: 'write', content, timestamp: entry.timestamp });
-      }
-    } else if (entry.toolName === 'Read') {
-      const result = toolResults.get(entry.toolUseId);
-      if (result) {
-        const text = extractResultText(result);
-        if (text)
-          ops.push({ type: 'read', content: stripLineNumbers(text), timestamp: entry.timestamp });
-      }
-    } else if (entry.toolName === 'Edit') {
-      const oldString = entry.input.old_string;
-      const newString = entry.input.new_string;
-      if (typeof oldString === 'string' && typeof newString === 'string') {
-        ops.push({ type: 'edit', oldString, newString, timestamp: entry.timestamp });
-      }
-    }
-  }
-
-  return ops;
 }
 
 function CopyPathButton({ filePath }: { filePath: string }) {
@@ -228,10 +115,7 @@ export function FilesTouched({
   onFileClick,
   onNavigateToMessage,
 }: FilesTouchedProps) {
-  const { categories, entries } = useMemo(() => extractFilePaths(messages), [messages]);
-
-  const totalCount = categories.written.length + categories.read.length;
-  if (totalCount === 0) return null;
+  const { categories, entries } = useMemo(() => extractFiles(messages), [messages]);
 
   // Map each file path to the first message UUID that touched it
   const fileToUuid = useMemo(() => {
@@ -251,6 +135,9 @@ export function FilesTouched({
     },
     [entries, toolResults, onFileClick],
   );
+
+  const totalCount = categories.written.length + categories.read.length;
+  if (totalCount === 0) return null;
 
   return (
     <SidebarSection id="files-touched" icon="folder_open" title="Files Touched" count={totalCount}>

@@ -1,4 +1,4 @@
-import type { MessageResponse, ContentBlock } from '../../types';
+import type { MessageResponse } from '../../types';
 import type {
   TimelineData,
   TimelineCycle,
@@ -10,6 +10,12 @@ import type {
 } from './types';
 import { classifyPhase } from './classifyPhase';
 import { computeLayout } from './layoutEngine';
+import { getContentBlocks } from '../extractors/contentBlocks';
+import { extractToolNames } from '../extractors/tools';
+import { extractBashCommands } from '../extractors/commands';
+import { hasErrorResults } from '../extractors/errors';
+import { extractFilePathSet, extractFileExtensions } from '../extractors/files';
+import { hasSubagents as checkHasSubagents } from '../extractors/subagents';
 
 /** True if this is a genuine user prompt (not just tool result forwarding). */
 function isUserPrompt(msg: MessageResponse): boolean {
@@ -20,88 +26,34 @@ function isUserPrompt(msg: MessageResponse): boolean {
   return content.some((block) => block.type !== 'tool_result');
 }
 
-function getContentBlocks(msg: MessageResponse): ContentBlock[] {
-  if (!msg.message) return [];
-  const content = msg.message.content;
-  if (!Array.isArray(content)) return [];
-  return content;
-}
-
-function extractFileExtension(filePath: string): string {
-  const lastDot = filePath.lastIndexOf('.');
-  if (lastDot === -1) return '';
-  return filePath.slice(lastDot).toLowerCase();
-}
-
 function extractFeatures(
   assistantMsgs: MessageResponse[],
   auxiliaryMsgs: MessageResponse[],
 ): CycleFeatures {
-  const toolNames = new Set<string>();
-  const fileExtensions = new Set<string>();
-  const filePaths = new Set<string>();
-  const bashCommands: string[] = [];
   let thinkingTokens = 0;
   let textTokens = 0;
-  let hasErrors = false;
-  let hasSubagents = false;
 
-  // Extract from ALL assistant message content blocks
-  for (const assistantMsg of assistantMsgs) {
-    for (const block of getContentBlocks(assistantMsg)) {
+  for (const msg of assistantMsgs) {
+    for (const block of getContentBlocks(msg)) {
       if (block.type === 'thinking' && block.thinking) {
         thinkingTokens += block.thinking.length;
       } else if (block.type === 'text' && block.text) {
         textTokens += block.text.length;
-      } else if (block.type === 'tool_use' && block.name) {
-        toolNames.add(block.name);
-
-        if (block.name === 'Agent') {
-          hasSubagents = true;
-        }
-
-        const input = block.input;
-        if (input) {
-          // Extract file paths from file-oriented tools
-          const fp = input.file_path as string | undefined;
-          if (fp) {
-            filePaths.add(fp);
-            const ext = extractFileExtension(fp);
-            if (ext) fileExtensions.add(ext);
-          }
-
-          // Extract bash commands
-          if (block.name === 'Bash' && typeof input.command === 'string') {
-            bashCommands.push(input.command);
-          }
-        }
       }
     }
   }
 
-  // Check auxiliary messages for tool results with errors and agent progress
-  for (const msg of auxiliaryMsgs) {
-    if (msg.type === 'user') {
-      for (const block of getContentBlocks(msg)) {
-        if (block.type === 'tool_result' && block.is_error) {
-          hasErrors = true;
-        }
-      }
-    }
-    if (msg.type === 'progress' && msg.data?.type === 'agent_progress' && msg.data?.agentId) {
-      hasSubagents = true;
-    }
-  }
+  const allMsgs = [...assistantMsgs, ...auxiliaryMsgs];
 
   return {
-    toolNames,
-    hasErrors,
-    fileExtensions,
-    filePaths,
-    bashCommands,
+    toolNames: extractToolNames(assistantMsgs),
+    hasErrors: hasErrorResults(auxiliaryMsgs),
+    fileExtensions: extractFileExtensions(assistantMsgs),
+    filePaths: extractFilePathSet(assistantMsgs),
+    bashCommands: extractBashCommands(assistantMsgs).map((e) => e.command),
     thinkingTokens,
     textTokens,
-    hasSubagents,
+    hasSubagents: checkHasSubagents(allMsgs),
   };
 }
 
