@@ -22,6 +22,23 @@ import type { FileOperation } from '../components/FileViewer';
 import type { ContentBlock, MessageResponse, UsageTotals } from '../types';
 import type { SubagentInfo } from '../lib/extractors';
 
+function usePrintMode() {
+  const [printing, setPrinting] = useState(false);
+
+  useEffect(() => {
+    const onBefore = () => setPrinting(true);
+    const onAfter = () => setPrinting(false);
+    window.addEventListener('beforeprint', onBefore);
+    window.addEventListener('afterprint', onAfter);
+    return () => {
+      window.removeEventListener('beforeprint', onBefore);
+      window.removeEventListener('afterprint', onAfter);
+    };
+  }, []);
+
+  return printing;
+}
+
 function projectName(project: string): string {
   const parts = project.split('/').filter(Boolean);
   return parts[parts.length - 1] || project;
@@ -143,7 +160,7 @@ function SessionSidebar({
   }, []);
 
   return (
-    <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-6 overflow-y-auto">
+    <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-6 overflow-y-auto print:hidden">
       <div className="space-y-8">
         {/* Raw Session File */}
         {filePath && (
@@ -269,6 +286,7 @@ export function SessionView() {
   const { settings, isLoaded } = useSettings();
   const [userPage, setUserPage] = useState<number | null>(null);
   const [followMode, setFollowMode] = useState(false);
+  const printing = usePrintMode();
 
   const followInitialized = useRef(false);
   useEffect(() => {
@@ -303,6 +321,9 @@ export function SessionView() {
     page * settings.messagesPerPage,
     (page + 1) * settings.messagesPerPage,
   );
+
+  // When printing, show all messages instead of paginated subset
+  const visibleMessages = printing ? displayMessages : paginatedMessages;
 
   const [highlightUuid, setHighlightUuid] = useState<string | null>(null);
   const highlightTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -375,6 +396,10 @@ export function SessionView() {
     }
   }, [streamedMessages.length, followMode]);
 
+  const handleExportPdf = useCallback(() => {
+    window.print();
+  }, []);
+
   if (error) {
     return (
       <div className="mx-auto max-w-4xl p-8">
@@ -415,13 +440,22 @@ export function SessionView() {
                 </CopyableText>
                 <ActivityBadge state={activityState} />
                 {connectionStatus !== 'disconnected' && (
-                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-primary rounded">
+                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-primary rounded print:hidden">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     {connectionStatus === 'connected' ? 'LIVE' : 'CONNECTING'}
                   </span>
                 )}
               </div>
-              {liveUsage && <InlineMetrics usage={liveUsage} />}
+              <div className="flex items-center gap-4">
+                {liveUsage && <InlineMetrics usage={liveUsage} />}
+                <button
+                  onClick={handleExportPdf}
+                  className="text-muted-fg hover:text-fg transition-colors print:hidden"
+                  title="Export session as PDF"
+                >
+                  <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
+                </button>
+              </div>
             </div>
             <h1 className="text-xl font-headline font-medium tracking-tight text-fg">
               {title}
@@ -438,7 +472,7 @@ export function SessionView() {
 
         {/* Conversation Flow */}
         <section className="flex-1 bg-bg p-8">
-          <div className="max-w-3xl mx-auto space-y-4 pb-32">
+          <div className="max-w-3xl mx-auto space-y-4 pb-32 print:pb-0">
             {/* Pagination (top) */}
             {totalPages > 1 && (
               <Pagination
@@ -454,19 +488,19 @@ export function SessionView() {
 
             {/* Messages */}
             <div className="space-y-6">
-              {paginatedMessages.map((msg, index) => (
+              {visibleMessages.map((msg, index) => (
                 <div
                   key={msg.uuid}
                   data-row-index={index}
                   data-message-uuid={msg.uuid}
-                  className={`rounded-lg transition-colors duration-700 ${selectedIndex === index ? 'ring-2 ring-primary' : ''} ${highlightUuid === msg.uuid ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+                  className={`rounded-lg transition-colors duration-700 ${selectedIndex === index && !printing ? 'ring-2 ring-primary' : ''} ${highlightUuid === msg.uuid ? 'ring-2 ring-primary bg-primary/5' : ''}`}
                 >
                   <MessageBubble
                     message={msg}
                     toolResults={toolResults}
                     agentGroups={agentGroups}
                     agentGroupFirstIds={agentGroupFirstIds}
-                    isLastMessage={index === paginatedMessages.length - 1}
+                    isLastMessage={index === visibleMessages.length - 1}
                   />
                 </div>
               ))}

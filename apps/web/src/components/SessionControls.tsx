@@ -28,7 +28,7 @@ export function Pagination({
     'rounded border border-gray-300 dark:border-gray-600 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 hover:border-gray-400 dark:hover:bg-gray-700 dark:hover:border-gray-500 disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
-    <div className="flex items-center justify-between py-3">
+    <div className="flex items-center justify-between py-3 print:hidden" data-pagination>
       <div className="flex gap-2">
         <button onClick={() => onPageChange(0)} disabled={page === 0} className={buttonClass}>
           First
@@ -78,7 +78,8 @@ export function FollowToggle({ enabled, onToggle }: { enabled: boolean; onToggle
   return (
     <button
       onClick={onToggle}
-      className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-headline font-medium shadow-lg transition-colors ${
+      data-follow-toggle
+      className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-headline font-medium shadow-lg transition-colors print:hidden ${
         enabled
           ? 'bg-primary text-primary-fg hover:opacity-90'
           : 'bg-muted text-muted-fg hover:bg-secondary'

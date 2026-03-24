@@ -129,3 +129,70 @@
     vertical-align: middle;
   }
 }
+
+/* Print styles for PDF export */
+@media print {
+  /* Force light theme colors */
+  :root {
+    --bg: hsl(0 0% 100%);
+    --fg: hsl(220 20% 10%);
+    --card: hsl(0 0% 100%);
+    --card-fg: hsl(220 20% 10%);
+    --muted: hsl(220 14% 95%);
+    --muted-fg: hsl(215 15% 46%);
+    --border-color: hsl(220 14% 85%);
+    --secondary: hsl(220 14% 93%);
+    --secondary-fg: hsl(220 16% 36%);
+    --primary: hsl(220 100% 45%);
+    --tertiary-container: hsl(270 60% 96%);
+    --tertiary-container-fg: hsl(270 80% 35%);
+    --surface-dim: hsl(0 0% 100%);
+  }
+
+  /* Hide interactive elements */
+  nav,
+  footer,
+  [data-follow-toggle],
+  [data-pagination] {
+    display: none !important;
+  }
+
+  /* Preserve background colors in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset layout for print — only unlock the page-level scroll containers */
+  html, body, main,
+  main > div,          /* app wrapper */
+  main > div > div,    /* SessionView flex row */
+  main > div > div > div /* content canvas */ {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Allow page breaks between messages */
+  [data-message-uuid] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Remove bottom padding in print */
+  .pb-32 {
+    padding-bottom: 0 !important;
+  }
+
+  /* Ensure code blocks don't overflow and remove max-height constraints */
+  pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    max-height: none !important;
+  }
+
+  /* Remove animations */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
