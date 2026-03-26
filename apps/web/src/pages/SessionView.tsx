@@ -323,6 +323,7 @@ export function SessionView() {
     streamedMessages,
     connectionStatus,
     toolResults,
+    missingToolResultCount,
     liveUsage,
     liveCustomTitle,
     liveActivityState,
@@ -502,6 +503,14 @@ export function SessionView() {
                   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
                 }}
               />
+            )}
+
+            {/* Missing tool results warning */}
+            {missingToolResultCount > 0 && (
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                {missingToolResultCount} tool output{missingToolResultCount === 1 ? '' : 's'}{' '}
+                missing
+              </div>
             )}
 
             {/* Messages */}

@@ -1,7 +1,7 @@
 ---
 id: "audit-014"
 title: "Handle unknown message types and incomplete session data gracefully"
-status: pending
+status: completed
 priority: high
 effort: small
 type: bug
@@ -25,7 +25,7 @@ If a tool_use references a non-existent tool_use_id (corrupted/incomplete sessio
 
 ## Acceptance Criteria
 
-- [ ] Log unknown message types: `console.warn('Unknown message type:', msg.type)`
-- [ ] Render unknown message types with a fallback "Unknown message type" UI
-- [ ] Track and display missing tool results: "N tool outputs missing"
-- [ ] Handle content blocks with unexpected shapes (object instead of string/array)
+- [x] Log unknown message types: `console.warn('Unknown message type:', msg.type)`
+- [x] Render unknown message types with a fallback "Unknown message type" UI
+- [x] Track and display missing tool results: "N tool outputs missing"
+- [x] Handle content blocks with unexpected shapes (object instead of string/array)

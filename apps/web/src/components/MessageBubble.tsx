@@ -162,8 +162,10 @@ function AssistantMessage({
   isLastMessage?: boolean;
 }) {
   const [showRaw, setShowRaw] = useState(false);
-  const content = message.message?.content;
-  if (!Array.isArray(content)) return null;
+  const rawContent = message.message?.content;
+  // Guard against unexpected content shapes (e.g. object instead of string/array)
+  const content = Array.isArray(rawContent) ? rawContent : [];
+  if (content.length === 0) return null;
 
   // Split content into groups: consecutive non-tool blocks go in a bubble, tool blocks render standalone
   const groups: { type: 'bubble' | 'tool'; blocks: { block: ContentBlock; index: number }[] }[] =
@@ -215,7 +217,7 @@ function AssistantMessage({
                 </div>
                 <div className="flex-1 rounded-xl bg-card shadow-sm ring-1 ring-border p-5 text-fg space-y-3">
                   {textBlocks.map(({ block, index }) => {
-                    if (block.type === 'text' && block.text) {
+                    if (block.type === 'text' && typeof block.text === 'string' && block.text) {
                       const segments = processMessageContent(block.text);
                       if (segments.length === 0) return null;
                       return (
@@ -290,5 +292,12 @@ export function MessageBubble({
     return <SystemMessage message={message} />;
   }
 
-  return null;
+  // Unknown message type — log and render a fallback
+  console.warn('Unknown message type:', message.type);
+  return (
+    <div className="my-1 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+      <span className="font-medium">Unknown message type:</span>{' '}
+      <span className="font-mono">{message.type}</span>
+    </div>
+  );
 }

@@ -49,7 +49,22 @@ export function useSessionData(id: string | undefined) {
     return [...session.messages, ...streamedMessages];
   }, [session, streamedMessages]);
 
-  const toolResults = useMemo(() => buildToolResultMap(allMessages), [allMessages]);
+  const { toolResults, missingToolResultCount } = useMemo(() => {
+    const results = buildToolResultMap(allMessages);
+    // Count tool_use blocks that reference a missing tool_result
+    let missing = 0;
+    for (const msg of allMessages) {
+      if (msg.type !== 'assistant' || !msg.message) continue;
+      const content = msg.message.content;
+      if (!Array.isArray(content)) continue;
+      for (const block of content) {
+        if (block.type === 'tool_use' && block.id && !results.has(block.id)) {
+          missing++;
+        }
+      }
+    }
+    return { toolResults: results, missingToolResultCount: missing };
+  }, [allMessages]);
 
   // Aggregate usage: session totals + any new streamed assistant messages.
   const liveUsage = useMemo<UsageTotals | null>(() => {
@@ -144,6 +159,7 @@ export function useSessionData(id: string | undefined) {
     connectionStatus,
     allMessages,
     toolResults,
+    missingToolResultCount,
     liveUsage,
     liveCustomTitle,
     liveActivityState,
