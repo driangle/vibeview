@@ -271,7 +271,7 @@ func ParseMessageLine(line []byte) (Message, error) {
 func ParseHistoryFile(r io.Reader) ([]HistoryEntry, error) {
 	var entries []HistoryEntry
 	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 10*1024*1024)
+	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 	lineNum := 0
 	for scanner.Scan() {
 		lineNum++
@@ -297,7 +297,7 @@ func ParseHistoryFile(r io.Reader) ([]HistoryEntry, error) {
 func ParseSessionFile(r io.Reader) ([]Message, error) {
 	var messages []Message
 	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 10*1024*1024)
+	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 	lineNum := 0
 	for scanner.Scan() {
 		lineNum++

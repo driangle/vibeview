@@ -98,7 +98,7 @@ func (t *Tailer) readNewLines() {
 	}
 
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 10*1024*1024)
+	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()

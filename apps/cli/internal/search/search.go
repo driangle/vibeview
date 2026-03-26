@@ -13,6 +13,10 @@ import (
 	"github.com/driangle/vibeview/internal/session"
 )
 
+// globalSem limits the total number of concurrent file-search goroutines
+// across all in-flight Search calls to prevent file-descriptor exhaustion.
+var globalSem = make(chan struct{}, 16)
+
 // Result holds a matched session and a text snippet around the match.
 type Result struct {
 	Meta    session.SessionMeta
@@ -38,7 +42,6 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 		results []Result
 	)
 
-	sem := make(chan struct{}, 8)
 	var wg sync.WaitGroup
 
 	for _, meta := range sessions {
@@ -59,8 +62,8 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 			defer wg.Done()
 
 			select {
-			case sem <- struct{}{}:
-				defer func() { <-sem }()
+			case globalSem <- struct{}{}:
+				defer func() { <-globalSem }()
 			case <-ctx.Done():
 				return
 			}
@@ -109,7 +112,7 @@ func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta,
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 256*1024), 10*1024*1024)
+	scanner.Buffer(make([]byte, 0, 256*1024), 2*1024*1024)
 
 	for scanner.Scan() {
 		if ctx.Err() != nil {

@@ -90,8 +90,22 @@ func (b *Broker) Subscribe(sessionID string) (*Client, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	// Enforce total client limit.
+	total := 0
+	for _, cs := range b.clients {
+		total += len(cs)
+	}
+	if total >= maxTotalClients {
+		return nil, fmt.Errorf("too many connected clients (max %d)", maxTotalClients)
+	}
+
 	if b.clients[sessionID] == nil {
 		b.clients[sessionID] = make(map[*Client]struct{})
+	}
+
+	// Enforce per-session client limit.
+	if len(b.clients[sessionID]) >= maxClientsPerSession {
+		return nil, fmt.Errorf("too many clients for session %s (max %d)", sessionID, maxClientsPerSession)
 	}
 
 	// Start a tailer for this session if one isn't running.
@@ -256,7 +270,7 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 	}
 
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 10*1024*1024)
+	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -301,7 +315,11 @@ func (b *Broker) enrichNewSession(sessionID string) {
 	}
 }
 
-const idleDecayDuration = 5 * time.Minute
+const (
+	idleDecayDuration    = 5 * time.Minute
+	maxClientsPerSession = 10
+	maxTotalClients      = 100
+)
 
 func (b *Broker) pingLoop() {
 	ticker := time.NewTicker(30 * time.Second)

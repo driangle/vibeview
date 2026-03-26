@@ -196,9 +196,14 @@ func (s *Server) handleGetSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+	const maxBodySize = 10 * 1024 // 10 KB
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize+1))
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "failed to read body"})
+		return
+	}
+	if len(body) > maxBodySize {
+		writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "request body too large"})
 		return
 	}
 
@@ -296,6 +301,9 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		limit, err := strconv.Atoi(limitStr)
 		if err == nil && limit > 0 {
+			if limit > 1000 {
+				limit = 1000
+			}
 			offset := 0
 			if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
 				if o, err := strconv.Atoi(offsetStr); err == nil && o > 0 {
@@ -376,18 +384,18 @@ func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	client, err := s.broker.Subscribe(id)
+	if err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": err.Error()})
+		return
+	}
+	defer s.broker.Unsubscribe(client)
+
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
-
-	client, err := s.broker.Subscribe(id)
-	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})
-		return
-	}
-	defer s.broker.Unsubscribe(client)
 
 	ctx := r.Context()
 	for {

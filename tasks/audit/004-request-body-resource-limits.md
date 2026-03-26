@@ -1,7 +1,7 @@
 ---
 id: "audit-004"
 title: "Add resource limits to prevent DoS via large inputs"
-status: pending
+status: completed
 priority: critical
 effort: small
 type: bug
@@ -36,8 +36,8 @@ Very large offset values could cause bounds issues.
 
 ## Acceptance Criteria
 
-- [ ] Limit request body: `io.LimitReader(r.Body, 10*1024)` on settings endpoint
-- [ ] Reduce scanner buffer to 1-2MB or add per-line length validation
-- [ ] Add max clients per session and total client limits to broker
-- [ ] Add global search semaphore or queue
-- [ ] Validate pagination offset against array length before slicing
+- [x] Limit request body: `io.LimitReader(r.Body, 10*1024)` on settings endpoint
+- [x] Reduce scanner buffer to 1-2MB or add per-line length validation
+- [x] Add max clients per session and total client limits to broker
+- [x] Add global search semaphore or queue
+- [x] Validate pagination offset against array length before slicing
