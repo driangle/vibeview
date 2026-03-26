@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -110,10 +112,18 @@ func (s *Server) routes() {
 	s.mux.Handle("/", spa.Handler())
 }
 
-// ListenAndServe starts the HTTP server on the given port.
+// ListenAndServe starts the HTTP server on the given address.
+// addr can be a port (":8080") or host:port ("127.0.0.1:8080").
 func (s *Server) ListenAndServe(port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	s.httpServer = &http.Server{Addr: addr, Handler: cors(s.mux)}
+
+	// Warn if the server will be reachable from non-loopback addresses.
+	host, _, _ := net.SplitHostPort(addr)
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		log.Printf("WARNING: server is bound to all interfaces (%s); consider binding to localhost only", addr)
+	}
+
+	s.httpServer = &http.Server{Addr: addr, Handler: corsHandler(port, s.mux)}
 	return s.httpServer.ListenAndServe()
 }
 
@@ -123,12 +133,30 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }
 
-// cors wraps a handler with permissive CORS headers for local development.
-func cors(next http.Handler) http.Handler {
+// localhostOrigins returns the set of allowed origins for the given port.
+func localhostOrigins(port int) map[string]struct{} {
+	p := strconv.Itoa(port)
+	return map[string]struct{}{
+		"http://localhost:" + p:  {},
+		"http://127.0.0.1:" + p:  {},
+		"http://[::1]:" + p:      {},
+		"https://localhost:" + p: {},
+		"https://127.0.0.1:" + p: {},
+		"https://[::1]:" + p:     {},
+	}
+}
+
+// corsHandler wraps a handler with CORS headers restricted to localhost origins.
+func corsHandler(port int, next http.Handler) http.Handler {
+	allowed := localhostOrigins(port)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		origin := r.Header.Get("Origin")
+		if _, ok := allowed[origin]; ok {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Vary", "Origin")
+		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return

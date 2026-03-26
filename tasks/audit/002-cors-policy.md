@@ -1,7 +1,7 @@
 ---
 id: "audit-002"
 title: "Restrict CORS policy to localhost origins"
-status: pending
+status: completed
 priority: critical
 effort: small
 type: bug
@@ -21,9 +21,9 @@ Server responds with `Access-Control-Allow-Origin: *`. Any website can query the
 
 ## Acceptance Criteria
 
-- [ ] Restrict `Access-Control-Allow-Origin` to the actual localhost origin (e.g., `http://localhost:<port>`)
-- [ ] Validate `Origin` header before responding with CORS headers
-- [ ] Add warning log if server is bound to non-loopback address
+- [x] Restrict `Access-Control-Allow-Origin` to the actual localhost origin (e.g., `http://localhost:<port>`)
+- [x] Validate `Origin` header before responding with CORS headers
+- [x] Add warning log if server is bound to non-loopback address
 
 ## verify
 ```yaml

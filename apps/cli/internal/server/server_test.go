@@ -203,29 +203,89 @@ func TestGetSessionNotFound(t *testing.T) {
 	}
 }
 
-func TestCORSHeaders(t *testing.T) {
+func TestCORSAllowsLocalhostOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := cors(srv.mux)
+	handler := corsHandler(3000, srv.mux)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Origin", "http://localhost:3000")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:3000" {
+		t.Errorf("expected CORS origin http://localhost:3000, got %q", got)
+	}
+}
+
+func TestCORSRejectsExternalOrigin(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(3000, srv.mux)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Origin", "https://evil.com")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected no CORS origin header for external origin, got %q", got)
+	}
+}
+
+func TestCORSRejectsWildcard(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(3000, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
-	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "*" {
-		t.Errorf("expected CORS origin *, got %q", got)
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got == "*" {
+		t.Error("CORS header must not be wildcard *")
+	}
+}
+
+func TestCORSAllows127001Origin(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(3000, srv.mux)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Origin", "http://127.0.0.1:3000")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "http://127.0.0.1:3000" {
+		t.Errorf("expected CORS origin http://127.0.0.1:3000, got %q", got)
 	}
 }
 
 func TestCORSPreflight(t *testing.T) {
 	srv := newTestServer(t)
-	handler := cors(srv.mux)
+	handler := corsHandler(3000, srv.mux)
 
 	req := httptest.NewRequest("OPTIONS", "/api/sessions", nil)
+	req.Header.Set("Origin", "http://localhost:3000")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNoContent {
 		t.Errorf("expected 204 for OPTIONS, got %d", w.Code)
+	}
+}
+
+func TestCORSNoOriginHeader(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(3000, srv.mux)
+
+	// Same-origin requests have no Origin header; should still serve content.
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 for same-origin request, got %d", w.Code)
+	}
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected no CORS header for same-origin, got %q", got)
 	}
 }
 
