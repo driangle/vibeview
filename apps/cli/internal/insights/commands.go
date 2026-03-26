@@ -2,6 +2,7 @@ package insights
 
 import (
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/redact"
 )
 
 // ExtractBashCommands finds all Bash tool_use blocks and extracts the command string.
@@ -18,7 +19,7 @@ func ExtractBashCommands(messages []claude.Message) []BashCommand {
 				continue
 			}
 			commands = append(commands, BashCommand{
-				Command:     cmd,
+				Command:     redact.RedactSecrets(cmd),
 				ToolUseID:   block.ID,
 				MessageUUID: msg.UUID,
 			})

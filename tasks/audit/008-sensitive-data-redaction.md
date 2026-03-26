@@ -1,7 +1,7 @@
 ---
 id: "audit-008"
 title: "Add sensitive data redaction for commands and tool results"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: improvement
@@ -42,11 +42,11 @@ User home directory and project structure visible in UI.
 
 ## Acceptance Criteria
 
-- [ ] Implement pattern-based redaction for known sensitive patterns:
+- [x] Implement pattern-based redaction for known sensitive patterns:
   - `--password`, `--secret`, `--token`, `-H "Authorization"`
   - `API_KEY=`, `DATABASE_URL=`, `ANTHROPIC_API_KEY=`
   - Bearer tokens, SSH keys, connection strings
-- [ ] Apply redaction to command display and tool result display
-- [ ] Add warning before copying raw JSON or tool results
-- [ ] Mask absolute paths by replacing home directory with `~`
-- [ ] Sanitize search snippets containing sensitive patterns
+- [x] Apply redaction to command display and tool result display
+- [ ] ~~Add warning before copying raw JSON or tool results~~ (skipped: no copy warnings per decision)
+- [x] Mask absolute paths by replacing home directory with `~`
+- [x] Sanitize search snippets containing sensitive patterns

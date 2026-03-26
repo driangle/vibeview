@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/redact"
 )
 
 var writeTools = map[string]bool{"Edit": true, "Write": true}
@@ -25,18 +26,19 @@ func ExtractFiles(messages []claude.Message) FilesResult {
 			if filePath == "" {
 				continue
 			}
+			maskedPath := redact.MaskHomePath(filePath)
 
 			if writeTools[block.Name] {
-				written[filePath] = true
+				written[maskedPath] = true
 			} else if readTools[block.Name] {
-				read[filePath] = true
+				read[maskedPath] = true
 			}
 
 			if block.ID != "" {
 				entries = append(entries, FileEntry{
 					ToolUseID:   block.ID,
 					ToolName:    block.Name,
-					FilePath:    filePath,
+					FilePath:    maskedPath,
 					Input:       block.Input,
 					Timestamp:   msToISO(msg.Timestamp.Int64()),
 					MessageUUID: msg.UUID,

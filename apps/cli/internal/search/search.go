@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/driangle/vibeview/internal/redact"
 	"github.com/driangle/vibeview/internal/session"
 )
 
@@ -147,7 +148,7 @@ func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta,
 			}
 			return Result{
 				Meta:    meta,
-				Snippet: buildSnippet(block.Text, query, 120),
+				Snippet: redact.RedactSecrets(buildSnippet(block.Text, query, 120)),
 			}, true
 		}
 	}

@@ -2,6 +2,7 @@ package insights
 
 import (
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/redact"
 )
 
 // GetContentBlocks safely extracts content blocks from a message.
@@ -35,7 +36,7 @@ func ResolveResultText(block claude.ContentBlock) string {
 		return ""
 	}
 	if s, ok := block.Content.(string); ok {
-		return s
+		return redact.RedactSecrets(s)
 	}
 	if arr, ok := block.Content.([]any); ok {
 		for _, item := range arr {
@@ -45,7 +46,7 @@ func ResolveResultText(block claude.ContentBlock) string {
 			}
 			if m["type"] == "text" {
 				if text, ok := m["text"].(string); ok && text != "" {
-					return text
+					return redact.RedactSecrets(text)
 				}
 			}
 		}

@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/redact"
 )
 
 var worktreePathRe = regexp.MustCompile(`worktree at ([^\s]+)`)
@@ -38,7 +39,7 @@ func ExtractWorktrees(messages []claude.Message, toolResults map[string]claude.C
 
 			worktrees = append(worktrees, WorktreeEntry{
 				Name:        name,
-				Path:        path,
+				Path:        redact.MaskHomePath(path),
 				Branch:      branch,
 				MessageUUID: msg.UUID,
 			})

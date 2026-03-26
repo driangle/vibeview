@@ -17,6 +17,7 @@ import (
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/insights"
 	"github.com/driangle/vibeview/internal/pidcheck"
+	"github.com/driangle/vibeview/internal/redact"
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/session"
 	"github.com/driangle/vibeview/internal/settings"
@@ -364,7 +365,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	extracted := insights.Extract(messages)
 	resp := SessionDetailResponse{
 		SessionResponse: toSessionResponse(*meta),
-		FilePath:        path,
+		FilePath:        redact.MaskHomePath(path),
 		Messages:        msgResponses,
 		Insights:        &extracted,
 		SkippedLines:    parseResult.SkippedLines,
