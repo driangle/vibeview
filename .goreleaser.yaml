@@ -45,6 +45,7 @@ brews:
       owner: driangle
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
     homepage: "https://github.com/driangle/vibeview"
     description: "A local viewer for Claude Code sessions"
     license: "MIT"
