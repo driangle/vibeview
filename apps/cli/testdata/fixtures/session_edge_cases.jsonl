@@ -1,0 +1,7 @@
+{"type":"assistant","uuid":"edge-001","timestamp":0,"message":{"role":"assistant","content":[{"type":"tool_use","id":"","name":"Bash","input":{"command":"echo hi"}},{"type":"tool_use","id":"tu-e1","name":"Bash","input":{}},{"type":"tool_use","id":"tu-e2","name":"","input":{"file_path":"/tmp/x"}},{"type":"text","text":"just text"}]}}
+{"type":"system","uuid":"edge-002","timestamp":1711000000000,"content":"system message with no inner message"}
+{"type":"user","uuid":"edge-003","isMeta":false,"timestamp":1711000001000,"message":{"role":"user","content":[{"type":"text","text":"<command-name>/commit</command-name>"}]}}
+{"type":"assistant","uuid":"edge-004","timestamp":1711000002000,"message":null}
+{"type":"progress","uuid":"edge-005","timestamp":1711000003000,"data":{"type":"agent_progress","agentId":"agent-1","prompt":"do something"}}
+{"type":"progress","uuid":"edge-006","timestamp":1711000004000,"data":{"type":"agent_progress","agentId":"agent-1"}}
+{"type":"progress","uuid":"edge-007","timestamp":1711000005000,"data":{"type":"other_progress"}}

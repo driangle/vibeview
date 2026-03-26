@@ -14,8 +14,16 @@ build: web ## Build the single binary with embedded SPA
 	cp -r apps/web/dist apps/cli/internal/spa/dist
 	cd apps/cli && go build -o vibeview ./cmd/vibeview
 
-check: ## Run Go vet + build check
-	cd apps/cli && go vet ./... && go build ./cmd/vibeview
+test: ## Run Go tests with coverage
+	cd apps/cli && go test ./... -coverprofile=coverage.out -count=1
+	@cd apps/cli && go tool cover -func=coverage.out | tail -1
+	@echo "Coverage report: apps/cli/coverage.out (use 'go tool cover -html=coverage.out' to view)"
+
+check: ## Run Go vet, tests with coverage, and build check
+	cd apps/cli && go vet ./...
+	cd apps/cli && go test ./... -coverprofile=coverage.out -count=1
+	@cd apps/cli && go tool cover -func=coverage.out | tail -1
+	cd apps/cli && go build ./cmd/vibeview
 
 install: web ## Build and install the CLI binary
 	rm -rf apps/cli/internal/spa/dist

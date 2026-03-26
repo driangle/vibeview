@@ -1,7 +1,7 @@
 ---
 id: "audit-012b"
 title: "Add tests for insights module (60%+ coverage)"
-status: pending
+status: completed
 priority: high
 effort: medium
 tags: [testing]
@@ -21,15 +21,15 @@ The insights module contains critical business logic for extracting skills, comm
 
 ## Tasks
 
-- [ ] Add tests for commands extraction
-- [ ] Add tests for errors extraction
-- [ ] Add tests for files extraction
-- [ ] Add tests for skills extraction
-- [ ] Add tests for worktrees extraction
-- [ ] Add tests for helper functions
-- [ ] Create test fixtures in `apps/cli/testdata/fixtures/` with edge-case JSONL files
+- [x] Add tests for commands extraction
+- [x] Add tests for errors extraction
+- [x] Add tests for files extraction
+- [x] Add tests for skills extraction
+- [x] Add tests for worktrees extraction
+- [x] Add tests for helper functions
+- [x] Create test fixtures in `apps/cli/testdata/fixtures/` with edge-case JSONL files
 
 ## Acceptance Criteria
 
-- [ ] Insights module has 60%+ test coverage
-- [ ] `apps/cli/testdata/fixtures/` directory exists with edge-case JSONL files
+- [x] Insights module has 60%+ test coverage
+- [x] `apps/cli/testdata/fixtures/` directory exists with edge-case JSONL files
