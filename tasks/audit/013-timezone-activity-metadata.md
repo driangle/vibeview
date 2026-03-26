@@ -1,7 +1,7 @@
 ---
 id: "audit-013"
 title: "Fix timezone handling and activity state edge cases"
-status: pending
+status: completed
 priority: medium
 effort: small
 type: bug
@@ -29,7 +29,7 @@ No explicit validation of session ID format at discovery time.
 
 ## Acceptance Criteria
 
-- [ ] Ensure all timestamp comparisons in formatTime() use UTC-aware parsing
-- [ ] Add sanity check: clamp timestamps > now + 1 hour to now
-- [ ] Add session ID format validation at discovery time
-- [ ] Add settings file permission fix: use 0o600 instead of 0o644
+- [x] Ensure all timestamp comparisons in formatTime() use UTC-aware parsing
+- [x] Add sanity check: clamp timestamps > now + 1 hour to now
+- [x] Add session ID format validation at discovery time
+- [x] Add settings file permission fix: use 0o600 instead of 0o644

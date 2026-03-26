@@ -23,8 +23,14 @@ func DeriveActivityState(messages []claude.Message) string {
 	}
 
 	// Check if the last meaningful message is older than 5 minutes.
+	// Clamp future timestamps (clock skew) to now so the idle check still works.
 	lastTimestamp := lastMessageTimestamp(messages)
-	if lastTimestamp > 0 && time.Now().UnixMilli()-lastTimestamp > int64(idleThresholdMs) {
+	nowMs := time.Now().UnixMilli()
+	const maxFutureMs = 60 * 60 * 1000 // 1 hour
+	if lastTimestamp > 0 && lastTimestamp > nowMs+maxFutureMs {
+		lastTimestamp = nowMs
+	}
+	if lastTimestamp > 0 && nowMs-lastTimestamp > int64(idleThresholdMs) {
 		return ActivityIdle
 	}
 

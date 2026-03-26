@@ -98,7 +98,7 @@ func Save(path string, s Settings) error {
 		return fmt.Errorf("marshal settings: %w", err)
 	}
 
-	return os.WriteFile(path, data, 0o644)
+	return os.WriteFile(path, data, 0o600)
 }
 
 // Validate checks that all settings values are within allowed ranges.

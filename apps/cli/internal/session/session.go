@@ -145,6 +145,10 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 		if !matchesDirFilter(dirSet, entry.Project) {
 			continue
 		}
+		if err := pathutil.ValidateSessionID(entry.SessionID); err != nil {
+			logutil.Debugf("skipping history entry with invalid session ID: %v", err)
+			continue
+		}
 		meta := SessionMeta{
 			SessionID: entry.SessionID,
 			Project:   entry.Project,
@@ -430,6 +434,11 @@ func (idx *Index) EnrichSession(claudeDir string, sessionID string) bool {
 
 // AddSession adds a new session from a history entry if it doesn't already exist.
 func (idx *Index) AddSession(claudeDir string, entry claude.HistoryEntry) {
+	if err := pathutil.ValidateSessionID(entry.SessionID); err != nil {
+		logutil.Debugf("rejecting session with invalid ID: %v", err)
+		return
+	}
+
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 
