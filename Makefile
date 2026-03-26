@@ -1,4 +1,4 @@
-.PHONY: check install install-dev install-dev-full build web dev
+.PHONY: check install install-dev install-dev-full build web dev docs docs-dev docs-preview
 
 dev: ## Run CLI + Vite dev server with hot reload
 	@trap 'kill 0' EXIT; \
@@ -28,3 +28,12 @@ install-dev: ## Install CLI in dev mode (same as install for now)
 install-dev-full: ## Install CLI + web dependencies
 	cd apps/cli && go install ./cmd/vibeview
 	cd apps/web && npm install
+
+docs-dev: ## Start VitePress dev server
+	cd apps/docs && npm run dev
+
+docs: ## Build documentation site
+	cd apps/docs && npm run build
+
+docs-preview: ## Preview built documentation site
+	cd apps/docs && npm run preview

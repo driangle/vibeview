@@ -31,7 +31,7 @@ func main() {
 
 	port := flag.Int("port", 4880, "port to listen on")
 	claudeDir := flag.String("claude-dir", filepath.Join(home, ".claude"), "path to claude data directory")
-	open := flag.Bool("open", true, "open browser on startup")
+	open := flag.Bool("open", false, "open browser on startup")
 	dirsFlag := flag.String("dirs", "", "comma-separated project directory names to filter (under ~/.claude/projects/)")
 	logLevel := flag.String("log-level", "warn", "log level: debug, warn, error")
 	flag.Parse()

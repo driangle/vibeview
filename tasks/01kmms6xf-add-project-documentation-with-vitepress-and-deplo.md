@@ -1,7 +1,7 @@
 ---
 title: "Add project documentation with VitePress and deploy to GitHub Pages"
 id: "01kmms6xf"
-status: pending
+status: in-progress
 priority: medium
 type: feature
 tags: ["docs", "vitepress"]
@@ -16,11 +16,11 @@ Set up a VitePress-powered documentation site for the project and configure auto
 
 ## Tasks
 
-- [ ] Install VitePress as a dev dependency
-- [ ] Scaffold VitePress config (`.vitepress/config.ts`) with project name, nav, and sidebar
-- [ ] Create initial documentation pages (index/home, getting started, architecture overview)
-- [ ] Add an npm script (`docs:dev`, `docs:build`, `docs:preview`) for local development
-- [ ] Create a GitHub Actions workflow (`.github/workflows/docs.yml`) to build and deploy to GitHub Pages on push to `main`
+- [x] Install VitePress as a dev dependency
+- [x] Scaffold VitePress config (`.vitepress/config.ts`) with project name, nav, and sidebar
+- [x] Create initial documentation pages (index/home, getting started, architecture overview)
+- [x] Add an npm script (`docs:dev`, `docs:build`, `docs:preview`) for local development
+- [x] Create a GitHub Actions workflow (`.github/workflows/docs.yml`) to build and deploy to GitHub Pages on push to `main`
 - [ ] Enable GitHub Pages in repo settings (source: GitHub Actions)
 - [ ] Verify the deployed site loads correctly
 
