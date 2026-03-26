@@ -313,6 +313,8 @@ func TestEncodeProjectPath(t *testing.T) {
 		{"/Users/foo/myproject", "-Users-foo-myproject"},
 		{"/Users/foo.bar/myproject", "-Users-foo-bar-myproject"},
 		{"/Users/german.greiner/workplace", "-Users-german-greiner-workplace"},
+		{"/Users/driangle/workplace/gg/germangreiner_com", "-Users-driangle-workplace-gg-germangreiner-com"},
+		{"/Users/foo/my project", "-Users-foo-my-project"},
 	}
 	for _, tt := range tests {
 		got := EncodeProjectPath(tt.input)

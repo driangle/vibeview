@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -342,12 +343,14 @@ func ParseSessionFile(r io.Reader) ([]Message, ParseResult, error) {
 	return messages, result, nil
 }
 
+// nonAlphanumericPattern matches any character that is not a letter or digit.
+var nonAlphanumericPattern = regexp.MustCompile(`[^a-zA-Z0-9]`)
+
 // EncodeProjectPath converts a filesystem path to Claude's directory encoding.
-// Claude Code replaces both "/" and "." with "-".
-// e.g., "/Users/foo.bar/myproject" → "-Users-foo-bar-myproject"
+// Claude Code replaces all non-alphanumeric characters with "-".
+// e.g., "/Users/foo.bar/my_project" → "-Users-foo-bar-my-project"
 func EncodeProjectPath(path string) string {
-	s := strings.ReplaceAll(path, "/", "-")
-	return strings.ReplaceAll(s, ".", "-")
+	return nonAlphanumericPattern.ReplaceAllString(path, "-")
 }
 
 // DecodeProjectPath converts a Claude directory name back to a filesystem path.
