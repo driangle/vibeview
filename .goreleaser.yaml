@@ -4,8 +4,8 @@ project_name: vibeview
 
 before:
   hooks:
-    - cmd: make web
-    - cmd: bash -c "rm -rf apps/cli/internal/spa/dist && cp -r apps/web/dist apps/cli/internal/spa/dist"
+    - make web
+    - bash -c "rm -rf apps/cli/internal/spa/dist && cp -r apps/web/dist apps/cli/internal/spa/dist"
 
 builds:
   - dir: apps/cli
