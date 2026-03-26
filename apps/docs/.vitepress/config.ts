@@ -8,6 +8,7 @@ export default defineConfig({
   head: [["link", { rel: "icon", href: "/vibeview/favicon.svg" }]],
 
   themeConfig: {
+    logo: "/favicon.svg",
     nav: [
       { text: "Guide", link: "/getting-started/quick-start" },
       {
