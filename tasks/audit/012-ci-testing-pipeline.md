@@ -1,7 +1,7 @@
 ---
 id: "audit-012"
 title: "Set up CI test pipeline and add critical missing tests"
-status: pending
+status: in-progress
 priority: critical
 effort: large
 type: chore
@@ -47,6 +47,13 @@ Parser handles arbitrary input and should be fuzz-tested.
 - [ ] Expand server_test.go and session_test.go to 60%+ coverage
 - [ ] Create `apps/cli/testdata/fixtures/` with edge case JSONL files
 - [ ] Add at least 3 React component tests for critical paths
+
+## Sub-tasks
+
+- **audit-012a** — Create CI test workflow for Go and web
+- **audit-012b** — Add tests for insights module (60%+ coverage)
+- **audit-012c** — Add fuzz tests and expand server/session coverage
+- **audit-012d** — Set up Vitest and add React component tests
 
 ## verify
 ```yaml
