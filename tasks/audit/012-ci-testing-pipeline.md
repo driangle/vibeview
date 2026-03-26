@@ -1,7 +1,7 @@
 ---
 id: "audit-012"
 title: "Set up CI test pipeline and add critical missing tests"
-status: in-progress
+status: completed
 priority: critical
 effort: large
 type: chore
@@ -40,13 +40,13 @@ Parser handles arbitrary input and should be fuzz-tested.
 
 ## Acceptance Criteria
 
-- [ ] Create `.github/workflows/test.yml` running `go test -race -cover ./...` on PR/push
-- [ ] Set up Vitest + React Testing Library for web frontend
-- [ ] Add tests for insights module (target 60%+ coverage)
-- [ ] Add fuzz tests for `ParseMessageLine` and `ParseHistoryLine`
-- [ ] Expand server_test.go and session_test.go to 60%+ coverage
-- [ ] Create `apps/cli/testdata/fixtures/` with edge case JSONL files
-- [ ] Add at least 3 React component tests for critical paths
+- [x] Create `.github/workflows/test.yml` running `go test -race -cover ./...` on PR/push
+- [x] Set up Vitest + React Testing Library for web frontend
+- [x] Add tests for insights module (target 60%+ coverage)
+- [x] Add fuzz tests for `ParseMessageLine` and `ParseHistoryLine`
+- [x] Expand server_test.go and session_test.go to 60%+ coverage
+- [x] Create `apps/cli/testdata/fixtures/` with edge case JSONL files
+- [x] Add at least 3 React component tests for critical paths
 
 ## Sub-tasks
 
