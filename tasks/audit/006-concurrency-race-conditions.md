@@ -1,7 +1,7 @@
 ---
 id: "audit-006"
 title: "Fix race conditions in index compaction and tailer offset"
-status: pending
+status: completed
 priority: critical
 effort: medium
 type: bug
@@ -32,11 +32,11 @@ Sessions with no user messages are never considered "enriched" — causes repeat
 
 ## Acceptance Criteria
 
-- [ ] Use a separate tombstone map or filter internally during compaction — never expose empty IDs
-- [ ] Check `scanner.Err()` and handle errors explicitly; re-seek to known good position
-- [ ] Use atomic operations or mutex for tailer offset
-- [ ] Return enrichment success based on `messageCount > 0`, not just slug presence
-- [ ] Run tests with `-race` flag to verify no data races
+- [x] Use a separate tombstone map or filter internally during compaction — never expose empty IDs
+- [x] Check `scanner.Err()` and handle errors explicitly; re-seek to known good position
+- [x] Use atomic operations or mutex for tailer offset
+- [x] Return enrichment success based on `messageCount > 0`, not just slug presence
+- [x] Run tests with `-race` flag to verify no data races
 
 ## verify
 ```yaml

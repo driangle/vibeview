@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/fsnotify/fsnotify"
@@ -14,7 +15,7 @@ import (
 // Tailer watches a JSONL session file and emits new messages as they are appended.
 type Tailer struct {
 	path    string
-	offset  int64
+	offset  atomic.Int64
 	watcher *fsnotify.Watcher
 	msgCh   chan claude.Message
 	done    chan struct{}
@@ -41,11 +42,11 @@ func NewTailer(path string) (*Tailer, error) {
 
 	t := &Tailer{
 		path:    path,
-		offset:  info.Size(),
 		watcher: w,
 		msgCh:   make(chan claude.Message, 64),
 		done:    make(chan struct{}),
 	}
+	t.offset.Store(info.Size())
 
 	go t.loop()
 	return t, nil
@@ -93,15 +94,18 @@ func (t *Tailer) readNewLines() {
 	}
 	defer f.Close()
 
-	if _, err := f.Seek(t.offset, io.SeekStart); err != nil {
+	currentOffset := t.offset.Load()
+	if _, err := f.Seek(currentOffset, io.SeekStart); err != nil {
 		return
 	}
 
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 
+	bytesConsumed := int64(0)
 	for scanner.Scan() {
 		line := scanner.Bytes()
+		bytesConsumed += int64(len(line)) + 1 // +1 for newline
 		if len(line) == 0 {
 			continue
 		}
@@ -116,9 +120,9 @@ func (t *Tailer) readNewLines() {
 		}
 	}
 
-	// Update offset to current position.
-	pos, err := f.Seek(0, io.SeekCurrent)
-	if err == nil {
-		t.offset = pos
+	if scanner.Err() != nil {
+		return // keep old offset; retry on next write event
 	}
+
+	t.offset.Store(currentOffset + bytesConsumed)
 }

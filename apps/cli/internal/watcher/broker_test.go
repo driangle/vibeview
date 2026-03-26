@@ -118,7 +118,7 @@ func TestBrokerHistoryWatcher(t *testing.T) {
 	}
 	defer broker.Close()
 
-	initialCount := len(idx.Sessions)
+	initialCount := len(idx.GetSessions())
 
 	// Create a new session file.
 	projDir := filepath.Join(dir, "projects", "-users-me-proj")
@@ -139,9 +139,7 @@ func TestBrokerHistoryWatcher(t *testing.T) {
 	// Wait for the watcher to detect the change.
 	deadline := time.After(3 * time.Second)
 	for {
-		broker.mu.Lock()
-		count := len(idx.Sessions)
-		broker.mu.Unlock()
+		count := len(idx.GetSessions())
 		if count > initialCount {
 			break
 		}

@@ -65,11 +65,16 @@ func (idx *Index) SetProcessChecker(c ProcessChecker) {
 }
 
 // GetSessions returns a snapshot of all sessions.
+// Sessions with empty IDs (tombstoned during compaction) are excluded.
 func (idx *Index) GetSessions() []SessionMeta {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
-	out := make([]SessionMeta, len(idx.Sessions))
-	copy(out, idx.Sessions)
+	out := make([]SessionMeta, 0, len(idx.Sessions))
+	for _, s := range idx.Sessions {
+		if s.SessionID != "" {
+			out = append(out, s)
+		}
+	}
 	return out
 }
 
@@ -415,7 +420,7 @@ func (idx *Index) EnrichSession(claudeDir string, sessionID string) bool {
 		}
 		enriched := enrichSession(claudeDir, idx.Sessions[i], idx.pidChecker)
 		idx.Sessions[i] = enriched
-		return enriched.Slug != ""
+		return enriched.MessageCount > 0
 	}
 	return false
 }

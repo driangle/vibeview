@@ -281,8 +281,10 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 
+	bytesConsumed := int64(0)
 	for scanner.Scan() {
 		line := scanner.Bytes()
+		bytesConsumed += int64(len(line)) + 1 // +1 for newline
 		if len(line) == 0 {
 			continue
 		}
@@ -303,11 +305,11 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		go b.enrichNewSession(entry.SessionID)
 	}
 
-	pos, err := f.Seek(0, 1)
-	if err == nil {
-		return pos
+	if scanner.Err() != nil {
+		return offset // keep old offset; retry on next write event
 	}
-	return offset
+
+	return offset + bytesConsumed
 }
 
 func (b *Broker) enrichNewSession(sessionID string) {
