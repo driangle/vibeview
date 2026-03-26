@@ -1,7 +1,7 @@
 ---
 id: "audit-005"
 title: "Fix cost calculation accuracy issues"
-status: pending
+status: completed
 priority: critical
 effort: small
 type: bug
@@ -25,8 +25,8 @@ context:
 
 ## Acceptance Criteria
 
-- [ ] Decide and document the correct cost semantic (accumulate vs. result-only)
-- [ ] Fix the overwrite logic to match the intended behavior
-- [ ] Log a warning when a model is not found in pricing data
-- [ ] Expose unknown model warnings in the API so the frontend can alert users
-- [ ] Add tests for cost calculation with multiple models and missing pricing
+- [x] Decide and document the correct cost semantic (accumulate vs. result-only)
+- [x] Fix the overwrite logic to match the intended behavior
+- [x] Log a warning when a model is not found in pricing data
+- [x] Expose unknown model warnings in the API so the frontend can alert users
+- [x] Add tests for cost calculation with multiple models and missing pricing

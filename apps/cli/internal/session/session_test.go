@@ -232,6 +232,91 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 	}
 }
 
+func TestResultMessageCostTakesPrecedence(t *testing.T) {
+	dir := t.TempDir()
+
+	history := `{"sessionId":"sess-result","project":"/Users/me/proj","display":"result test","timestamp":5000}
+`
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Programmatic sessions (claude -p) emit a result message with the CLI's
+	// authoritative TotalCostUSD. It should take precedence over our local
+	// pricing-table estimate.
+	sess := `{"type":"user","uuid":"u1","sessionId":"sess-result","timestamp":5000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-result","timestamp":5001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hello"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":5,"cache_read_input_tokens":10}}}
+{"type":"result","uuid":"r1","sessionId":"sess-result","timestamp":5002,"total_cost_usd":0.0042}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sess-result.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+	idx.Enrich(dir)
+
+	u := idx.Sessions[0].Usage
+	if math.Abs(u.CostUSD-0.0042) > 1e-9 {
+		t.Errorf("CostUSD = %f, want 0.0042 (result message should take precedence)", u.CostUSD)
+	}
+}
+
+func TestUnknownModelTracking(t *testing.T) {
+	dir := t.TempDir()
+
+	history := `{"sessionId":"sess-unknown","project":"/Users/me/proj","display":"unknown model","timestamp":6000}
+`
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Session with a known model and an unknown model.
+	sess := `{"type":"user","uuid":"u1","sessionId":"sess-unknown","timestamp":6000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-unknown","timestamp":6001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hello"}],"usage":{"input_tokens":100,"output_tokens":50}}}
+{"type":"assistant","uuid":"a2","sessionId":"sess-unknown","timestamp":6002,"message":{"role":"assistant","model":"claude-future-99","content":[{"type":"text","text":"from the future"}],"usage":{"input_tokens":200,"output_tokens":100}}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sess-unknown.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+	idx.Enrich(dir)
+
+	u := idx.Sessions[0].Usage
+
+	// Token counts should include both models.
+	if u.InputTokens != 300 {
+		t.Errorf("InputTokens = %d, want 300", u.InputTokens)
+	}
+
+	// Cost should only reflect the known model (unknown model contributes $0).
+	// sonnet-4: (100×3 + 50×15) / 1M = 0.00105
+	if math.Abs(u.CostUSD-0.00105) > 1e-9 {
+		t.Errorf("CostUSD = %f, want ~0.00105", u.CostUSD)
+	}
+
+	// UnknownModels should contain the unknown model.
+	if len(u.UnknownModels) != 1 || u.UnknownModels[0] != "claude-future-99" {
+		t.Errorf("UnknownModels = %v, want [claude-future-99]", u.UnknownModels)
+	}
+}
+
 func TestDiscoverMissingSessionFile(t *testing.T) {
 	dir := setupTestDir(t)
 

@@ -60,13 +60,16 @@ func lookupPricing(model string) (ModelPricing, bool) {
 }
 
 // CalculateCost returns the estimated cost in USD for a single API response.
-func CalculateCost(model string, u Usage) float64 {
+// The second return value is false when the model has no pricing data, in which
+// case cost is 0 and the caller should track/warn about the unknown model.
+func CalculateCost(model string, u Usage) (float64, bool) {
 	p, ok := lookupPricing(model)
 	if !ok {
-		return 0
+		return 0, false
 	}
-	return (float64(u.InputTokens)*p.InputPerM +
+	cost := (float64(u.InputTokens)*p.InputPerM +
 		float64(u.OutputTokens)*p.OutputPerM +
 		float64(u.CacheReadInputTokens)*p.CacheReadPerM +
 		float64(u.CacheCreationInputTokens)*p.CacheWritePerM) / 1_000_000
+	return cost, true
 }
