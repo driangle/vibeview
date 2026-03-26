@@ -29,7 +29,12 @@ export function LocateButton({ onClick }: { onClick: (e: React.MouseEvent) => vo
       className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-muted-fg hover:text-primary transition-all shrink-0"
       title="Locate in conversation"
     >
-      <span className="material-symbols-outlined text-[10px]">my_location</span>
+      <span
+        className="material-symbols-outlined"
+        style={{ fontSize: 14, fontVariationSettings: "'opsz' 14" }}
+      >
+        my_location
+      </span>
     </button>
   );
 }
