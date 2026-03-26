@@ -1,7 +1,7 @@
 ---
 id: "audit-012d"
 title: "Set up Vitest and add React component tests"
-status: pending
+status: completed
 priority: high
 effort: medium
 tags: [testing]
@@ -21,12 +21,12 @@ The web frontend has 9,414 LOC with zero tests. Set up Vitest + React Testing Li
 
 ## Tasks
 
-- [ ] Install and configure Vitest + React Testing Library + jsdom in `apps/web`
-- [ ] Add `vitest.config.ts` and test setup file
-- [ ] Add test script to `apps/web/package.json`
-- [ ] Write at least 3 component tests for critical paths (e.g., session list, session detail, cost display)
+- [x] Install and configure Vitest + React Testing Library + jsdom in `apps/web`
+- [x] Add `vitest.config.ts` and test setup file
+- [x] Add test script to `apps/web/package.json`
+- [x] Write at least 3 component tests for critical paths (e.g., session list, session detail, cost display)
 
 ## Acceptance Criteria
 
-- [ ] Vitest is configured and `npm test` runs in `apps/web`
-- [ ] At least 3 React component tests exist and pass
+- [x] Vitest is configured and `npm test` runs in `apps/web`
+- [x] At least 3 React component tests exist and pass
