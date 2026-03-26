@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ContentBlock } from '../types';
+import type { ContentBlock, ContentBlockInput } from '../types';
 import { EditDiffBlock } from './EditDiffBlock';
 import { RawJsonModal } from './RawJsonModal';
 
@@ -8,7 +8,7 @@ interface ToolCallBlockProps {
   result?: ContentBlock;
 }
 
-function formatInput(input: Record<string, unknown>): string {
+function formatInput(input: ContentBlockInput): string {
   if (input.command) return String(input.command);
   if (input.file_path) return String(input.file_path);
   if (input.pattern) return String(input.pattern);

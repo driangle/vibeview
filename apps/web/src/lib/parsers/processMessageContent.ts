@@ -8,14 +8,7 @@
  *  3. Add a renderer in MessageContent.tsx
  */
 
-// ---------------------------------------------------------------------------
-// Segment types
-// ---------------------------------------------------------------------------
-
-export type MessageSegment =
-  | { type: 'text'; content: string }
-  | { type: 'caveat'; content: string }
-  | { type: 'command'; name: string; args: string };
+import type { MessageSegment } from './types';
 
 // ---------------------------------------------------------------------------
 // Tags stripped entirely (tag + content removed)

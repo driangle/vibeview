@@ -3,7 +3,7 @@ import type { MessageResponse, ContentBlock } from '../types';
 import { ThinkingBlock } from './ThinkingBlock';
 import { ToolCallBlock } from './ToolCallBlock';
 import { AgentProgressWidget } from './AgentProgressWidget';
-import { processMessageContent } from './processMessageContent';
+import { processMessageContent } from '../lib/parsers';
 import { MessageContent } from './MessageContent';
 import { HookMessage, SystemMessage } from './EventMessages';
 import { RawJsonModal } from './RawJsonModal';

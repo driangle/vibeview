@@ -20,7 +20,9 @@ const GLYPHS_PER_ROW = 4;
 const ROW_HEIGHT = 14;
 const MAX_VISIBLE_GLYPHS = 8;
 
-function toolSummary(name: string, input?: Record<string, unknown>): string {
+import type { ContentBlockInput } from '../../types';
+
+function toolSummary(name: string, input?: ContentBlockInput): string {
   if (!input) return name;
   switch (name) {
     case 'Edit':

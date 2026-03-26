@@ -1,7 +1,7 @@
 ---
 id: "audit-011"
 title: "Refactor god components and improve separation of concerns"
-status: pending
+status: completed
 priority: high
 effort: large
 type: improvement
@@ -38,8 +38,8 @@ Multiple files use untyped records without specific field requirements.
 
 ## Acceptance Criteria
 
-- [ ] Split SessionView into SessionViewLayout, MessageCanvas, MessagePaginator, SessionSidebar
-- [ ] Split SessionList into list container + filter/sort components
-- [ ] Move processMessageContent.ts to lib/parsers/
-- [ ] Decouple segment renderers from type definitions
-- [ ] Add branded types for ContentBlockInput instead of Record<string, unknown>
+- [x] Split SessionView into SessionViewLayout, MessageCanvas, MessagePaginator, SessionSidebar
+- [x] Split SessionList into list container + filter/sort components
+- [x] Move processMessageContent.ts to lib/parsers/
+- [x] Decouple segment renderers from type definitions
+- [x] Add branded types for ContentBlockInput instead of Record<string, unknown>

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { MessageResponse } from '../types';
-import { processMessageContent } from './processMessageContent';
+import { processMessageContent } from '../lib/parsers';
 
 export interface SearchResult {
   messageUuid: string;

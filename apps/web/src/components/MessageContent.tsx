@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import type { Options as RehypeSanitizeOptions } from 'rehype-sanitize';
 import { CodeBlock } from './CodeBlock';
 import { RawJsonModal } from './RawJsonModal';
-import type { MessageSegment } from './processMessageContent';
+import type { MessageSegment } from '../lib/parsers';
 import type { MessageResponse } from '../types';
 
 const sanitizeSchema: RehypeSanitizeOptions = {
@@ -110,25 +110,27 @@ function CommandSegment({
 }
 
 // ---------------------------------------------------------------------------
-// Segment renderer registry — add new segment types here
+// Segment renderer — uses discriminated union narrowing for type safety
 // ---------------------------------------------------------------------------
 
-type SegmentRenderer = (
+function renderSegment(
   segment: MessageSegment,
   key: number,
   onShowRaw: () => void,
-) => React.ReactNode;
-
-const SEGMENT_RENDERERS: Record<string, SegmentRenderer> = {
-  text: (seg, key) => <TextSegment key={key} content={(seg as { content: string }).content} />,
-  caveat: (seg, key, onShowRaw) => (
-    <CaveatSegment key={key} content={(seg as { content: string }).content} onClick={onShowRaw} />
-  ),
-  command: (seg, key, onShowRaw) => {
-    const s = seg as { name: string; args: string };
-    return <CommandSegment key={key} name={s.name} args={s.args} onClick={onShowRaw} />;
-  },
-};
+): React.ReactNode {
+  switch (segment.type) {
+    case 'text':
+      return <TextSegment key={key} content={segment.content} />;
+    case 'caveat':
+      return <CaveatSegment key={key} content={segment.content} onClick={onShowRaw} />;
+    case 'command':
+      return (
+        <CommandSegment key={key} name={segment.name} args={segment.args} onClick={onShowRaw} />
+      );
+    default:
+      return null;
+  }
+}
 
 interface MessageContentProps {
   segments: MessageSegment[];
@@ -141,10 +143,7 @@ export function MessageContent({ segments, rawMessage }: MessageContentProps) {
 
   return (
     <>
-      {segments.map((seg, i) => {
-        const render = SEGMENT_RENDERERS[seg.type];
-        return render ? render(seg, i, openModal) : null;
-      })}
+      {segments.map((seg, i) => renderSegment(seg, i, openModal))}
       {showModal && rawMessage && (
         <RawJsonModal data={rawMessage.message} onClose={() => setShowModal(false)} />
       )}

@@ -1,3 +1,55 @@
+import type { MessageResponse } from './types';
+
+export function formatDate(timestamp: string): string {
+  return new Date(timestamp).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function formatTokenCount(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
+  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}k`;
+  return count.toString();
+}
+
+export function formatCost(usd: number): string {
+  return `$${usd.toFixed(2)}`;
+}
+
+export function formatDuration(messages: MessageResponse[]): string | null {
+  if (messages.length < 2) return null;
+  let first = NaN;
+  let last = NaN;
+  for (let i = 0; i < messages.length; i++) {
+    const t = new Date(messages[i].timestamp).getTime();
+    if (Number.isFinite(t)) {
+      first = t;
+      break;
+    }
+  }
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const t = new Date(messages[i].timestamp).getTime();
+    if (Number.isFinite(t)) {
+      last = t;
+      break;
+    }
+  }
+  const diffMs = last - first;
+  if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
+
+  const seconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+}
+
 export function formatTime(timestamp: string): string {
   const date = new Date(timestamp);
   const now = new Date();

@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import { ApiError, fetcher } from '../api';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
 import { SessionTable } from '../components/SessionTable';
-import type { SortColumn, SortDirection } from '../components/SortHeader';
 import { useSettings } from '../contexts/SettingsContext';
-import { useDebounced } from '../hooks/useDebounced';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import type { PaginatedSessions, SearchResponse, Session } from '../types';
+import { useSessionFilters } from '../hooks/useSessionFilters';
+import { useSessionSort } from '../hooks/useSessionSort';
+import type { PaginatedSessions, SearchResponse } from '../types';
 import { projectName } from '../utils';
 
 function buildSessionsUrl(
@@ -39,90 +38,39 @@ function buildSessionsUrl(
   return qs ? `/api/sessions?${qs}` : '/api/sessions';
 }
 
-function getSortValue(session: Session, column: SortColumn): string | number {
-  switch (column) {
-    case 'date':
-      return new Date(session.timestamp).getTime();
-    case 'name':
-      return (session.customTitle || session.slug || session.id).toLowerCase();
-    case 'directory':
-      return session.project.toLowerCase();
-    case 'messages':
-      return session.messageCount;
-    case 'tokens':
-      return session.usage.inputTokens + session.usage.outputTokens;
-    case 'cost':
-      return session.usage.costUSD;
-  }
-}
-
 const selectBase =
   'rounded-md border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none appearance-none';
 const selectDefault = `${selectBase} border-border bg-card text-fg`;
 const selectActive = `${selectBase} border-primary/40 bg-primary/5 text-fg`;
 
+function formatStatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
+  return String(n);
+}
+
 export function SessionList() {
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const [search, setSearch] = useLocalStorage('filter:search', '');
-  const debouncedSearch = useDebounced(search, 400);
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [storedDir, setStoredDir] = useLocalStorage('filter:dir', '');
-  const [storedModel, setStoredModel] = useLocalStorage('filter:model', '');
-  const [storedActivity, setStoredActivity] = useLocalStorage('filter:activity', '');
-  const [storedFrom, setStoredFrom] = useLocalStorage('filter:from', '');
-  const [storedTo, setStoredTo] = useLocalStorage('filter:to', '');
-
-  const initialized = useRef(false);
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-    const hasUrlFilters =
-      searchParams.has('dir') ||
-      searchParams.has('model') ||
-      searchParams.has('activity') ||
-      searchParams.has('from') ||
-      searchParams.has('to');
-    if (hasUrlFilters) return;
-    const needsUpdate = storedDir || storedModel || storedActivity || storedFrom || storedTo;
-    if (!needsUpdate) return;
-    setSearchParams(
-      (prev) => {
-        if (storedDir) prev.set('dir', storedDir);
-        if (storedModel) prev.set('model', storedModel);
-        if (storedActivity) prev.set('activity', storedActivity);
-        if (storedFrom) prev.set('from', storedFrom);
-        if (storedTo) prev.set('to', storedTo);
-        return prev;
-      },
-      { replace: true },
-    );
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const dirFilter = searchParams.get('dir') || '';
-  const modelFilter = searchParams.get('model') || '';
-  const activityFilter = searchParams.get('activity') || '';
-  const fromFilter = searchParams.get('from') || '';
-  const toFilter = searchParams.get('to') || '';
-  const currentPage = Number(searchParams.get('page')) || 1;
-
-  useEffect(() => {
-    setStoredDir(dirFilter);
-    setStoredModel(modelFilter);
-    setStoredActivity(activityFilter);
-    setStoredFrom(fromFilter);
-    setStoredTo(toFilter);
-  }, [dirFilter, modelFilter, activityFilter, fromFilter, toFilter]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const [sortColumn, setSortColumn] = useLocalStorage<SortColumn>(
-    'filter:sortColumn',
-    settings.defaultSort.column as SortColumn,
-  );
-  const [sortDirection, setSortDirection] = useLocalStorage<SortDirection>(
-    'filter:sortDirection',
-    settings.defaultSort.direction as SortDirection,
-  );
+  const {
+    search,
+    setSearch,
+    debouncedSearch,
+    dirFilter,
+    modelFilter,
+    activityFilter,
+    fromFilter,
+    toFilter,
+    currentPage,
+    setDirFilter,
+    setModelFilter,
+    setActivityFilter,
+    setDateRange,
+    setPage,
+    resetPage,
+    hasFilters,
+  } = useSessionFilters();
 
   const pageSize = settings.pageSize;
   const apiUrl = buildSessionsUrl(
@@ -162,16 +110,10 @@ export function SessionList() {
   const total = paginated?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const sortedSessions = useMemo(() => {
-    if (!sessions) return [];
-    return [...sessions].sort((a, b) => {
-      const aVal = getSortValue(a, sortColumn);
-      const bVal = getSortValue(b, sortColumn);
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [sessions, sortColumn, sortDirection]);
+  const { sortColumn, sortDirection, sortedSessions, toggleSort } = useSessionSort(
+    sessions,
+    settings.defaultSort,
+  );
 
   const onSelect = useCallback(
     (index: number) => {
@@ -199,79 +141,6 @@ export function SessionList() {
     return models.sort();
   }, [allPaginated]);
 
-  function toggleSort(column: SortColumn) {
-    if (sortColumn === column) {
-      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortColumn(column);
-      setSortDirection(column === 'date' ? 'desc' : 'asc');
-    }
-  }
-
-  function setDateRange(from: string, to: string) {
-    setSearchParams((prev) => {
-      if (from) {
-        prev.set('from', from);
-      } else {
-        prev.delete('from');
-      }
-      if (to) {
-        prev.set('to', to);
-      } else {
-        prev.delete('to');
-      }
-      prev.delete('page');
-      return prev;
-    });
-  }
-
-  function setDirFilter(dir: string) {
-    setSearchParams((prev) => {
-      if (dir) {
-        prev.set('dir', dir);
-      } else {
-        prev.delete('dir');
-      }
-      prev.delete('page');
-      return prev;
-    });
-  }
-
-  function setModelFilter(model: string) {
-    setSearchParams((prev) => {
-      if (model) {
-        prev.set('model', model);
-      } else {
-        prev.delete('model');
-      }
-      prev.delete('page');
-      return prev;
-    });
-  }
-
-  function setActivityFilter(state: string) {
-    setSearchParams((prev) => {
-      if (state) {
-        prev.set('activity', state);
-      } else {
-        prev.delete('activity');
-      }
-      prev.delete('page');
-      return prev;
-    });
-  }
-
-  function setPage(page: number) {
-    setSearchParams((prev) => {
-      if (page <= 1) {
-        prev.delete('page');
-      } else {
-        prev.set('page', String(page));
-      }
-      return prev;
-    });
-  }
-
   const loaded = !error && sessions;
 
   const isContentSearch = !!debouncedSearch && !!searchData;
@@ -288,12 +157,6 @@ export function SessionList() {
   const totalCost = useMemo(() => {
     return displaySessions.reduce((sum, s) => sum + s.usage.costUSD, 0);
   }, [displaySessions]);
-
-  function formatStatTokens(n: number): string {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-    return String(n);
-  }
 
   return (
     <div className="min-h-screen bg-bg p-6 md:p-10">
@@ -358,10 +221,7 @@ export function SessionList() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setSearchParams((prev) => {
-                  prev.delete('page');
-                  return prev;
-                });
+                resetPage();
               }}
               className="w-full rounded-md border border-border bg-card pl-9 pr-8 py-2 text-sm text-fg placeholder:text-muted-fg focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
             />
@@ -370,10 +230,7 @@ export function SessionList() {
                 type="button"
                 onClick={() => {
                   setSearch('');
-                  setSearchParams((prev) => {
-                    prev.delete('page');
-                    return prev;
-                  });
+                  resetPage();
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-0.5"
               >
@@ -448,16 +305,7 @@ export function SessionList() {
               onModelClick={setModelFilter}
               selectedIndex={selectedIndex}
               isLoaded={!!loaded}
-              hasFilters={
-                !!(
-                  dirFilter ||
-                  modelFilter ||
-                  activityFilter ||
-                  fromFilter ||
-                  toFilter ||
-                  debouncedSearch
-                )
-              }
+              hasFilters={hasFilters}
               showCost={settings.showCost}
               dateFormat={settings.dateFormat}
             />

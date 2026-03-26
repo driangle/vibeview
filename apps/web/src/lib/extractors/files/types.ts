@@ -1,8 +1,10 @@
+import type { ContentBlockInput } from '../../../types';
+
 export interface FileContentEntry {
   toolUseId: string;
   toolName: string;
   filePath: string;
-  input: Record<string, unknown>;
+  input: ContentBlockInput;
   timestamp: string;
   messageUuid: string;
 }

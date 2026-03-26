@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { MessageResponse, ContentBlock } from '../types';
 import { ToolCallBlock } from './ToolCallBlock';
-import { processMessageContent } from './processMessageContent';
+import { processMessageContent } from '../lib/parsers';
 import { MessageContent } from './MessageContent';
 
 interface AgentProgressWidgetProps {

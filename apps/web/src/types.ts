@@ -1,3 +1,9 @@
+/** Branded alias for tool_use input payloads. Prefer narrowing via type guards over bare casts. */
+export type ContentBlockInput = Record<string, unknown> & { __brand?: 'ContentBlockInput' };
+
+/** Branded alias for opaque message data blobs. */
+export type MessageData = Record<string, unknown> & { __brand?: 'MessageData' };
+
 export interface AppConfig {
   claudeDir: string;
   standalone: boolean;
@@ -42,7 +48,7 @@ export interface ContentBlock {
   signature?: string;
   id?: string;
   name?: string;
-  input?: Record<string, unknown>;
+  input?: ContentBlockInput;
   tool_use_id?: string;
   content?: unknown;
   is_error?: boolean;
@@ -70,8 +76,8 @@ export interface MessageResponse {
   messageKind?: string;
   message?: APIMessage;
   content?: string;
-  data?: Record<string, unknown>;
-  snapshot?: Record<string, unknown>;
+  data?: MessageData;
+  snapshot?: MessageData;
   customTitle?: string;
 }
 
@@ -90,7 +96,7 @@ export interface SessionInsights {
       toolUseId: string;
       toolName: string;
       filePath: string;
-      input: Record<string, unknown>;
+      input: ContentBlockInput;
       timestamp: string;
       messageUuid: string;
     }[];
