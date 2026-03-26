@@ -8,6 +8,7 @@ import { WorkingIndicator } from '../components/WorkingIndicator';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSessionData } from '../hooks/useSessionData';
+import { ConversationSearch } from '../components/ConversationSearch';
 import { FilesTouched } from '../components/FilesTouched';
 import { FileViewer } from '../components/FileViewer';
 import {
@@ -465,6 +466,10 @@ export function SessionView() {
               </div>
               <div className="flex items-center gap-4">
                 {liveUsage && <InlineMetrics usage={liveUsage} />}
+                <ConversationSearch
+                  messages={displayMessages}
+                  onNavigateToMessage={navigateToMessage}
+                />
                 <button
                   onClick={handleExportPdf}
                   className="text-muted-fg hover:text-fg transition-colors print:hidden"
