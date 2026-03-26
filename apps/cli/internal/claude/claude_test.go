@@ -210,7 +210,7 @@ func TestParseHistoryFile(t *testing.T) {
 		`{"sessionId":"s2","project":"/b","display":"task 2","timestamp":2}`,
 	}, "\n")
 
-	entries, err := ParseHistoryFile(strings.NewReader(input))
+	entries, result, err := ParseHistoryFile(strings.NewReader(input))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -223,6 +223,12 @@ func TestParseHistoryFile(t *testing.T) {
 	if entries[1].SessionID != "s2" {
 		t.Errorf("entries[1].SessionID = %q, want %q", entries[1].SessionID, "s2")
 	}
+	if result.SkippedLines != 1 {
+		t.Errorf("SkippedLines = %d, want 1", result.SkippedLines)
+	}
+	if len(result.MalformedSamples) != 1 || result.MalformedSamples[0] != "not valid json" {
+		t.Errorf("MalformedSamples = %v, want [\"not valid json\"]", result.MalformedSamples)
+	}
 }
 
 func TestParseSessionFile(t *testing.T) {
@@ -232,7 +238,7 @@ func TestParseSessionFile(t *testing.T) {
 		`{"type":"assistant","uuid":"a1","sessionId":"s1","timestamp":2,"message":{"role":"assistant","content":[{"type":"text","text":"hello"}]}}`,
 	}, "\n")
 
-	messages, err := ParseSessionFile(strings.NewReader(input))
+	messages, result, err := ParseSessionFile(strings.NewReader(input))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -244,6 +250,12 @@ func TestParseSessionFile(t *testing.T) {
 	}
 	if messages[1].Type != MessageTypeAssistant {
 		t.Errorf("messages[1].Type = %q, want %q", messages[1].Type, MessageTypeAssistant)
+	}
+	if result.SkippedLines != 1 {
+		t.Errorf("SkippedLines = %d, want 1", result.SkippedLines)
+	}
+	if len(result.MalformedSamples) != 1 || result.MalformedSamples[0] != "{bad json}" {
+		t.Errorf("MalformedSamples = %v, want [\"{bad json}\"]", result.MalformedSamples)
 	}
 }
 

@@ -353,7 +353,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
-	messages, err := claude.ParseSessionFile(f)
+	messages, _, err := claude.ParseSessionFile(f)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse session"})
 		return

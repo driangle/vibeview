@@ -1,7 +1,7 @@
 ---
 id: "audit-007"
 title: "Harden history file parsing and session deduplication"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: bug
@@ -28,8 +28,8 @@ No count or indicator of which/how many lines were corrupted.
 
 ## Acceptance Criteria
 
-- [ ] Validate file size after scanning and detect truncation
-- [ ] Implement line-boundary detection before returning offset
-- [ ] Use a secondary key (e.g., file offset or discovery order) for deduplication
-- [ ] Return `ParseResult` with `SkippedLines int` so callers can warn users
-- [ ] Log first 100 chars of malformed lines for debugging
+- [x] Validate file size after scanning and detect truncation
+- [x] Implement line-boundary detection before returning offset
+- [x] Use a secondary key (e.g., file offset or discovery order) for deduplication
+- [x] Return `ParseResult` with `SkippedLines int` so callers can warn users
+- [x] Log first 100 chars of malformed lines for debugging

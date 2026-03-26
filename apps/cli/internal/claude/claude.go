@@ -266,10 +266,31 @@ func ParseMessageLine(line []byte) (Message, error) {
 	return msg, nil
 }
 
+// ParseResult holds diagnostics about skipped or malformed lines encountered
+// during JSONL parsing.
+type ParseResult struct {
+	SkippedLines     int      // number of malformed lines that were skipped
+	MalformedSamples []string // first 100 chars of up to 5 malformed lines
+}
+
+const maxMalformedSamples = 5
+
+func (r *ParseResult) recordMalformed(line []byte) {
+	r.SkippedLines++
+	if len(r.MalformedSamples) < maxMalformedSamples {
+		sample := string(line)
+		if len(sample) > 100 {
+			sample = sample[:100]
+		}
+		r.MalformedSamples = append(r.MalformedSamples, sample)
+	}
+}
+
 // ParseHistoryFile reads and parses an entire history.jsonl file.
 // Malformed lines are skipped and logged to stderr.
-func ParseHistoryFile(r io.Reader) ([]HistoryEntry, error) {
+func ParseHistoryFile(r io.Reader) ([]HistoryEntry, ParseResult, error) {
 	var entries []HistoryEntry
+	var result ParseResult
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 	lineNum := 0
@@ -281,21 +302,23 @@ func ParseHistoryFile(r io.Reader) ([]HistoryEntry, error) {
 		}
 		entry, err := ParseHistoryLine(line)
 		if err != nil {
-			logutil.Warnf("history.jsonl line %d: %v", lineNum, err)
+			result.recordMalformed(line)
+			logutil.Warnf("history.jsonl line %d: %v (content: %.100s)", lineNum, err, line)
 			continue
 		}
 		entries = append(entries, entry)
 	}
 	if err := scanner.Err(); err != nil {
-		return entries, fmt.Errorf("scan history file: %w", err)
+		return entries, result, fmt.Errorf("scan history file: %w", err)
 	}
-	return entries, nil
+	return entries, result, nil
 }
 
 // ParseSessionFile reads and parses an entire session JSONL file.
 // Malformed lines are skipped and logged to stderr.
-func ParseSessionFile(r io.Reader) ([]Message, error) {
+func ParseSessionFile(r io.Reader) ([]Message, ParseResult, error) {
 	var messages []Message
+	var result ParseResult
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
 	lineNum := 0
@@ -307,15 +330,16 @@ func ParseSessionFile(r io.Reader) ([]Message, error) {
 		}
 		msg, err := ParseMessageLine(line)
 		if err != nil {
-			logutil.Warnf("session jsonl line %d: %v", lineNum, err)
+			result.recordMalformed(line)
+			logutil.Warnf("session jsonl line %d: %v (content: %.100s)", lineNum, err, line)
 			continue
 		}
 		messages = append(messages, msg)
 	}
 	if err := scanner.Err(); err != nil {
-		return messages, fmt.Errorf("scan session file: %w", err)
+		return messages, result, fmt.Errorf("scan session file: %w", err)
 	}
-	return messages, nil
+	return messages, result, nil
 }
 
 // EncodeProjectPath converts a filesystem path to Claude's directory encoding.

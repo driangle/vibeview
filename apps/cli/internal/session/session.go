@@ -127,9 +127,12 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 	}
 	defer f.Close()
 
-	entries, err := claude.ParseHistoryFile(f)
+	entries, parseResult, err := claude.ParseHistoryFile(f)
 	if err != nil {
 		return nil, err
+	}
+	if parseResult.SkippedLines > 0 {
+		logutil.Warnf("history.jsonl: skipped %d malformed lines", parseResult.SkippedLines)
 	}
 
 	// Build a set of valid dirs for filtering.
@@ -148,7 +151,7 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 			Timestamp: entry.Timestamp.Int64(),
 		}
 		if idx, exists := seen[entry.SessionID]; exists {
-			if meta.Timestamp > sessions[idx].Timestamp {
+			if meta.Timestamp >= sessions[idx].Timestamp {
 				sessions[idx] = meta
 			}
 		} else {
@@ -335,7 +338,7 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 	}
 	defer f.Close()
 
-	messages, _ := claude.ParseSessionFile(f)
+	messages, _, _ := claude.ParseSessionFile(f)
 	meta.MessageCount = len(messages)
 
 	unknownModels := map[string]bool{}
@@ -542,7 +545,7 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 	}
 	defer f.Close()
 
-	messages, err := claude.ParseSessionFile(f)
+	messages, _, err := claude.ParseSessionFile(f)
 	if err != nil {
 		return SessionMeta{}, err
 	}

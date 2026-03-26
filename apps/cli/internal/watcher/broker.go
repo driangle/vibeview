@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/logutil"
 	"github.com/driangle/vibeview/internal/pathutil"
 	"github.com/driangle/vibeview/internal/session"
 	"github.com/fsnotify/fsnotify"
@@ -274,6 +275,17 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 	}
 	defer f.Close()
 
+	// Detect truncation: if the file is smaller than our offset, the file was
+	// rotated or truncated. Reset to the beginning so we don't miss entries.
+	info, err := f.Stat()
+	if err != nil {
+		return offset
+	}
+	if info.Size() < offset {
+		logutil.Warnf("history.jsonl truncated (size %d < offset %d), re-reading from start", info.Size(), offset)
+		offset = 0
+	}
+
 	if _, err := f.Seek(offset, 0); err != nil {
 		return offset
 	}
@@ -290,6 +302,7 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		}
 		entry, err := claude.ParseHistoryLine(line)
 		if err != nil {
+			logutil.Warnf("history.jsonl: skipping malformed line at offset %d (content: %.100s)", offset+bytesConsumed, line)
 			continue
 		}
 
@@ -309,7 +322,12 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		return offset // keep old offset; retry on next write event
 	}
 
-	return offset + bytesConsumed
+	newOffset := offset + bytesConsumed
+	// Clamp offset to file size to guard against line-boundary issues.
+	if newOffset > info.Size() {
+		newOffset = info.Size()
+	}
+	return newOffset
 }
 
 func (b *Broker) enrichNewSession(sessionID string) {
