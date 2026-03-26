@@ -589,3 +589,315 @@ func TestLoadFromPathsDepthLimit(t *testing.T) {
 		}
 	}
 }
+
+// --- AddSession tests ---
+
+func TestAddSession(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	initialCount := len(idx.GetSessions())
+
+	entry := claude.HistoryEntry{
+		SessionID: "new-sess",
+		Project:   "/Users/me/project-c",
+		Timestamp: 9000,
+	}
+	idx.AddSession(dir, entry)
+
+	sessions := idx.GetSessions()
+	if len(sessions) != initialCount+1 {
+		t.Fatalf("expected %d sessions after add, got %d", initialCount+1, len(sessions))
+	}
+	// New session should be prepended (first).
+	if sessions[0].SessionID != "new-sess" {
+		t.Errorf("expected new session first, got %s", sessions[0].SessionID)
+	}
+}
+
+func TestAddSessionDuplicate(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	initialCount := len(idx.GetSessions())
+
+	// Try to add a session that already exists.
+	entry := claude.HistoryEntry{
+		SessionID: "sess-1",
+		Project:   "/Users/me/project-a",
+		Timestamp: 9999,
+	}
+	idx.AddSession(dir, entry)
+
+	if len(idx.GetSessions()) != initialCount {
+		t.Error("adding duplicate session should not increase count")
+	}
+}
+
+// --- SetCustomTitle tests ---
+
+func TestSetCustomTitle(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	idx.SetCustomTitle("sess-1", "My Custom Title")
+
+	meta := idx.FindSession("sess-1")
+	if meta == nil {
+		t.Fatal("sess-1 not found")
+	}
+	if meta.CustomTitle != "My Custom Title" {
+		t.Errorf("CustomTitle = %q, want %q", meta.CustomTitle, "My Custom Title")
+	}
+}
+
+func TestSetCustomTitleNonexistent(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should not panic for non-existent session.
+	idx.SetCustomTitle("nonexistent", "Title")
+}
+
+// --- SetActivityState tests ---
+
+func TestSetActivityState(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	idx.SetActivityState("sess-1", ActivityWorking)
+
+	meta := idx.FindSession("sess-1")
+	if meta == nil {
+		t.Fatal("sess-1 not found")
+	}
+	if meta.ActivityState != ActivityWorking {
+		t.Errorf("ActivityState = %q, want %q", meta.ActivityState, ActivityWorking)
+	}
+}
+
+func TestSetActivityStateNonexistent(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should not panic for non-existent session.
+	idx.SetActivityState("nonexistent", ActivityIdle)
+}
+
+// --- FindSession tests ---
+
+func TestFindSession(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	meta := idx.FindSession("sess-1")
+	if meta == nil {
+		t.Fatal("expected to find sess-1")
+	}
+	if meta.SessionID != "sess-1" {
+		t.Errorf("SessionID = %q, want sess-1", meta.SessionID)
+	}
+
+	if idx.FindSession("nonexistent") != nil {
+		t.Error("expected nil for nonexistent session")
+	}
+}
+
+// --- EnrichSession tests ---
+
+func TestEnrichSession(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// sess-1 has a session file, should enrich successfully.
+	if !idx.EnrichSession(dir, "sess-1") {
+		t.Error("expected EnrichSession to return true for sess-1")
+	}
+
+	meta := idx.FindSession("sess-1")
+	if meta.MessageCount != 2 {
+		t.Errorf("after enrichment, MessageCount = %d, want 2", meta.MessageCount)
+	}
+	if meta.Model == "" {
+		t.Error("expected non-empty model after enrichment")
+	}
+}
+
+func TestEnrichSessionMissingFile(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// sess-3 has no session file.
+	if idx.EnrichSession(dir, "sess-3") {
+		t.Error("expected EnrichSession to return false for sess-3 (no file)")
+	}
+}
+
+func TestEnrichSessionNonexistent(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if idx.EnrichSession(dir, "nonexistent") {
+		t.Error("expected EnrichSession to return false for nonexistent session")
+	}
+}
+
+// --- EnrichN tests ---
+
+func TestEnrichN(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Enrich only the first session (most recent = sess-2).
+	idx.EnrichN(dir, 1)
+
+	sess2 := idx.FindSession("sess-2")
+	if sess2 == nil {
+		t.Fatal("sess-2 not found")
+	}
+	if sess2.MessageCount == 0 {
+		t.Error("expected sess-2 to be enriched")
+	}
+}
+
+func TestEnrichNZero(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// EnrichN(0) should be a no-op.
+	idx.EnrichN(dir, 0)
+}
+
+func TestEnrichNLargerThanTotal(t *testing.T) {
+	dir := setupTestDir(t)
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Should not panic when n > total sessions.
+	idx.EnrichN(dir, 1000)
+}
+
+// --- ResolveFilePath tests ---
+
+func TestResolveFilePathStandalone(t *testing.T) {
+	meta := SessionMeta{
+		SessionID: "test",
+		FilePath:  "/some/standalone/path.jsonl",
+	}
+	path, err := ResolveFilePath("/unused", meta)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if path != "/some/standalone/path.jsonl" {
+		t.Errorf("expected standalone path, got %q", path)
+	}
+}
+
+func TestResolveFilePathFromClaudeDir(t *testing.T) {
+	meta := SessionMeta{
+		SessionID: "sess-abc",
+		Project:   "/Users/me/proj",
+	}
+	path, err := ResolveFilePath("/home/.claude", meta)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := "/home/.claude/projects/-Users-me-proj/sess-abc.jsonl"
+	if path != want {
+		t.Errorf("got %q, want %q", path, want)
+	}
+}
+
+// --- GetSessions excludes tombstoned entries ---
+
+func TestGetSessionsExcludesTombstoned(t *testing.T) {
+	idx := &Index{
+		Sessions: []SessionMeta{
+			{SessionID: "live"},
+			{SessionID: ""}, // tombstoned
+			{SessionID: "also-live"},
+		},
+	}
+	sessions := idx.GetSessions()
+	if len(sessions) != 2 {
+		t.Fatalf("expected 2 sessions, got %d", len(sessions))
+	}
+	for _, s := range sessions {
+		if s.SessionID == "" {
+			t.Error("tombstoned session should be excluded")
+		}
+	}
+}
+
+// --- Discover with dirs filter ---
+
+func TestDiscoverWithDirsFilter(t *testing.T) {
+	dir := setupTestDir(t)
+
+	// Use the exact encoded directory name to match.
+	idx, err := Discover(dir, []string{"-Users-me-project-a"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessions := idx.GetSessions()
+	for _, s := range sessions {
+		if s.Project != "/Users/me/project-a" {
+			t.Errorf("expected only project-a sessions, got %q", s.Project)
+		}
+	}
+	if len(sessions) != 2 {
+		t.Errorf("expected 2 sessions for project-a, got %d", len(sessions))
+	}
+}
+
+func TestDiscoverWithDirsFilterNoMatch(t *testing.T) {
+	dir := setupTestDir(t)
+
+	idx, err := Discover(dir, []string{"nonexistent-project"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(idx.GetSessions()) != 0 {
+		t.Error("expected 0 sessions for non-matching dir filter")
+	}
+}

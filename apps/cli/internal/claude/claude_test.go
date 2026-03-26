@@ -329,3 +329,40 @@ func TestDecodeProjectPath(t *testing.T) {
 		t.Errorf("DecodeProjectPath = %q, want %q", got, want)
 	}
 }
+
+// --- Fuzz Tests ---
+
+func FuzzParseMessageLine(f *testing.F) {
+	// Seed with valid message types.
+	f.Add([]byte(`{"type":"user","uuid":"u1","sessionId":"s1","timestamp":1700000000,"message":{"role":"user","content":[{"type":"text","text":"hello"}]}}`))
+	f.Add([]byte(`{"type":"assistant","uuid":"a1","sessionId":"s1","timestamp":1700000001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hi"}],"usage":{"input_tokens":10,"output_tokens":5}}}`))
+	f.Add([]byte(`{"type":"progress","uuid":"p1","sessionId":"s1","timestamp":1700000002,"toolUseID":"tu1","data":{"status":"running"}}`))
+	f.Add([]byte(`{"type":"system","uuid":"sys1","sessionId":"s1","timestamp":1700000003}`))
+	f.Add([]byte(`{"type":"result","uuid":"r1","sessionId":"s1","timestamp":1700000004,"total_cost_usd":0.05}`))
+	f.Add([]byte(`{"type":"user","uuid":"u2","sessionId":"s1","timestamp":1700000005,"message":{"role":"user","content":"plain string content"}}`))
+	f.Add([]byte(`{"type":"user","uuid":"u3","sessionId":"s1","timestamp":1700000006,"message":{"role":"user","content":[{"type":"text","text":"hi"}]},"toolUseResult":{"durationMs":100,"filenames":["a.go"],"numFiles":1,"truncated":false}}`))
+	f.Add([]byte(`{"type":"user","uuid":"u4","sessionId":"s1","timestamp":1700000007,"message":{"role":"user","content":[{"type":"text","text":"hi"}]},"toolUseResult":"Error: something"}`))
+	f.Add([]byte(`{}`))
+	f.Add([]byte(`not json`))
+	f.Add([]byte(``))
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		// ParseMessageLine must not panic on any input.
+		_, _ = ParseMessageLine(data)
+	})
+}
+
+func FuzzParseHistoryLine(f *testing.F) {
+	f.Add([]byte(`{"sessionId":"abc-123","project":"/Users/foo/bar","display":"fix bug","timestamp":1700000000}`))
+	f.Add([]byte(`{"sessionId":"","project":"","display":"","timestamp":0}`))
+	f.Add([]byte(`{"sessionId":"s1","project":"/a","display":"d","timestamp":"2026-03-13T10:46:43.165Z"}`))
+	f.Add([]byte(`{"sessionId":"s2","project":"/b","display":"d","timestamp":"1700000000"}`))
+	f.Add([]byte(`{}`))
+	f.Add([]byte(`not json`))
+	f.Add([]byte(``))
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		// ParseHistoryLine must not panic on any input.
+		_, _ = ParseHistoryLine(data)
+	})
+}

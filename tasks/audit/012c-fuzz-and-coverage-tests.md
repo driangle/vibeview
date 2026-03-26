@@ -1,7 +1,7 @@
 ---
 id: "audit-012c"
 title: "Add fuzz tests and expand server/session coverage"
-status: pending
+status: completed
 priority: high
 effort: medium
 tags: [testing]
@@ -23,13 +23,13 @@ Add fuzz tests for the JSONL parser functions that handle arbitrary input, and e
 
 ## Tasks
 
-- [ ] Add fuzz test for `ParseMessageLine`
-- [ ] Add fuzz test for `ParseHistoryLine`
-- [ ] Expand `server_test.go` to cover more endpoints and error paths
-- [ ] Expand `session_test.go` to cover more session operations and edge cases
+- [x] Add fuzz test for `ParseMessageLine`
+- [x] Add fuzz test for `ParseHistoryLine`
+- [x] Expand `server_test.go` to cover more endpoints and error paths
+- [x] Expand `session_test.go` to cover more session operations and edge cases
 
 ## Acceptance Criteria
 
-- [ ] Fuzz tests exist for `ParseMessageLine` and `ParseHistoryLine`
-- [ ] Server test coverage reaches 60%+
-- [ ] Session test coverage reaches 60%+
+- [x] Fuzz tests exist for `ParseMessageLine` and `ParseHistoryLine`
+- [x] Server test coverage reaches 60%+
+- [x] Session test coverage reaches 60%+
