@@ -17,6 +17,7 @@ import (
 	"github.com/driangle/vibeview/internal/insights"
 	"github.com/driangle/vibeview/internal/logutil"
 	"github.com/driangle/vibeview/internal/pathutil"
+	"github.com/driangle/vibeview/internal/redact"
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/server"
 	"github.com/driangle/vibeview/internal/session"
@@ -210,6 +211,8 @@ Examples:
 
 func inspectCmd(claudeDir *string, logLevel *string) *cobra.Command {
 	var jsonOutput bool
+	var yamlOutput bool
+	var verbose bool
 
 	cmd := &cobra.Command{
 		Use:   "inspect <session-file | directory | session-id>",
@@ -225,7 +228,9 @@ Input can be:
 Examples:
   vibeview inspect 877fff1e-80c9-4d20-a600-f278eb2c7bdc
   vibeview inspect /path/to/session.jsonl
-  vibeview inspect --json 877fff1e-80c9-4d20-a600-f278eb2c7bdc`,
+  vibeview inspect --json 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+  vibeview inspect --yaml 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+  vibeview inspect -v 877fff1e-80c9-4d20-a600-f278eb2c7bdc`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			logutil.SetLevel(logutil.LevelDebug)
@@ -244,11 +249,20 @@ Examples:
 				report.Lookup = buildLookupReport(*claudeDir, target)
 			}
 
-			outputAny(report, jsonOutput)
+			switch {
+			case jsonOutput:
+				outputAny(unwrapReport(report), true)
+			case yamlOutput:
+				outputAny(unwrapReport(report), false)
+			default:
+				renderStyled(os.Stdout, report, verbose)
+			}
 		},
 	}
 
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "output as JSON instead of YAML")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&yamlOutput, "yaml", false, "output as YAML")
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "include diagnostic sections")
 
 	return cmd
 }
@@ -395,18 +409,28 @@ type usageReport struct {
 }
 
 type insightsReport struct {
-	Tools        []toolEntry `json:"tools,omitempty" yaml:"tools,omitempty"`
-	Errors       []string    `json:"errors,omitempty" yaml:"errors,omitempty"`
-	FilesWritten int         `json:"files_written" yaml:"files_written"`
-	FilesRead    int         `json:"files_read" yaml:"files_read"`
-	BashCommands int         `json:"bash_commands" yaml:"bash_commands"`
-	Subagents    int         `json:"subagents" yaml:"subagents"`
-	Skills       []toolEntry `json:"skills,omitempty" yaml:"skills,omitempty"`
+	Tools        []toolEntry      `json:"tools,omitempty" yaml:"tools,omitempty"`
+	Errors       []errorDetail    `json:"errors,omitempty" yaml:"errors,omitempty"`
+	FilesWritten []string         `json:"files_written" yaml:"files_written"`
+	FilesRead    int              `json:"files_read" yaml:"files_read"`
+	BashCommands int              `json:"bash_commands" yaml:"bash_commands"`
+	Subagents    []subagentDetail `json:"subagents,omitempty" yaml:"subagents,omitempty"`
+	Skills       []toolEntry      `json:"skills,omitempty" yaml:"skills,omitempty"`
 }
 
 type toolEntry struct {
 	Name  string `json:"name" yaml:"name"`
 	Count int    `json:"count" yaml:"count"`
+}
+
+type errorDetail struct {
+	ToolName string `json:"tool_name" yaml:"tool_name"`
+	Snippet  string `json:"snippet" yaml:"snippet"`
+}
+
+type subagentDetail struct {
+	Description string `json:"description" yaml:"description"`
+	TurnCount   int    `json:"turn_count,omitempty" yaml:"turn_count,omitempty"`
 }
 
 // --- Builders ---
@@ -641,17 +665,22 @@ func buildUsageReport(messages []claude.Message) *usageReport {
 func buildInsightsReport(messages []claude.Message) *insightsReport {
 	ins := insights.Extract(messages)
 	r := &insightsReport{
-		FilesWritten: len(ins.Files.Categories.Written),
 		FilesRead:    len(ins.Files.Categories.Read),
 		BashCommands: len(ins.Commands),
-		Subagents:    len(ins.Subagents),
+	}
+
+	for _, path := range ins.Files.Categories.Written {
+		r.FilesWritten = append(r.FilesWritten, redact.MaskHomePath(path))
 	}
 
 	for _, t := range ins.Tools {
 		r.Tools = append(r.Tools, toolEntry{Name: t.Name, Count: t.Count})
 	}
 	for _, e := range ins.Errors {
-		r.Errors = append(r.Errors, fmt.Sprintf("[%s] %s", e.ToolName, e.Snippet))
+		r.Errors = append(r.Errors, errorDetail{ToolName: e.ToolName, Snippet: e.Snippet})
+	}
+	for _, s := range ins.Subagents {
+		r.Subagents = append(r.Subagents, subagentDetail{Description: s.Description, TurnCount: s.TurnCount})
 	}
 	for _, s := range ins.Skills {
 		r.Skills = append(r.Skills, toolEntry{Name: s.Name, Count: s.Count})
@@ -661,6 +690,19 @@ func buildInsightsReport(messages []claude.Message) *insightsReport {
 }
 
 // --- Output ---
+
+func unwrapReport(r inspectReport) any {
+	switch {
+	case r.Lookup != nil:
+		return r.Lookup
+	case r.File != nil:
+		return r.File
+	case r.Directory != nil:
+		return r.Directory
+	default:
+		return r
+	}
+}
 
 func outputAny(v any, asJSON bool) {
 	if asJSON {

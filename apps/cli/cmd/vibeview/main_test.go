@@ -128,7 +128,7 @@ func TestBuildInsightsReport(t *testing.T) {
 	if len(r.Tools) == 0 {
 		t.Error("expected tools to be non-empty")
 	}
-	if r.FilesWritten == 0 {
+	if len(r.FilesWritten) == 0 {
 		t.Error("expected files_written > 0")
 	}
 	if r.FilesRead == 0 {

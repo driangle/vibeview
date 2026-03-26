@@ -43,11 +43,19 @@ vibeview inspect /path/to/session.jsonl
 vibeview inspect /path/to/sessions/
 ```
 
-Output is YAML by default. Use `--json` for JSON.
+Output is a styled, human-readable terminal report by default. Use `--json` or `--yaml` for machine-readable formats.
 
 ```bash
 vibeview inspect --json 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+vibeview inspect --yaml 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+vibeview inspect -v 877fff1e-80c9-4d20-a600-f278eb2c7bdc
 ```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--json` | `false` | Output as JSON |
+| `--yaml` | `false` | Output as YAML |
+| `--verbose`, `-v` | `false` | Include diagnostic sections (resolution, parse, enrichment) |
 
 #### Session ID lookup
 
@@ -60,43 +68,43 @@ When given a session ID, `inspect` traces the full discovery pipeline:
 5. Runs enrichment (message count, model, token usage, cost)
 6. Extracts insights (tools, files, errors, commands, skills, subagents)
 
-Any problems found along the way are reported in the `problems` field, making it useful for diagnosing why a session might not appear in the web interface.
+Any problems found along the way are reported in the Problems section (or `problems` field in JSON/YAML), making it useful for diagnosing why a session might not appear in the web interface.
 
 #### Example output
 
-```yaml
-lookup:
-  session_id: 877fff1e-80c9-4d20-a600-f278eb2c7bdc
-  valid: true
-  history_hits: 34
-  project: /Users/you/myproject
-  resolution:
-    encoded_path: -Users-you-myproject
-    dir_exists: true
-    file_exists: true
-  enrichment:
-    success: true
-    messages: 698
-    model: claude-opus-4-6
-    slug: I want to create my personal website...
-    activity: idle
-  usage:
-    input_tokens: 246
-    output_tokens: 60415
-    cache_creation_tokens: 116470
-    cache_read_tokens: 10821076
-    total_tokens: 10998207
-    cost_usd: 22.95
-  insights:
-    tools:
-      - name: Write
-        count: 44
-      - name: Edit
-        count: 44
-    files_written: 34
-    files_read: 12
-    bash_commands: 20
+The default styled output shows sections for session metadata, conversation stats, tool usage, files, errors, subagents, and skills. Empty sections are omitted.
+
 ```
+Session
+  ID           877fff1e-80c9-4d20-a600-f278eb2c7bdc
+  Project      ~/myproject
+  Slug         I want to create my personal website...
+  Started      2026-03-26 21:07  (2h ago)
+  Duration     45m30s
+  Model        claude-opus-4-6
+  Activity     idle
+
+Conversation
+  Messages     698 total, 120 user, 340 assistant, 238 progress
+  Tokens       In: 246  Out: 60,415  Cache: 10,937,546
+  Cost         $22.95
+
+Tool Usage
+  Tool                  Calls     Errors
+  Write                 44        0
+  Edit                  44        2
+  Bash                  20        1
+  Read                  12        0
+
+Files
+  Read         12 files
+  Written      34 files
+    ~/myproject/src/index.ts
+    ~/myproject/src/app.ts
+    ...
+```
+
+With `--verbose`, additional diagnostic sections are appended (Resolution, Enrichment).
 
 ### `vibeview search`
 
