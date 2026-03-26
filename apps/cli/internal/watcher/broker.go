@@ -217,6 +217,22 @@ func (b *Broker) startTailer(sessionID string) error {
 		}
 	}()
 
+	go func() {
+		for err := range tailer.Errors() {
+			data, _ := json.Marshal(map[string]string{"error": err.Error()})
+			event := SSEEvent{Event: "stream_error", Data: string(data)}
+
+			b.mu.Lock()
+			for client := range b.clients[sessionID] {
+				select {
+				case client.Events <- event:
+				default:
+				}
+			}
+			b.mu.Unlock()
+		}
+	}()
+
 	return nil
 }
 

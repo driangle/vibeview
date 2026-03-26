@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -115,13 +114,7 @@ func (s *Server) routes() {
 // ListenAndServe starts the HTTP server on the given address.
 // addr can be a port (":8080") or host:port ("127.0.0.1:8080").
 func (s *Server) ListenAndServe(port int) error {
-	addr := fmt.Sprintf(":%d", port)
-
-	// Warn if the server will be reachable from non-loopback addresses.
-	host, _, _ := net.SplitHostPort(addr)
-	if host == "" || host == "0.0.0.0" || host == "::" {
-		log.Printf("WARNING: server is bound to all interfaces (%s); consider binding to localhost only", addr)
-	}
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
 
 	s.httpServer = &http.Server{Addr: addr, Handler: corsHandler(port, s.mux)}
 	return s.httpServer.ListenAndServe()
@@ -220,7 +213,11 @@ func (s *Server) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := settings.Save(s.settingsPath, merged); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		resp := map[string]any{"error": err.Error()}
+		if fieldErrs := settings.ValidateFields(merged); fieldErrs != nil {
+			resp["fieldErrors"] = fieldErrs
+		}
+		writeJSON(w, http.StatusBadRequest, resp)
 		return
 	}
 
@@ -353,7 +350,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
-	messages, _, err := claude.ParseSessionFile(f)
+	messages, parseResult, err := claude.ParseSessionFile(f)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse session"})
 		return
@@ -370,6 +367,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		FilePath:        path,
 		Messages:        msgResponses,
 		Insights:        &extracted,
+		SkippedLines:    parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
 }
@@ -568,9 +566,10 @@ type SearchResponse struct {
 // SessionDetailResponse is the API representation of a single session with messages.
 type SessionDetailResponse struct {
 	SessionResponse
-	FilePath string                    `json:"filePath"`
-	Messages []MessageResponse         `json:"messages"`
-	Insights *insights.SessionInsights `json:"insights,omitempty"`
+	FilePath     string                    `json:"filePath"`
+	Messages     []MessageResponse         `json:"messages"`
+	Insights     *insights.SessionInsights `json:"insights,omitempty"`
+	SkippedLines int                       `json:"skippedLines,omitempty"`
 }
 
 // MessageResponse is the API representation of a single message.

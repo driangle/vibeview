@@ -7,6 +7,7 @@ import { Pagination, FollowToggle } from '../components/SessionControls';
 import { WorkingIndicator } from '../components/WorkingIndicator';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/SettingsContext';
+import { ApiError } from '../api';
 import { useSessionData } from '../hooks/useSessionData';
 import { ConversationSearch } from '../components/ConversationSearch';
 import { FilesTouched } from '../components/FilesTouched';
@@ -320,8 +321,10 @@ export function SessionView() {
     session,
     error,
     isLoading,
+    mutate,
     streamedMessages,
     connectionStatus,
+    streamError,
     toolResults,
     missingToolResultCount,
     liveUsage,
@@ -422,7 +425,18 @@ export function SessionView() {
   if (error) {
     return (
       <div className="mx-auto max-w-4xl p-8">
-        <p className="text-destructive">Failed to load session.</p>
+        <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <p className="text-destructive text-sm">
+            Failed to load session
+            {error instanceof ApiError ? ` (HTTP ${error.status})` : ''}.
+          </p>
+          <button
+            onClick={() => mutate()}
+            className="shrink-0 rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-fg hover:bg-muted transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -458,10 +472,28 @@ export function SessionView() {
                   ID: {session.id.slice(0, 8).toUpperCase()}
                 </CopyableText>
                 <ActivityBadge state={activityState} />
-                {connectionStatus !== 'disconnected' && (
+                {connectionStatus === 'connected' && (
+                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded print:hidden">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    LIVE
+                  </span>
+                )}
+                {connectionStatus === 'connecting' && (
                   <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-primary rounded print:hidden">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    {connectionStatus === 'connected' ? 'LIVE' : 'CONNECTING'}
+                    CONNECTING
+                  </span>
+                )}
+                {connectionStatus === 'reconnecting' && (
+                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded print:hidden">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    RECONNECTING
+                  </span>
+                )}
+                {connectionStatus === 'disconnected' && (
+                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-destructive rounded print:hidden">
+                    <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                    OFFLINE
                   </span>
                 )}
               </div>
@@ -505,11 +537,22 @@ export function SessionView() {
               />
             )}
 
-            {/* Missing tool results warning */}
+            {/* Data quality warnings */}
             {missingToolResultCount > 0 && (
               <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
                 {missingToolResultCount} tool output{missingToolResultCount === 1 ? '' : 's'}{' '}
                 missing
+              </div>
+            )}
+            {session.skippedLines != null && session.skippedLines > 0 && (
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                {session.skippedLines} malformed line{session.skippedLines === 1 ? '' : 's'} skipped
+                during parsing
+              </div>
+            )}
+            {streamError && (
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                Stream error: {streamError}
               </div>
             )}
 

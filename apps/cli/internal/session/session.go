@@ -355,7 +355,7 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
 				cost, ok := claude.CalculateCost(msg.Message.Model, *u)
 				meta.Usage.CostUSD += cost
-				if !ok && msg.Message.Model != "" {
+				if !ok && msg.Message.Model != "" && !isSyntheticModel(msg.Message.Model) {
 					if !unknownModels[msg.Message.Model] {
 						logutil.Warnf("no pricing data for model %q, cost will be $0 for this message", msg.Message.Model)
 						unknownModels[msg.Message.Model] = true
@@ -591,7 +591,7 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
 				cost, ok := claude.CalculateCost(msg.Message.Model, *u)
 				meta.Usage.CostUSD += cost
-				if !ok && msg.Message.Model != "" {
+				if !ok && msg.Message.Model != "" && !isSyntheticModel(msg.Message.Model) {
 					if !unknownModels[msg.Message.Model] {
 						logutil.Warnf("no pricing data for model %q, cost will be $0 for this message", msg.Message.Model)
 						unknownModels[msg.Message.Model] = true
@@ -633,6 +633,12 @@ var (
 	commandNamePattern = regexp.MustCompile(`<command-name>[^<]*</command-name>`)
 	xmlTagPattern      = regexp.MustCompile(`<[^>]+>`)
 )
+
+// isSyntheticModel returns true for model names that are internal markers
+// (e.g. "<synthetic>") rather than real API model identifiers.
+func isSyntheticModel(model string) bool {
+	return strings.HasPrefix(model, "<") && strings.HasSuffix(model, ">")
+}
 
 // truncateSlug shortens text to maxLen, breaking at a word boundary.
 // It strips XML/HTML tags before truncating.

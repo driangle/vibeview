@@ -31,9 +31,10 @@ export function useSessionData(id: string | undefined) {
     data: session,
     error,
     isLoading,
+    mutate,
   } = useSWR<SessionDetail>(id ? `/api/sessions/${id}` : null, fetcher);
 
-  const { streamedMessages, connectionStatus, serverActivityState, addInitialUUIDs } =
+  const { streamedMessages, connectionStatus, streamError, serverActivityState, addInitialUUIDs } =
     useSessionStream(id);
 
   // Register initial message UUIDs so the SSE hook deduplicates.
@@ -155,8 +156,10 @@ export function useSessionData(id: string | undefined) {
     session,
     error,
     isLoading,
+    mutate,
     streamedMessages,
     connectionStatus,
+    streamError,
     allMessages,
     toolResults,
     missingToolResultCount,

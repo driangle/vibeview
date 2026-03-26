@@ -70,10 +70,12 @@ function RadioGroup({
 function Field({
   label,
   description,
+  error,
   children,
 }: {
   label: string;
   description?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -81,8 +83,11 @@ function Field({
       <div className="min-w-0">
         <div className="text-sm font-medium text-fg">{label}</div>
         {description && <div className="mt-0.5 text-xs text-muted-fg">{description}</div>}
+        {error && <div className="mt-0.5 text-xs text-destructive">{error}</div>}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className={`shrink-0 ${error ? 'ring-1 ring-destructive rounded-md' : ''}`}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -206,6 +211,7 @@ export function Settings() {
     message: string;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Sync form when settings load from API for the first time.
   const [initialized, setInitialized] = useState(false);
@@ -219,11 +225,13 @@ export function Settings() {
   function update<K extends keyof SettingsType>(key: K, value: SettingsType[K]) {
     setForm((f) => ({ ...f, [key]: value }));
     setStatus(null);
+    setFieldErrors({});
   }
 
   async function save() {
     setSaving(true);
     setStatus(null);
+    setFieldErrors({});
     try {
       const res = await fetch('/api/settings', {
         method: 'PUT',
@@ -233,6 +241,9 @@ export function Settings() {
       const body = await res.json();
       if (!res.ok) {
         setStatus({ type: 'error', message: body.error || 'Failed to save' });
+        if (body.fieldErrors) {
+          setFieldErrors(body.fieldErrors);
+        }
         return;
       }
       // Sync the context with the saved values.
@@ -272,7 +283,11 @@ export function Settings() {
 
       <div className="space-y-6">
         <Section title="Appearance">
-          <Field label="Theme" description="Color scheme for the interface">
+          <Field
+            label="Theme"
+            description="Color scheme for the interface"
+            error={fieldErrors['theme']}
+          >
             <RadioGroup
               options={[
                 { label: 'Light', value: 'light' },
@@ -286,7 +301,11 @@ export function Settings() {
               }}
             />
           </Field>
-          <Field label="Date format" description="How timestamps are displayed">
+          <Field
+            label="Date format"
+            description="How timestamps are displayed"
+            error={fieldErrors['dateFormat']}
+          >
             <RadioGroup
               options={[
                 { label: 'Relative', value: 'relative' },
@@ -302,7 +321,7 @@ export function Settings() {
         </Section>
 
         <Section title="Session List">
-          <Field label="Default sort column">
+          <Field label="Default sort column" error={fieldErrors['defaultSort.column']}>
             <select
               value={form.defaultSort.column}
               onChange={(e) =>
@@ -321,7 +340,7 @@ export function Settings() {
               <option value="cost">Cost</option>
             </select>
           </Field>
-          <Field label="Default sort direction">
+          <Field label="Default sort direction" error={fieldErrors['defaultSort.direction']}>
             <RadioGroup
               options={[
                 { label: 'Asc', value: 'asc' },
@@ -331,7 +350,11 @@ export function Settings() {
               onChange={(v) => update('defaultSort', { ...form.defaultSort, direction: v })}
             />
           </Field>
-          <Field label="Page size" description="Sessions per page (25-500)">
+          <Field
+            label="Page size"
+            description="Sessions per page (25-500)"
+            error={fieldErrors['pageSize']}
+          >
             <input
               type="number"
               min={25}
@@ -347,7 +370,11 @@ export function Settings() {
           <Field label="Auto-follow" description="Auto-scroll to new messages">
             <Toggle checked={form.autoFollow} onChange={(v) => update('autoFollow', v)} />
           </Field>
-          <Field label="Messages per page" description="Messages loaded per page (25-500)">
+          <Field
+            label="Messages per page"
+            description="Messages loaded per page (25-500)"
+            error={fieldErrors['messagesPerPage']}
+          >
             <input
               type="number"
               min={25}
@@ -360,7 +387,11 @@ export function Settings() {
         </Section>
 
         <Section title="Live Updates">
-          <Field label="Refresh interval" description="Polling interval for session updates">
+          <Field
+            label="Refresh interval"
+            description="Polling interval for session updates"
+            error={fieldErrors['refreshInterval']}
+          >
             <select
               value={form.refreshInterval}
               onChange={(e) => update('refreshInterval', parseInt(e.target.value))}
@@ -373,7 +404,11 @@ export function Settings() {
               ))}
             </select>
           </Field>
-          <Field label="Recent threshold" description="How long a session is considered 'recent'">
+          <Field
+            label="Recent threshold"
+            description="How long a session is considered 'recent'"
+            error={fieldErrors['recentThreshold']}
+          >
             <select
               value={form.recentThreshold}
               onChange={(e) => update('recentThreshold', parseInt(e.target.value))}

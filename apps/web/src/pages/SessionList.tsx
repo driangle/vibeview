@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useSWR from 'swr';
-import { fetcher } from '../api';
+import { ApiError, fetcher } from '../api';
 import { DateRangeFilter } from '../components/DateRangeFilter';
 import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
@@ -139,6 +139,7 @@ export function SessionList() {
     data: paginated,
     error,
     isLoading,
+    mutate,
   } = useSWR<PaginatedSessions>(apiUrl, fetcher, {
     refreshInterval: settings.refreshInterval,
     keepPreviousData: true,
@@ -298,9 +299,18 @@ export function SessionList() {
     <div className="min-h-screen bg-bg p-6 md:p-10">
       <div className="mx-auto max-w-7xl space-y-6">
         {error && (
-          <p className="text-destructive text-sm">
-            Failed to load sessions. Is the server running?
-          </p>
+          <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <p className="text-destructive text-sm">
+              Failed to load sessions
+              {error instanceof ApiError ? ` (HTTP ${error.status})` : ''}. Is the server running?
+            </p>
+            <button
+              onClick={() => mutate()}
+              className="shrink-0 rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-fg hover:bg-muted transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         )}
 
         {/* Stats */}

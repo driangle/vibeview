@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { ActivityState, MessageResponse } from '../types';
 
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000];
 
 export function useSessionStream(sessionId: string | undefined) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  const [streamError, setStreamError] = useState<string | null>(null);
   // Server-pushed activity state (from idle decay / process liveness checks).
   const [serverActivityState, setServerActivityState] = useState<ActivityState | null>(null);
   const seenUUIDs = useRef(new Set<string>());
@@ -63,9 +64,18 @@ export function useSessionStream(sessionId: string | undefined) {
         // Keep-alive; no action needed.
       });
 
+      es.addEventListener('stream_error', (e) => {
+        try {
+          const data = JSON.parse((e as MessageEvent).data);
+          setStreamError(data.error ?? 'Unknown stream error');
+        } catch {
+          setStreamError('Unknown stream error');
+        }
+      });
+
       es.onerror = () => {
         es.close();
-        setStatus('disconnected');
+        setStatus('reconnecting');
         const delay = RECONNECT_DELAYS[Math.min(retryCount.current, RECONNECT_DELAYS.length - 1)];
         retryCount.current++;
         retryTimer = setTimeout(connect, delay);
@@ -91,6 +101,7 @@ export function useSessionStream(sessionId: string | undefined) {
   return {
     streamedMessages: messages,
     connectionStatus: status,
+    streamError,
     serverActivityState,
     addInitialUUIDs,
   };

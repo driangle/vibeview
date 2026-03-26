@@ -1,7 +1,7 @@
 ---
 id: "audit-010"
 title: "Improve error display, connection status, and failure mode UX"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: improvement
@@ -43,9 +43,9 @@ Cannot adjust verbosity without restarting.
 
 ## Acceptance Criteria
 
-- [ ] Show error details with HTTP status and retry button on API failures
-- [ ] Warn users when tool results are missing: "Some tool outputs are missing"
-- [ ] Display connection status badge (Live/Reconnecting/Offline) in SessionView
-- [ ] Surface skipped line count from backend to frontend
-- [ ] Add field-level validation errors in Settings UI
-- [ ] Log tailer errors and notify clients via SSE error event
+- [x] Show error details with HTTP status and retry button on API failures
+- [x] Warn users when tool results are missing: "Some tool outputs are missing"
+- [x] Display connection status badge (Live/Reconnecting/Offline) in SessionView
+- [x] Surface skipped line count from backend to frontend
+- [x] Add field-level validation errors in Settings UI
+- [x] Log tailer errors and notify clients via SSE error event

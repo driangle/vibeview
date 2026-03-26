@@ -136,6 +136,42 @@ func Validate(s Settings) error {
 	return nil
 }
 
+// ValidateFields checks settings and returns per-field error messages.
+// Returns nil when all fields are valid.
+func ValidateFields(s Settings) map[string]string {
+	errs := map[string]string{}
+
+	if !validThemes[s.Theme] {
+		errs["theme"] = fmt.Sprintf("must be one of: light, dark, system (got %q)", s.Theme)
+	}
+	if !validSortColumns[s.DefaultSort.Column] {
+		errs["defaultSort.column"] = fmt.Sprintf("must be one of: date, name, directory, messages, tokens, cost (got %q)", s.DefaultSort.Column)
+	}
+	if !validSortDirections[s.DefaultSort.Direction] {
+		errs["defaultSort.direction"] = fmt.Sprintf("must be one of: asc, desc (got %q)", s.DefaultSort.Direction)
+	}
+	if s.PageSize < 25 || s.PageSize > 500 {
+		errs["pageSize"] = fmt.Sprintf("must be 25–500 (got %d)", s.PageSize)
+	}
+	if !validDateFormats[s.DateFormat] {
+		errs["dateFormat"] = fmt.Sprintf("must be one of: relative, absolute (got %q)", s.DateFormat)
+	}
+	if s.RefreshInterval < 1000 || s.RefreshInterval > 60000 {
+		errs["refreshInterval"] = fmt.Sprintf("must be 1000–60000 (got %d)", s.RefreshInterval)
+	}
+	if s.MessagesPerPage < 25 || s.MessagesPerPage > 500 {
+		errs["messagesPerPage"] = fmt.Sprintf("must be 25–500 (got %d)", s.MessagesPerPage)
+	}
+	if s.RecentThreshold < 60000 || s.RecentThreshold > 3600000 {
+		errs["recentThreshold"] = fmt.Sprintf("must be 60000–3600000 (got %d)", s.RecentThreshold)
+	}
+
+	if len(errs) == 0 {
+		return nil
+	}
+	return errs
+}
+
 // MergeJSON applies only the fields present in partialJSON onto base.
 // Fields not included in the JSON are left unchanged.
 func MergeJSON(base Settings, partialJSON []byte) (Settings, error) {

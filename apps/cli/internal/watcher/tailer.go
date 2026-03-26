@@ -3,12 +3,14 @@ package watcher
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"sync"
 	"sync/atomic"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/logutil"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -18,6 +20,7 @@ type Tailer struct {
 	offset  atomic.Int64
 	watcher *fsnotify.Watcher
 	msgCh   chan claude.Message
+	errCh   chan error
 	done    chan struct{}
 	once    sync.Once
 }
@@ -44,6 +47,7 @@ func NewTailer(path string) (*Tailer, error) {
 		path:    path,
 		watcher: w,
 		msgCh:   make(chan claude.Message, 64),
+		errCh:   make(chan error, 8),
 		done:    make(chan struct{}),
 	}
 	t.offset.Store(info.Size())
@@ -57,6 +61,11 @@ func (t *Tailer) Messages() <-chan claude.Message {
 	return t.msgCh
 }
 
+// Errors returns a channel that receives tailer errors (file read, seek, scan failures).
+func (t *Tailer) Errors() <-chan error {
+	return t.errCh
+}
+
 // Close stops the tailer and releases resources.
 func (t *Tailer) Close() error {
 	t.once.Do(func() {
@@ -67,6 +76,7 @@ func (t *Tailer) Close() error {
 
 func (t *Tailer) loop() {
 	defer close(t.msgCh)
+	defer close(t.errCh)
 
 	for {
 		select {
@@ -79,23 +89,36 @@ func (t *Tailer) loop() {
 			if event.Has(fsnotify.Write) {
 				t.readNewLines()
 			}
-		case _, ok := <-t.watcher.Errors:
+		case err, ok := <-t.watcher.Errors:
 			if !ok {
 				return
 			}
+			logutil.Warnf("tailer: fsnotify error for %s: %v", t.path, err)
+			t.sendError(fmt.Errorf("file watch error: %w", err))
 		}
+	}
+}
+
+func (t *Tailer) sendError(err error) {
+	select {
+	case t.errCh <- err:
+	default:
 	}
 }
 
 func (t *Tailer) readNewLines() {
 	f, err := os.Open(t.path)
 	if err != nil {
+		logutil.Warnf("tailer: failed to open %s: %v", t.path, err)
+		t.sendError(fmt.Errorf("failed to open session file: %w", err))
 		return
 	}
 	defer f.Close()
 
 	currentOffset := t.offset.Load()
 	if _, err := f.Seek(currentOffset, io.SeekStart); err != nil {
+		logutil.Warnf("tailer: failed to seek %s: %v", t.path, err)
+		t.sendError(fmt.Errorf("failed to seek session file: %w", err))
 		return
 	}
 
@@ -120,7 +143,9 @@ func (t *Tailer) readNewLines() {
 		}
 	}
 
-	if scanner.Err() != nil {
+	if err := scanner.Err(); err != nil {
+		logutil.Warnf("tailer: scanner error for %s: %v", t.path, err)
+		t.sendError(fmt.Errorf("scanner error: %w", err))
 		return // keep old offset; retry on next write event
 	}
 
