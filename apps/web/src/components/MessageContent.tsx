@@ -1,17 +1,36 @@
 import { useState, useCallback } from 'react';
 import Markdown from 'react-markdown';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+import type { Options as RehypeSanitizeOptions } from 'rehype-sanitize';
 import { CodeBlock } from './CodeBlock';
 import { RawJsonModal } from './RawJsonModal';
 import type { MessageSegment } from './processMessageContent';
 import type { MessageResponse } from '../types';
+
+const sanitizeSchema: RehypeSanitizeOptions = {
+  ...defaultSchema,
+  tagNames: (defaultSchema.tagNames ?? []).filter(
+    (tag) => !['iframe', 'svg', 'path', 'rect', 'circle', 'line', 'video', 'audio'].includes(tag),
+  ),
+  attributes: Object.fromEntries(
+    Object.entries(defaultSchema.attributes ?? {}).map(([tag, attrs]) => [
+      tag,
+      (attrs ?? []).filter((attr) => {
+        const name = typeof attr === 'string' ? attr : attr[0];
+        return !/^on/i.test(String(name));
+      }),
+    ]),
+  ),
+};
 
 function TextSegment({ content }: { content: string }) {
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
       <Markdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
+        rehypePlugins={[[rehypeSanitize, sanitizeSchema]]}
         components={{
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');

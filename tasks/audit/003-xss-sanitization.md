@@ -1,7 +1,7 @@
 ---
 id: "audit-003"
 title: "Add XSS sanitization to markdown and HTML rendering"
-status: pending
+status: completed
 priority: high
 effort: small
 type: bug
@@ -29,7 +29,7 @@ Content in `<pre>` tag without explicit escaping (React escapes by default but s
 
 ## Acceptance Criteria
 
-- [ ] Add `rehype-sanitize` plugin to react-markdown
-- [ ] Remove `iframe`, `svg`, `path`, `rect`, `circle`, `line`, `video`, `audio` from HTML tag whitelist
-- [ ] Strip event handler attributes (`onerror`, `onload`, `onclick`, etc.) from allowed tags
-- [ ] Verify thinking blocks are safely rendered
+- [x] Add `rehype-sanitize` plugin to react-markdown
+- [x] Remove `iframe`, `svg`, `path`, `rect`, `circle`, `line`, `video`, `audio` from HTML tag whitelist
+- [x] Strip event handler attributes (`onerror`, `onload`, `onclick`, etc.) from allowed tags
+- [x] Verify thinking blocks are safely rendered
