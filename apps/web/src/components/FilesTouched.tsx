@@ -1,11 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { FileOperation } from './FileViewer';
 import { SidebarSection, LocateButton } from './SessionInsights';
-import type { ContentBlock, MessageResponse } from '../types';
-import { extractFiles, resolveFileOperations } from '../lib/extractors';
+import type { ContentBlock, SessionInsights } from '../types';
+import { resolveFileOperations } from '../lib/extractors';
 
 interface FilesTouchedProps {
-  messages: MessageResponse[];
+  files: SessionInsights['files'];
   toolResults: Map<string, ContentBlock>;
   onFileClick: (filePath: string, operations: FileOperation[]) => void;
   onNavigateToMessage: (uuid: string) => void;
@@ -110,12 +110,12 @@ function FileGroup({
 }
 
 export function FilesTouched({
-  messages,
+  files,
   toolResults,
   onFileClick,
   onNavigateToMessage,
 }: FilesTouchedProps) {
-  const { categories, entries } = useMemo(() => extractFiles(messages), [messages]);
+  const { categories, entries } = files;
 
   // Map each file path to the first message UUID that touched it
   const fileToUuid = useMemo(() => {

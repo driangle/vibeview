@@ -66,19 +66,14 @@ function getMessageText(message: MessageResponse): string {
   return '';
 }
 
-function extractSkillExpansionName(message: MessageResponse): string | null {
+function extractSkillNameFromText(message: MessageResponse): string {
   const text = getMessageText(message);
   const match = text.match(/^Base directory for this skill:.*\/skills\/([^\s/]+)/);
-  return match ? match[1] : null;
+  return match ? match[1] : 'unknown';
 }
 
-function SkillLoadedMessage({
-  message,
-  skillName,
-}: {
-  message: MessageResponse;
-  skillName: string;
-}) {
+function SkillLoadedMessage({ message }: { message: MessageResponse }) {
+  const skillName = extractSkillNameFromText(message);
   const [expanded, setExpanded] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
 
@@ -266,12 +261,9 @@ export function MessageBubble({
       return null;
     }
 
-    // Skill expansion messages (isMeta user messages injected by the harness)
-    if (message.isMeta) {
-      const skillName = extractSkillExpansionName(message);
-      if (skillName) {
-        return <SkillLoadedMessage message={message} skillName={skillName} />;
-      }
+    // Skill expansion messages (classified by the API)
+    if (message.messageKind === 'skill-expansion') {
+      return <SkillLoadedMessage message={message} />;
     }
 
     return <UserMessage message={message} />;

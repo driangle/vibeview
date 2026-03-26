@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/insights"
 	"github.com/driangle/vibeview/internal/pidcheck"
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/session"
@@ -323,10 +324,12 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		msgResponses = append(msgResponses, toMessageResponse(msg))
 	}
 
+	extracted := insights.Extract(messages)
 	resp := SessionDetailResponse{
 		SessionResponse: toSessionResponse(*meta),
 		FilePath:        path,
 		Messages:        msgResponses,
+		Insights:        &extracted,
 	}
 	writeJSON(w, http.StatusOK, resp)
 }
@@ -525,8 +528,9 @@ type SearchResponse struct {
 // SessionDetailResponse is the API representation of a single session with messages.
 type SessionDetailResponse struct {
 	SessionResponse
-	FilePath string            `json:"filePath"`
-	Messages []MessageResponse `json:"messages"`
+	FilePath string                    `json:"filePath"`
+	Messages []MessageResponse         `json:"messages"`
+	Insights *insights.SessionInsights `json:"insights,omitempty"`
 }
 
 // MessageResponse is the API representation of a single message.
@@ -535,6 +539,7 @@ type MessageResponse struct {
 	Type        string             `json:"type"`
 	Timestamp   string             `json:"timestamp"`
 	IsMeta      bool               `json:"isMeta,omitempty"`
+	MessageKind string             `json:"messageKind,omitempty"`
 	Message     *claude.APIMessage `json:"message,omitempty"`
 	Content     string             `json:"content,omitempty"`
 	Data        map[string]any     `json:"data,omitempty"`
@@ -564,6 +569,7 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 		Type:        string(msg.Type),
 		Timestamp:   msToISO(msg.Timestamp.Int64()),
 		IsMeta:      msg.IsMeta,
+		MessageKind: insights.ClassifyMessageKind(msg),
 		Message:     msg.Message,
 		Content:     msg.Content,
 		Data:        msg.Data,

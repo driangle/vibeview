@@ -1,14 +1,6 @@
-import { useState, useMemo } from 'react';
-import type { ContentBlock, MessageResponse } from '../types';
-import {
-  extractToolCounts,
-  extractBashCommands,
-  extractErrors,
-  extractWorktrees,
-  extractSkills,
-  resolveResultText,
-} from '../lib/extractors';
-import type { SubagentInfo } from '../lib/extractors';
+import { useState } from 'react';
+import type { ContentBlock, SessionInsights } from '../types';
+import { resolveResultText } from '../lib/extractors';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -99,8 +91,8 @@ export function SidebarSection({
   );
 }
 
-export function ToolUsageSummary({ messages }: { messages: MessageResponse[] }) {
-  const toolCounts = useMemo(() => extractToolCounts(messages), [messages]);
+export function ToolUsageSummary({ tools }: { tools: SessionInsights['tools'] }) {
+  const toolCounts = tools;
 
   if (toolCounts.length === 0) return null;
 
@@ -127,14 +119,12 @@ export function ToolUsageSummary({ messages }: { messages: MessageResponse[] }) 
 }
 
 export function SkillsSummary({
-  messages,
+  skills,
   onNavigateToMessage,
 }: {
-  messages: MessageResponse[];
+  skills: SessionInsights['skills'];
   onNavigateToMessage: (uuid: string) => void;
 }) {
-  const skills = useMemo(() => extractSkills(messages), [messages]);
-
   if (skills.length === 0) return null;
 
   const total = skills.reduce((s, t) => s + t.count, 0);
@@ -157,17 +147,16 @@ export function SkillsSummary({
 }
 
 export function BashCommandsList({
-  messages,
+  commands,
   toolResults,
   onCommandClick,
   onNavigateToMessage,
 }: {
-  messages: MessageResponse[];
+  commands: SessionInsights['commands'];
   toolResults: Map<string, ContentBlock>;
   onCommandClick: (command: string, output: string | null) => void;
   onNavigateToMessage: (uuid: string) => void;
 }) {
-  const commands = useMemo(() => extractBashCommands(messages), [messages]);
   const [expanded, setExpanded] = useState(false);
 
   if (commands.length === 0) return null;
@@ -207,15 +196,12 @@ export function BashCommandsList({
 }
 
 export function ErrorsSummary({
-  messages,
-  toolResults,
+  errors,
   onNavigateToMessage,
 }: {
-  messages: MessageResponse[];
-  toolResults: Map<string, ContentBlock>;
+  errors: SessionInsights['errors'];
   onNavigateToMessage: (uuid: string) => void;
 }) {
-  const errors = useMemo(() => extractErrors(messages, toolResults), [messages, toolResults]);
   const [expanded, setExpanded] = useState(false);
 
   if (errors.length === 0) return null;
@@ -254,17 +240,19 @@ export function ErrorsSummary({
   );
 }
 
+type SubagentEntry = SessionInsights['subagents'][number];
+
 function AgentCard({
   agent,
   onNavigateToMessage,
 }: {
-  agent: SubagentInfo;
+  agent: SubagentEntry;
   onNavigateToMessage: (uuid: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const prompt = agent.prompt || 'Agent';
   const preview = prompt.length > 80 ? prompt.slice(0, 80) + '...' : prompt;
-  const turnCount = agent.source === 'agent_progress' ? agent.turns.length : 1;
+  const turnCount = agent.source === 'agent_progress' ? (agent.turnCount ?? 1) : 1;
 
   return (
     <div className="bg-card border border-border rounded-md overflow-hidden group">
@@ -308,12 +296,12 @@ export function SubagentsSummary({
   subagents,
   onNavigateToMessage,
 }: {
-  subagents: SubagentInfo[];
+  subagents: SessionInsights['subagents'];
   onNavigateToMessage: (uuid: string) => void;
 }) {
   if (subagents.length === 0) return null;
 
-  const turnCounts = subagents.map((a) => (a.source === 'agent_progress' ? a.turns.length : 1));
+  const turnCounts = subagents.map((a) => (a.source === 'agent_progress' ? (a.turnCount ?? 1) : 1));
   const totalTurns = turnCounts.reduce((s, c) => s + c, 0);
   const sorted = [...turnCounts].sort((a, b) => a - b);
   const medianTurns =
@@ -343,16 +331,12 @@ export function SubagentsSummary({
 }
 
 export function WorktreesSummary({
-  messages,
-  toolResults,
+  worktrees,
   onNavigateToMessage,
 }: {
-  messages: MessageResponse[];
-  toolResults: Map<string, ContentBlock>;
+  worktrees: SessionInsights['worktrees'];
   onNavigateToMessage: (uuid: string) => void;
 }) {
-  const worktrees = useMemo(() => extractWorktrees(messages, toolResults), [messages, toolResults]);
-
   if (worktrees.length === 0) return null;
 
   return (

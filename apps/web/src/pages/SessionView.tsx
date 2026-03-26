@@ -20,8 +20,7 @@ import {
   WorktreesSummary,
 } from '../components/SessionInsights';
 import type { FileOperation } from '../components/FileViewer';
-import type { ContentBlock, MessageResponse, UsageTotals } from '../types';
-import type { SubagentInfo } from '../lib/extractors';
+import type { ContentBlock, MessageResponse, SessionInsights, UsageTotals } from '../types';
 
 function usePrintMode() {
   const [printing, setPrinting] = useState(false);
@@ -132,9 +131,8 @@ function SessionSidebar({
   model,
   timestamp,
   sessionId,
-  messages,
+  insights,
   toolResults,
-  subagents,
   onNavigateToMessage,
 }: {
   filePath?: string;
@@ -142,9 +140,8 @@ function SessionSidebar({
   model: string;
   timestamp: string;
   sessionId: string;
-  messages: MessageResponse[];
+  insights: SessionInsights | null;
   toolResults: Map<string, ContentBlock>;
-  subagents: SubagentInfo[];
   onNavigateToMessage: (uuid: string) => void;
 }) {
   const [viewerFile, setViewerFile] = useState<{
@@ -206,43 +203,53 @@ function SessionSidebar({
         )}
 
         {/* Files Touched */}
-        <FilesTouched
-          messages={messages}
-          toolResults={toolResults}
-          onFileClick={handleFileClick}
-          onNavigateToMessage={onNavigateToMessage}
-        />
+        {insights && (
+          <FilesTouched
+            files={insights.files}
+            toolResults={toolResults}
+            onFileClick={handleFileClick}
+            onNavigateToMessage={onNavigateToMessage}
+          />
+        )}
 
         {/* Tool Usage */}
-        <ToolUsageSummary messages={messages} />
+        {insights && <ToolUsageSummary tools={insights.tools} />}
 
         {/* Skills */}
-        <SkillsSummary messages={messages} onNavigateToMessage={onNavigateToMessage} />
+        {insights && (
+          <SkillsSummary skills={insights.skills} onNavigateToMessage={onNavigateToMessage} />
+        )}
 
         {/* Bash Commands */}
-        <BashCommandsList
-          messages={messages}
-          toolResults={toolResults}
-          onCommandClick={handleCommandClick}
-          onNavigateToMessage={onNavigateToMessage}
-        />
+        {insights && (
+          <BashCommandsList
+            commands={insights.commands}
+            toolResults={toolResults}
+            onCommandClick={handleCommandClick}
+            onNavigateToMessage={onNavigateToMessage}
+          />
+        )}
 
         {/* Worktrees */}
-        <WorktreesSummary
-          messages={messages}
-          toolResults={toolResults}
-          onNavigateToMessage={onNavigateToMessage}
-        />
+        {insights && (
+          <WorktreesSummary
+            worktrees={insights.worktrees}
+            onNavigateToMessage={onNavigateToMessage}
+          />
+        )}
 
         {/* Subagents */}
-        <SubagentsSummary subagents={subagents} onNavigateToMessage={onNavigateToMessage} />
+        {insights && (
+          <SubagentsSummary
+            subagents={insights.subagents}
+            onNavigateToMessage={onNavigateToMessage}
+          />
+        )}
 
         {/* Errors */}
-        <ErrorsSummary
-          messages={messages}
-          toolResults={toolResults}
-          onNavigateToMessage={onNavigateToMessage}
-        />
+        {insights && (
+          <ErrorsSummary errors={insights.errors} onNavigateToMessage={onNavigateToMessage} />
+        )}
 
         {/* Metadata */}
         <SidebarSection id="metadata" icon="info" title="Metadata">
@@ -319,7 +326,7 @@ export function SessionView() {
     liveCustomTitle,
     liveActivityState,
     displayMessages,
-    subagents,
+    insights,
     agentGroups,
     agentGroupFirstIds,
   } = useSessionData(id);
@@ -550,9 +557,8 @@ export function SessionView() {
         model={session.model}
         timestamp={session.timestamp}
         sessionId={session.id}
-        messages={displayMessages}
+        insights={insights}
         toolResults={toolResults}
-        subagents={subagents}
         onNavigateToMessage={navigateToMessage}
       />
     </div>

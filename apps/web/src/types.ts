@@ -67,6 +67,7 @@ export interface MessageResponse {
     | 'custom-title';
   timestamp: string;
   isMeta?: boolean;
+  messageKind?: string;
   message?: APIMessage;
   content?: string;
   data?: Record<string, unknown>;
@@ -79,9 +80,39 @@ export interface PaginatedSessions {
   total: number;
 }
 
+export interface SessionInsights {
+  tools: { name: string; count: number }[];
+  commands: { command: string; toolUseId: string; messageUuid: string }[];
+  errors: { toolName: string; snippet: string; messageUuid: string }[];
+  files: {
+    categories: { written: string[]; read: string[] };
+    entries: {
+      toolUseId: string;
+      toolName: string;
+      filePath: string;
+      input: Record<string, unknown>;
+      timestamp: string;
+      messageUuid: string;
+    }[];
+  };
+  worktrees: { name: string; path: string; branch: string; messageUuid: string }[];
+  skills: { name: string; count: number; messageUuid: string }[];
+  subagents: {
+    source: string;
+    agentId: string;
+    prompt: string;
+    description: string;
+    firstMessageUuid: string;
+    toolUseId?: string;
+    resultText?: string;
+    turnCount?: number;
+  }[];
+}
+
 export interface SessionDetail extends Session {
   filePath: string;
   messages: MessageResponse[];
+  insights?: SessionInsights;
 }
 
 export interface SearchResult {

@@ -228,6 +228,7 @@ type ContentBlock struct {
 	// tool_result block
 	ToolUseID string `json:"tool_use_id,omitempty"`
 	Content   any    `json:"content,omitempty"`
+	IsError   bool   `json:"is_error,omitempty"`
 }
 
 // Usage holds token usage data from the API response.

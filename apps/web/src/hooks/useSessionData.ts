@@ -10,8 +10,6 @@ import type {
 } from '../types';
 import { calculateCost } from '../pricing';
 import { useSessionStream } from './useSessionStream';
-import { extractSubagents } from '../lib/extractors';
-import type { SubagentInfo } from '../lib/extractors';
 
 function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
@@ -110,24 +108,28 @@ export function useSessionData(id: string | undefined) {
     return undefined;
   }, [streamedMessages, serverActivityState]);
 
-  // Extract subagent info from both old (agent_progress) and new (Agent tool_use) formats.
-  const subagents = useMemo<SubagentInfo[]>(
-    () => extractSubagents(allMessages, toolResults),
-    [allMessages, toolResults],
-  );
+  // Use API-provided insights when available.
+  const insights = session?.insights ?? null;
 
   // Keep agentGroups/agentGroupFirstIds for AgentProgressWidget (old-format rendering).
   const { agentGroups, agentGroupFirstIds } = useMemo(() => {
     const groups = new Map<string, MessageResponse[]>();
     const firstIds = new Set<string>();
-    for (const agent of subagents) {
-      if (agent.source === 'agent_progress') {
-        groups.set(agent.agentId, agent.turns);
-        firstIds.add(agent.firstMessageUuid);
+    // Build groups from progress messages for the AgentProgressWidget.
+    for (const msg of allMessages) {
+      if (msg.type !== 'progress' || msg.data?.type !== 'agent_progress') continue;
+      const agentId = String(msg.data.agentId ?? '');
+      if (!agentId) continue;
+      const existing = groups.get(agentId);
+      if (existing) {
+        existing.push(msg);
+      } else {
+        groups.set(agentId, [msg]);
+        firstIds.add(msg.uuid);
       }
     }
     return { agentGroups: groups, agentGroupFirstIds: firstIds };
-  }, [subagents]);
+  }, [allMessages]);
 
   // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
@@ -146,7 +148,7 @@ export function useSessionData(id: string | undefined) {
     liveCustomTitle,
     liveActivityState,
     displayMessages,
-    subagents,
+    insights,
     agentGroups,
     agentGroupFirstIds,
   };

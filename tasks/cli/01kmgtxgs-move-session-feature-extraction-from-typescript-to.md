@@ -1,7 +1,7 @@
 ---
 title: "Move session feature extraction from TypeScript to Go API"
 id: "01kmgtxgs"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["refactor", "api", "backend"]
@@ -16,19 +16,19 @@ Move session feature extraction and parsing logic from the frontend (`apps/web/s
 
 ## Tasks
 
-- [ ] Define Go structs for each extraction result (tool counts, bash commands, errors, worktrees, subagents, skills, files touched)
-- [ ] Add a `SessionInsights` (or similar) field to the session detail API response
-- [ ] Implement tool count extraction in Go (count tool_use blocks by name)
-- [ ] Implement bash command extraction in Go (Bash tool_use blocks with command input)
-- [ ] Implement error extraction in Go (tool_result blocks with is_error flag)
-- [ ] Implement worktree extraction in Go (EnterWorktree tool_use blocks, parse result text)
-- [ ] Implement subagent extraction in Go (Agent tool_use blocks and agent_progress messages)
-- [ ] Implement skill extraction in Go (Skill tool_use blocks and `<command-name>` user messages)
-- [ ] Classify message types in Go: detect skill expansion messages (`isMeta` + "Base directory for this skill:" content) and expose a `messageKind` field (e.g. `skill-expansion`) so the frontend doesn't need content-based detection logic
-- [ ] Implement files touched extraction in Go (Read/Write/Edit tool_use blocks)
-- [ ] Update the frontend to consume pre-extracted data from the API instead of running extractors
-- [ ] Remove the TypeScript extractors that are now handled server-side
-- [ ] Remove frontend content-based detection of skill expansion messages (`extractSkillExpansionName` in MessageBubble.tsx) — replace with API-provided `messageKind`
+- [x] Define Go structs for each extraction result (tool counts, bash commands, errors, worktrees, subagents, skills, files touched)
+- [x] Add a `SessionInsights` (or similar) field to the session detail API response
+- [x] Implement tool count extraction in Go (count tool_use blocks by name)
+- [x] Implement bash command extraction in Go (Bash tool_use blocks with command input)
+- [x] Implement error extraction in Go (tool_result blocks with is_error flag)
+- [x] Implement worktree extraction in Go (EnterWorktree tool_use blocks, parse result text)
+- [x] Implement subagent extraction in Go (Agent tool_use blocks and agent_progress messages)
+- [x] Implement skill extraction in Go (Skill tool_use blocks and `<command-name>` user messages)
+- [x] Classify message types in Go: detect skill expansion messages (`isMeta` + "Base directory for this skill:" content) and expose a `messageKind` field (e.g. `skill-expansion`) so the frontend doesn't need content-based detection logic
+- [x] Implement files touched extraction in Go (Read/Write/Edit tool_use blocks)
+- [x] Update the frontend to consume pre-extracted data from the API instead of running extractors
+- [x] Remove the TypeScript extractors that are now handled server-side
+- [x] Remove frontend content-based detection of skill expansion messages (`extractSkillExpansionName` in MessageBubble.tsx) — replace with API-provided `messageKind`
 
 ## Acceptance Criteria
 

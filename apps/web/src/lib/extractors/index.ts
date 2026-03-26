@@ -22,14 +22,5 @@ export {
 } from './files';
 export type { FileContentEntry, FilesByCategory, FilesResult } from './files';
 
-// Worktrees
-export { extractWorktrees } from './worktrees';
-export type { WorktreeEntry } from './worktrees';
-
-// Skills
-export { extractSkills } from './skills';
-export type { SkillEntry } from './skills';
-
 // Subagents
-export { extractSubagents, hasSubagents } from './subagents';
-export type { SubagentInfo, SubagentFromProgress, SubagentFromToolUse } from './subagents';
+export { hasSubagents } from './subagents';
