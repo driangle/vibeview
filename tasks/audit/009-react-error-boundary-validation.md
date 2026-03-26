@@ -1,7 +1,7 @@
 ---
 id: "audit-009"
 title: "Add React Error Boundaries and runtime data validation"
-status: pending
+status: completed
 priority: critical
 effort: medium
 type: bug
@@ -37,8 +37,8 @@ No discriminated union validation at runtime for content blocks.
 
 ## Acceptance Criteria
 
-- [ ] Create ErrorBoundary component wrapping main routes and SessionView
-- [ ] Wrap `JSON.parse()` calls in useSessionStream.ts with try-catch
-- [ ] Add Zod or similar runtime validation for critical API response types
-- [ ] Fix `writeJSON()` to log errors on encoding failure
-- [ ] Add runtime type guards for ContentBlock type discrimination
+- [x] Create ErrorBoundary component wrapping main routes and SessionView
+- [x] Wrap `JSON.parse()` calls in useSessionStream.ts with try-catch
+- [x] Add Zod or similar runtime validation for critical API response types
+- [x] Fix `writeJSON()` to log errors on encoding failure
+- [x] Add runtime type guards for ContentBlock type discrimination

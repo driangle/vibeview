@@ -33,7 +33,13 @@ export function useSessionStream(sessionId: string | undefined) {
       };
 
       es.addEventListener('message', (e) => {
-        const msg: MessageResponse = JSON.parse(e.data);
+        let msg: MessageResponse;
+        try {
+          msg = JSON.parse(e.data);
+        } catch {
+          console.warn('Malformed SSE message data, skipping:', e.data);
+          return;
+        }
         if (seenUUIDs.current.has(msg.uuid)) return;
         seenUUIDs.current.add(msg.uuid);
         // A new message invalidates any server-pushed state — the client
@@ -43,7 +49,13 @@ export function useSessionStream(sessionId: string | undefined) {
       });
 
       es.addEventListener('activity_state', (e) => {
-        const data: { state: ActivityState } = JSON.parse(e.data);
+        let data: { state: ActivityState };
+        try {
+          data = JSON.parse(e.data);
+        } catch {
+          console.warn('Malformed SSE activity_state data, skipping:', e.data);
+          return;
+        }
         setServerActivityState(data.state);
       });
 

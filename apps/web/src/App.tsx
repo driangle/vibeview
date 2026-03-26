@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { NavBar } from './components/NavBar';
 import { Footer } from './components/Footer';
 import { SettingsProvider } from './contexts/SettingsContext';
@@ -15,13 +16,15 @@ export function App() {
         <div className="flex h-dvh flex-col bg-bg">
           <NavBar />
           <main className="min-h-0 flex-1 overflow-auto">
-            <Routes>
-              <Route path="/" element={<SessionList />} />
-              <Route path="/directories" element={<DirectoryList />} />
-              <Route path="/session/:id" element={<SessionView />} />
-              <Route path="/activity" element={<UsagePatterns />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/" element={<SessionList />} />
+                <Route path="/directories" element={<DirectoryList />} />
+                <Route path="/session/:id" element={<SessionView />} />
+                <Route path="/activity" element={<UsagePatterns />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </ErrorBoundary>
           </main>
           <Footer />
         </div>
