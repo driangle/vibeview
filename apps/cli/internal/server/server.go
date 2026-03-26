@@ -341,7 +341,11 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := session.ResolveFilePath(s.claudeDir, *meta)
+	path, err := session.ResolveFilePath(s.claudeDir, *meta)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		return
+	}
 	f, err := os.Open(path)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})

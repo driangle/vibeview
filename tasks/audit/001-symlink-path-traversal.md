@@ -1,7 +1,7 @@
 ---
 id: "audit-001"
 title: "Fix symlink following and path traversal vulnerabilities"
-status: pending
+status: completed
 priority: critical
 effort: medium
 type: bug
@@ -32,11 +32,11 @@ History file watcher adds `~/.claude/history.jsonl` without symlink validation.
 
 ## Acceptance Criteria
 
-- [ ] Use `filepath.EvalSymlinks()` in tailer and broker — reject paths resolving outside `~/.claude/`
-- [ ] Validate session ID format: `^[a-zA-Z0-9_-]{1,256}$`
-- [ ] Check `os.Lstat()` on history.jsonl to reject symlinks
-- [ ] Add depth limit (e.g., 10) and symlink skip to `filepath.WalkDir` in standalone discovery
-- [ ] Add tests for symlink and path traversal scenarios
+- [x] Use `filepath.EvalSymlinks()` in tailer and broker — reject paths resolving outside `~/.claude/`
+- [x] Validate session ID format: `^[a-zA-Z0-9_-]{1,256}$`
+- [x] Check `os.Lstat()` on history.jsonl to reject symlinks
+- [x] Add depth limit (e.g., 10) and symlink skip to `filepath.WalkDir` in standalone discovery
+- [x] Add tests for symlink and path traversal scenarios
 
 ## verify
 ```yaml

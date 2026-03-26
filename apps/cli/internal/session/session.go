@@ -12,6 +12,7 @@ import (
 
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/logutil"
+	"github.com/driangle/vibeview/internal/pathutil"
 )
 
 // UsageTotals holds aggregated token and cost data for a session.
@@ -266,7 +267,12 @@ func (idx *Index) enrichRange(claudeDir string, snapshot []SessionMeta, from, to
 				results[i] = result{meta: meta, exists: true, skipped: true}
 				continue
 			}
-			sessionPath := ResolveFilePath(claudeDir, meta)
+			sessionPath, err := ResolveFilePath(claudeDir, meta)
+			if err != nil {
+				logutil.Debugf("session %s has invalid path: %v (removing from index)", meta.SessionID, err)
+				results[i] = result{meta: meta, exists: false}
+				continue
+			}
 			if _, err := os.Stat(sessionPath); err != nil {
 				logutil.Debugf("session %s has no JSONL file at %s (removing from index)", meta.SessionID, sessionPath)
 				results[i] = result{meta: meta, exists: false}
@@ -314,7 +320,10 @@ func (idx *Index) enrichRange(claudeDir string, snapshot []SessionMeta, from, to
 // enrichSession reads a session's JSONL file and populates derived fields.
 // If checker is non-nil, it overrides non-idle states for dead processes.
 func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) SessionMeta {
-	sessionPath := SessionFilePath(claudeDir, meta.Project, meta.SessionID)
+	sessionPath, err := SessionFilePath(claudeDir, meta.Project, meta.SessionID)
+	if err != nil {
+		return meta
+	}
 	f, err := os.Open(sessionPath)
 	if err != nil {
 		return meta
@@ -385,9 +394,13 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 }
 
 // SessionFilePath returns the expected path for a session's JSONL file.
-func SessionFilePath(claudeDir, project, sessionID string) string {
+// Returns an error if the session ID contains unsafe characters.
+func SessionFilePath(claudeDir, project, sessionID string) (string, error) {
+	if err := pathutil.ValidateSessionID(sessionID); err != nil {
+		return "", err
+	}
 	encoded := claude.EncodeProjectPath(project)
-	return filepath.Join(claudeDir, "projects", encoded, sessionID+".jsonl")
+	return filepath.Join(claudeDir, "projects", encoded, sessionID+".jsonl"), nil
 }
 
 // EnrichSession enriches a single session by ID.
@@ -441,16 +454,19 @@ func (idx *Index) FilterByProject(query string) []SessionMeta {
 // ResolveFilePath returns the absolute path for a session's JSONL file.
 // For standalone sessions (FilePath set), it returns FilePath directly.
 // For claude-dir sessions, it computes the path from claudeDir + project + sessionID.
-func ResolveFilePath(claudeDir string, meta SessionMeta) string {
+func ResolveFilePath(claudeDir string, meta SessionMeta) (string, error) {
 	if meta.FilePath != "" {
-		return meta.FilePath
+		return meta.FilePath, nil
 	}
 	return SessionFilePath(claudeDir, meta.Project, meta.SessionID)
 }
 
+const maxWalkDepth = 10
+
 // LoadFromPaths builds an Index from explicit file and directory paths.
 // Directories are walked recursively for *.jsonl files. Files that fail
 // to parse are skipped with a warning on stderr.
+// Symlinks are skipped and directory depth is capped at maxWalkDepth.
 func LoadFromPaths(paths []string) (*Index, error) {
 	var files []string
 	for _, p := range paths {
@@ -459,15 +475,32 @@ func LoadFromPaths(paths []string) (*Index, error) {
 			logutil.Warnf("cannot resolve path %q: %v", p, err)
 			continue
 		}
-		info, err := os.Stat(abs)
+		info, err := os.Lstat(abs)
 		if err != nil {
 			logutil.Warnf("cannot stat %q: %v", abs, err)
 			continue
 		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			logutil.Warnf("skipping symlink %q", abs)
+			continue
+		}
 		if info.IsDir() {
+			baseDepth := strings.Count(abs, string(filepath.Separator))
 			filepath.WalkDir(abs, func(path string, d os.DirEntry, err error) error {
 				if err != nil {
 					return nil
+				}
+				// Skip symlinks to prevent cycles and escaping the directory.
+				if d.Type()&os.ModeSymlink != 0 {
+					if d.IsDir() {
+						return filepath.SkipDir
+					}
+					return nil
+				}
+				// Enforce depth limit.
+				depth := strings.Count(path, string(filepath.Separator)) - baseDepth
+				if d.IsDir() && depth > maxWalkDepth {
+					return filepath.SkipDir
 				}
 				if !d.IsDir() && strings.HasSuffix(d.Name(), ".jsonl") {
 					files = append(files, path)
@@ -519,6 +552,10 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 			sessionID = msg.SessionID
 			break
 		}
+	}
+
+	if err := pathutil.ValidateSessionID(sessionID); err != nil {
+		return SessionMeta{}, fmt.Errorf("unsafe session ID in %q: %w", path, err)
 	}
 
 	meta := SessionMeta{

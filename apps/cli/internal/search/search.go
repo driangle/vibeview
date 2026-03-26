@@ -104,7 +104,10 @@ type contentLine struct {
 }
 
 func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta, query string, queryBytes []byte) (Result, bool) {
-	path := session.ResolveFilePath(claudeDir, meta)
+	path, err := session.ResolveFilePath(claudeDir, meta)
+	if err != nil {
+		return Result{}, false
+	}
 	f, err := os.Open(path)
 	if err != nil {
 		return Result{}, false

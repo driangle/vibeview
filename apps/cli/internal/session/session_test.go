@@ -396,10 +396,29 @@ func TestFilterByProjectPreservesOrder(t *testing.T) {
 }
 
 func TestSessionFilePath(t *testing.T) {
-	path := SessionFilePath("/home/.claude", "/Users/me/project", "abc-123")
+	path, err := SessionFilePath("/home/.claude", "/Users/me/project", "abc-123")
+	if err != nil {
+		t.Fatalf("SessionFilePath: unexpected error: %v", err)
+	}
 	want := "/home/.claude/projects/-Users-me-project/abc-123.jsonl"
 	if path != want {
 		t.Errorf("SessionFilePath: got %q, want %q", path, want)
+	}
+}
+
+func TestSessionFilePathRejectsTraversal(t *testing.T) {
+	bad := []string{
+		"../../../etc/passwd",
+		"foo/bar",
+		"hello world",
+		"",
+		"session.jsonl",
+	}
+	for _, id := range bad {
+		_, err := SessionFilePath("/home/.claude", "/Users/me/project", id)
+		if err == nil {
+			t.Errorf("SessionFilePath(%q) should have returned error", id)
+		}
 	}
 }
 
@@ -507,5 +526,66 @@ func TestDiscoverMissingHistoryFile(t *testing.T) {
 	_, err := Discover(dir, nil)
 	if err == nil {
 		t.Error("expected error for missing history.jsonl")
+	}
+}
+
+func TestLoadFromPathsSkipsSymlinks(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create a real JSONL file.
+	realFile := filepath.Join(dir, "real.jsonl")
+	content := `{"type":"human","message":{"role":"user","content":[{"type":"text","text":"hello"}]},"timestamp":1000}` + "\n"
+	if err := os.WriteFile(realFile, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink to an outside file.
+	outside := t.TempDir()
+	secret := filepath.Join(outside, "secret.jsonl")
+	os.WriteFile(secret, []byte(content), 0644)
+	link := filepath.Join(dir, "evil.jsonl")
+	if err := os.Symlink(secret, link); err != nil {
+		t.Skip("cannot create symlinks")
+	}
+
+	idx, err := LoadFromPaths([]string{dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Only the real file should be loaded, not the symlink.
+	for _, s := range idx.Sessions {
+		if s.FilePath == secret {
+			t.Error("symlinked file should not be loaded")
+		}
+	}
+}
+
+func TestLoadFromPathsDepthLimit(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create a deeply nested JSONL file beyond maxWalkDepth.
+	deep := dir
+	for i := 0; i < maxWalkDepth+5; i++ {
+		deep = filepath.Join(deep, "sub")
+	}
+	if err := os.MkdirAll(deep, 0755); err != nil {
+		t.Fatal(err)
+	}
+	content := `{"type":"human","message":{"role":"user","content":[{"type":"text","text":"deep"}]},"timestamp":1000}` + "\n"
+	deepFile := filepath.Join(deep, "deep.jsonl")
+	if err := os.WriteFile(deepFile, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := LoadFromPaths([]string{dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, s := range idx.Sessions {
+		if s.FilePath == deepFile {
+			t.Error("file beyond depth limit should not be loaded")
+		}
 	}
 }

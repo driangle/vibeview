@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/internal/pathutil"
 	"github.com/driangle/vibeview/internal/session"
 	"github.com/fsnotify/fsnotify"
 )
@@ -168,7 +169,13 @@ func (b *Broker) startTailer(sessionID string) error {
 		return fmt.Errorf("session %s not found in index", sessionID)
 	}
 
-	path := session.ResolveFilePath(b.claudeDir, *meta)
+	path, err := session.ResolveFilePath(b.claudeDir, *meta)
+	if err != nil {
+		return fmt.Errorf("resolve path for %s: %w", sessionID, err)
+	}
+	if _, err := pathutil.SafeResolve(path, b.claudeDir); err != nil {
+		return fmt.Errorf("unsafe path for session %s: %w", sessionID, err)
+	}
 	tailer, err := NewTailer(path)
 	if err != nil {
 		return fmt.Errorf("start tailer for %s: %w", sessionID, err)
@@ -214,9 +221,13 @@ func (b *Broker) startTailer(sessionID string) error {
 
 func (b *Broker) startHistoryWatcher() error {
 	historyPath := filepath.Join(b.claudeDir, "history.jsonl")
-	if _, err := os.Stat(historyPath); err != nil {
+	info, err := os.Lstat(historyPath)
+	if err != nil {
 		// History file doesn't exist yet; skip watching.
 		return nil
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("history file %s is a symlink; refusing to watch", historyPath)
 	}
 
 	w, err := fsnotify.NewWatcher()
@@ -230,8 +241,6 @@ func (b *Broker) startHistoryWatcher() error {
 	}
 
 	b.historyWatcher = w
-
-	info, _ := os.Stat(historyPath)
 	initialSize := info.Size()
 
 	go func() {
