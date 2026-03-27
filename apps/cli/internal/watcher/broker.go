@@ -12,6 +12,7 @@ import (
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/logutil"
 	"github.com/driangle/vibeview/internal/pathutil"
+	"github.com/driangle/vibeview/internal/redact"
 	"github.com/driangle/vibeview/internal/session"
 	"github.com/fsnotify/fsnotify"
 )
@@ -445,9 +446,9 @@ func toMessageEvent(msg claude.Message) messageEvent {
 		Type:        string(msg.Type),
 		Timestamp:   ts,
 		IsMeta:      msg.IsMeta,
-		Message:     msg.Message,
-		Data:        msg.Data,
-		Snapshot:    msg.Snapshot,
+		Message:     redact.RedactAPIMessage(msg.Message),
+		Data:        redact.RedactMapValues(msg.Data),
+		Snapshot:    redact.RedactMapValues(msg.Snapshot),
 		CustomTitle: msg.CustomTitle,
 	}
 }

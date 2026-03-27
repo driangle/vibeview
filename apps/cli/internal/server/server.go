@@ -445,7 +445,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	for _, r := range results {
 		resp.Results = append(resp.Results, SearchResultResponse{
 			Session: toSessionResponse(r.Meta),
-			Snippet: r.Snippet,
+			Snippet: redact.RedactSecrets(r.Snippet),
 		})
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -610,10 +610,10 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 		Timestamp:   msToISO(msg.Timestamp.Int64()),
 		IsMeta:      msg.IsMeta,
 		MessageKind: insights.ClassifyMessageKind(msg),
-		Message:     msg.Message,
-		Content:     msg.Content,
-		Data:        msg.Data,
-		Snapshot:    msg.Snapshot,
+		Message:     redact.RedactAPIMessage(msg.Message),
+		Content:     redact.RedactSecrets(msg.Content),
+		Data:        redact.RedactMapValues(msg.Data),
+		Snapshot:    redact.RedactMapValues(msg.Snapshot),
 		CustomTitle: msg.CustomTitle,
 	}
 }
