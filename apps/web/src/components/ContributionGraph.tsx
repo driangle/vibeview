@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import type { ActivityDay } from '../types';
-import { Tooltip, useTooltip } from './Tooltip';
+import { Tooltip } from './Tooltip';
+import { useTooltip } from './useTooltip';
 
 type ViewMode = 'day' | 'week' | 'month';
 

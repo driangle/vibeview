@@ -135,6 +135,7 @@ export function ConversationSearch({
 
   // Reset active index when results change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting derived state when search results change
     setActiveIndex(0);
   }, [results]);
 

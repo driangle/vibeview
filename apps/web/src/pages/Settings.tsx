@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '../contexts/useSettings';
 import type { Settings as SettingsType, ModelPricing } from '../types';
 
 function applyThemePreview(theme: string) {

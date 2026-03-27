@@ -1,5 +1,6 @@
 import type { ActivityHour } from '../types';
-import { Tooltip, useTooltip } from './Tooltip';
+import { Tooltip } from './Tooltip';
+import { useTooltip } from './useTooltip';
 
 const LEVEL_CLASSES = [
   'bg-secondary',

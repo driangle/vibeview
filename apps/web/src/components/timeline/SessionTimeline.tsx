@@ -70,9 +70,11 @@ export function SessionTimeline({ contentWidth, contentHeight, children }: Sessi
   // Fit to view on first render (once container size is known)
   useEffect(() => {
     if (hasInitialized || containerSize.width === 0 || contentWidth === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time initialization from ResizeObserver measurement
     setTransform(
       computeFitTransform(containerSize.width, containerSize.height, contentWidth, contentHeight),
     );
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasInitialized(true);
   }, [containerSize, contentWidth, contentHeight, hasInitialized]);
 

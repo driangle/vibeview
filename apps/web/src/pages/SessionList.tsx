@@ -6,7 +6,7 @@ import { DateRangeFilter } from '../components/DateRangeFilter';
 import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
 import { SessionTable } from '../components/SessionTable';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '../contexts/useSettings';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSessionFilters } from '../hooks/useSessionFilters';
 import { useSessionSort } from '../hooks/useSessionSort';

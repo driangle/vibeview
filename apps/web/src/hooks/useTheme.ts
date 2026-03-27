@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '../contexts/useSettings';
 
 export type ThemeSetting = 'light' | 'dark' | 'system';
 type ResolvedTheme = 'light' | 'dark';

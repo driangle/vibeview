@@ -1,32 +1,8 @@
-import { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '../api';
 import type { Settings } from '../types';
-
-const defaults: Settings = {
-  theme: 'system',
-  defaultSort: { column: 'date', direction: 'desc' },
-  pageSize: 100,
-  dateFormat: 'relative',
-  autoFollow: false,
-  refreshInterval: 5000,
-  showCost: true,
-  customModelPricing: {},
-  messagesPerPage: 100,
-  recentThreshold: 300000,
-};
-
-interface SettingsContextValue {
-  settings: Settings;
-  updateSettings: (partial: Partial<Settings>) => Promise<void>;
-  isLoaded: boolean;
-}
-
-const SettingsContext = createContext<SettingsContextValue>({
-  settings: defaults,
-  updateSettings: async () => {},
-  isLoaded: false,
-});
+import { defaults, SettingsContext } from './useSettings';
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { data, mutate } = useSWR<Settings>('/api/settings', fetcher);
@@ -66,8 +42,4 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       {children}
     </SettingsContext.Provider>
   );
-}
-
-export function useSettings() {
-  return useContext(SettingsContext);
 }

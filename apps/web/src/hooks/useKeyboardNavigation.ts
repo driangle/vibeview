@@ -26,6 +26,7 @@ export function useKeyboardNavigation({
   // Clamp index when itemCount shrinks
   useEffect(() => {
     if (itemCount === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clamping index to valid range when list size changes
     setSelectedIndex((prev) => Math.min(prev, itemCount - 1));
   }, [itemCount]);
 

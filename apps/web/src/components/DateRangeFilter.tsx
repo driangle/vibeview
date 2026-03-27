@@ -266,7 +266,9 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
     if (open) {
       const fromDate = toDateStr(from);
       const toDate = toDateStr(to);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local pick state with external props on open
       setPickStart(fromDate || null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPickEnd(toDate || null);
       if (to) {
         const d = new Date(Number(to));
@@ -309,7 +311,7 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
       }
       return m - 1;
     });
-  }, []);
+  }, [setRightYear]);
 
   const navigateRight = useCallback(() => {
     setRightMonth((m) => {
@@ -319,7 +321,7 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
       }
       return m + 1;
     });
-  }, []);
+  }, [setRightYear]);
 
   function handleDateClick(ds: string) {
     if (!pickStart || pickEnd) {

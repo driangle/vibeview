@@ -6,7 +6,7 @@ import { CopyableText } from '../components/CopyableText';
 import { Pagination, FollowToggle } from '../components/SessionControls';
 import { WorkingIndicator } from '../components/WorkingIndicator';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '../contexts/useSettings';
 import { ApiError } from '../api';
 import { useSessionData } from '../hooks/useSessionData';
 import { usePrintMode } from '../hooks/usePrintMode';
