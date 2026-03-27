@@ -4,6 +4,7 @@ import type { ActivityState, MessageResponse } from '../types';
 type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000];
+const MAX_RETRIES = RECONNECT_DELAYS.length;
 
 export function useSessionStream(sessionId: string | undefined) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
@@ -75,6 +76,10 @@ export function useSessionStream(sessionId: string | undefined) {
 
       es.onerror = () => {
         es.close();
+        if (retryCount.current >= MAX_RETRIES) {
+          setStatus('disconnected');
+          return;
+        }
         setStatus('reconnecting');
         const delay = RECONNECT_DELAYS[Math.min(retryCount.current, RECONNECT_DELAYS.length - 1)];
         retryCount.current++;

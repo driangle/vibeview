@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import useSWR from 'swr';
 import { fetcher } from '../api';
+import { useBackendStatus } from '../hooks/useBackendStatus';
 import { useTheme } from '../hooks/useTheme';
 import type { AppConfig } from '../types';
+import { ConnectionBadge } from './ConnectionBadge';
 import { Modal } from './Modal';
 
 function ConfigLabel({ config }: { config: AppConfig }) {
@@ -156,6 +158,7 @@ function ThemeToggle() {
 
 export function NavBar() {
   const { data: config } = useSWR<AppConfig>('/api/config', fetcher);
+  const backendStatus = useBackendStatus();
 
   return (
     <nav className="border-b border-border bg-card">
@@ -202,6 +205,7 @@ export function NavBar() {
           Activity
         </NavLink>
         <div className="ml-auto flex items-center gap-2">
+          <ConnectionBadge status={backendStatus} />
           {config && <ConfigLabel config={config} />}
           <NavLink
             to="/settings"

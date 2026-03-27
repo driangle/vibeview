@@ -141,7 +141,7 @@ export function SessionList() {
     return models.sort();
   }, [allPaginated]);
 
-  const loaded = !error && sessions;
+  const loaded = !!sessions;
 
   const isContentSearch = !!debouncedSearch && !!searchData;
   const displaySessions = isContentSearch

@@ -59,7 +59,6 @@ export function SessionView() {
     isLoading,
     mutate,
     streamedMessages,
-    connectionStatus,
     streamError,
     toolResults,
     missingToolResultCount,
@@ -113,7 +112,7 @@ export function SessionView() {
     window.print();
   }, []);
 
-  if (error) {
+  if (error && !session) {
     return (
       <div className="mx-auto max-w-4xl p-8">
         <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
@@ -152,7 +151,7 @@ export function SessionView() {
         onScroll={handleScroll}
       >
         {/* Session Header */}
-        <section className="px-8 py-4 border-b border-border bg-card">
+        <section className="sticky top-0 z-10 px-8 py-4 border-b border-border bg-card">
           <div className="max-w-3xl mx-auto space-y-2">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -163,30 +162,6 @@ export function SessionView() {
                   ID: {session.id.slice(0, 8).toUpperCase()}
                 </CopyableText>
                 <ActivityBadge state={activityState} />
-                {connectionStatus === 'connected' && (
-                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded print:hidden">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    LIVE
-                  </span>
-                )}
-                {connectionStatus === 'connecting' && (
-                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-primary rounded print:hidden">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    CONNECTING
-                  </span>
-                )}
-                {connectionStatus === 'reconnecting' && (
-                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded print:hidden">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    RECONNECTING
-                  </span>
-                )}
-                {connectionStatus === 'disconnected' && (
-                  <span className="flex items-center gap-1.5 font-headline text-[10px] uppercase tracking-widest px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-destructive rounded print:hidden">
-                    <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
-                    OFFLINE
-                  </span>
-                )}
               </div>
               <div className="flex items-center gap-4">
                 {liveUsage && <InlineMetrics usage={liveUsage} />}
