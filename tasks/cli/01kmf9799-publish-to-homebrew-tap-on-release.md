@@ -1,7 +1,7 @@
 ---
 title: "Publish to Homebrew tap on release"
 id: "01kmf9799"
-status: in-progress
+status: completed
 priority: low
 type: chore
 tags: ["ci", "release"]

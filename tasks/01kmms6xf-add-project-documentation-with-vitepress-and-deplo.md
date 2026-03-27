@@ -1,7 +1,7 @@
 ---
 title: "Add project documentation with VitePress and deploy to GitHub Pages"
 id: "01kmms6xf"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["docs", "vitepress"]
