@@ -153,13 +153,9 @@ export function ConversationSearch({
     }
   }, [open]);
 
-  // Keyboard shortcut to open (Cmd/Ctrl+F)
+  // Close search on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        e.preventDefault();
-        setOpen(true);
-      }
       if (e.key === 'Escape' && open) {
         setOpen(false);
       }
