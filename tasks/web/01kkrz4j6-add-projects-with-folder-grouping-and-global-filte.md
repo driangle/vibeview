@@ -26,6 +26,12 @@ Allow users to create "projects" by selecting a set of folders that belong toget
 - [ ] Persist the selected project across page reloads (e.g., URL param or local storage)
 - [ ] Support an "All Projects" / no-filter default state
 
+## Sub-tasks
+
+1. **01kmser9a** — [Project data model and CRUD operations](01kmser9a-project-data-model-and-crud-operations.md)
+2. **01kmserdz** — [Project management UI with folder picker](01kmserdz-project-management-ui-with-folder-picker.md) (depends on 01kmser9a)
+3. **01kmseref** — [Global project selector and filtering](01kmseref-global-project-selector-and-filtering.md) (depends on 01kmserdz)
+
 ## Acceptance Criteria
 
 - Users can create a project by giving it a name and selecting one or more folders
