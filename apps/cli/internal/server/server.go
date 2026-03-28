@@ -509,10 +509,16 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		limit = 100
 	}
 
+	var dirs []string
+	if projectID := r.URL.Query().Get("project"); projectID != "" {
+		dirs = s.resolveProjectDirs(projectID)
+	}
+
 	results := search.Search(r.Context(), s.index, search.Options{
 		Query:     q,
 		Limit:     limit,
 		ClaudeDir: s.claudeDir,
+		Dirs:      dirs,
 	})
 
 	resp := SearchResponse{

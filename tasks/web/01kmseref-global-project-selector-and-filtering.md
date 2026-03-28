@@ -1,7 +1,7 @@
 ---
 id: "01kmseref"
 title: "Global project selector and filtering"
-status: pending
+status: completed
 priority: medium
 effort: medium
 dependencies: ["01kmserdz"]

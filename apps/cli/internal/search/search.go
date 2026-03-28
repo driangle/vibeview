@@ -29,12 +29,25 @@ type Options struct {
 	Query     string
 	Limit     int
 	ClaudeDir string
+	Dirs      []string // If non-empty, only search sessions whose Project matches one of these directories.
 }
 
 // Search scans session JSONL files for messages containing the query string.
 // It returns up to opts.Limit results, searching newest sessions first.
 func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 	sessions := idx.GetSessions()
+	if len(opts.Dirs) > 0 {
+		filtered := make([]session.SessionMeta, 0, len(sessions))
+		for _, sm := range sessions {
+			for _, d := range opts.Dirs {
+				if strings.Contains(sm.Project, d) {
+					filtered = append(filtered, sm)
+					break
+				}
+			}
+		}
+		sessions = filtered
+	}
 	query := strings.ToLower(opts.Query)
 	queryBytes := []byte(query)
 

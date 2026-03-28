@@ -1,7 +1,7 @@
 ---
 title: "Global project selector with cross-page filtering"
 id: "01kmsgr56"
-status: in-progress
+status: completed
 priority: high
 type: feature
 effort: large

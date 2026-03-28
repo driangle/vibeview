@@ -106,7 +106,7 @@ export function SessionList() {
   });
 
   const contentSearchUrl = debouncedSearch
-    ? `/api/search?q=${encodeURIComponent(debouncedSearch)}&limit=20`
+    ? `/api/search?q=${encodeURIComponent(debouncedSearch)}&limit=20${activeProjectId ? `&project=${encodeURIComponent(activeProjectId)}` : ''}`
     : null;
   const { data: searchData, isLoading: searchLoading } = useSWR<SearchResponse>(
     contentSearchUrl,

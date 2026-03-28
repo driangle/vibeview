@@ -631,6 +631,40 @@ func TestSearchEndpointWithLimit(t *testing.T) {
 	}
 }
 
+func TestSearchEndpointWithProjectFilter(t *testing.T) {
+	srv := newTestServerWithProjects(t)
+	srv.index.Enrich(srv.claudeDir)
+
+	// "hello world" exists in sess-1 (project-a). proj-1 includes project-a.
+	req := httptest.NewRequest("GET", "/api/search?q=hello+world&project=proj-1", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp SearchResponse
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp.Total != 1 {
+		t.Fatalf("expected 1 result for proj-1, got %d", resp.Total)
+	}
+	if resp.Results[0].Session.ID != "sess-1" {
+		t.Errorf("expected sess-1, got %s", resp.Results[0].Session.ID)
+	}
+
+	// "second session" exists in sess-2 (project-b). proj-1 only has project-a,
+	// so searching within proj-1 should find no results.
+	req = httptest.NewRequest("GET", "/api/search?q=second+session&project=proj-1", nil)
+	w = httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp.Total != 0 {
+		t.Fatalf("expected 0 results for 'second session' in proj-1, got %d", resp.Total)
+	}
+}
+
 func TestActivityEndpoint(t *testing.T) {
 	srv := newTestServer(t)
 
