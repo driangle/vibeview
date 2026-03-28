@@ -1,7 +1,7 @@
 ---
 id: "01kmser9a"
 title: "Project data model and CRUD operations"
-status: pending
+status: completed
 priority: medium
 effort: medium
 dependencies: []
@@ -18,11 +18,11 @@ Define the project data model and implement CRUD operations for managing project
 
 ## Tasks
 
-- [ ] Define the `Project` TypeScript interface (id, name, folderPaths, description?, color?)
-- [ ] Create a `useProjects` hook that manages project state in localStorage
-- [ ] Implement create, read, update, and delete operations in the hook
-- [ ] Generate unique IDs for new projects (e.g., crypto.randomUUID or nanoid)
-- [ ] Add tests for CRUD operations and localStorage persistence
+- [x] Define the `Project` TypeScript interface (id, name, folderPaths, description?, color?)
+- [x] Create a `useProjects` hook that manages project state in localStorage
+- [x] Implement create, read, update, and delete operations in the hook
+- [x] Generate unique IDs for new projects (e.g., crypto.randomUUID or nanoid)
+- [x] Add tests for CRUD operations and localStorage persistence
 
 ## Acceptance Criteria
 

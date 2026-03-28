@@ -4,6 +4,14 @@ export type ContentBlockInput = Record<string, unknown> & { __brand?: 'ContentBl
 /** Branded alias for opaque message data blobs. */
 export type MessageData = Record<string, unknown> & { __brand?: 'MessageData' };
 
+export interface Project {
+  id: string;
+  name: string;
+  folderPaths: string[];
+  description?: string;
+  color?: string;
+}
+
 export interface AppConfig {
   claudeDir: string;
   standalone: boolean;
