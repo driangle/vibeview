@@ -56,9 +56,16 @@ export function ProjectList() {
   return (
     <div className="mx-auto max-w-2xl p-8">
       <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-fg">Projects</h1>
-          {projects.length > 0 && <span className="text-sm text-muted-fg">{projects.length}</span>}
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-fg">Projects</h1>
+            {projects.length > 0 && (
+              <span className="text-sm text-muted-fg">{projects.length}</span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-muted-fg">
+            Group related directories together to filter sessions across your workspace.
+          </p>
         </div>
         <button
           onClick={openCreate}

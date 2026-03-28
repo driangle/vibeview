@@ -24,9 +24,16 @@ const sanitizeSchema: RehypeSanitizeOptions = {
   ),
 };
 
-function TextSegment({ content }: { content: string }) {
+const proseBase =
+  'prose prose-sm max-w-none leading-relaxed prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.8em] prose-code:font-mono';
+
+function TextSegment({ content, variant }: { content: string; variant?: 'user' | 'assistant' }) {
+  const colorClasses =
+    variant === 'user'
+      ? 'text-inherit prose-headings:text-inherit prose-strong:text-inherit prose-code:bg-white/20 prose-code:text-inherit prose-a:text-inherit prose-a:underline'
+      : 'dark:prose-invert prose-code:bg-secondary';
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:rounded prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.8em] prose-code:font-mono">
+    <div className={`${proseBase} ${colorClasses}`}>
       <Markdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeSanitize, sanitizeSchema]]}
@@ -116,10 +123,11 @@ function renderSegment(
   segment: MessageSegment,
   key: number,
   onShowRaw: () => void,
+  variant?: 'user' | 'assistant',
 ): React.ReactNode {
   switch (segment.type) {
     case 'text':
-      return <TextSegment key={key} content={segment.content} />;
+      return <TextSegment key={key} content={segment.content} variant={variant} />;
     case 'caveat':
       return <CaveatSegment key={key} content={segment.content} onClick={onShowRaw} />;
     case 'command':
@@ -134,15 +142,16 @@ function renderSegment(
 interface MessageContentProps {
   segments: MessageSegment[];
   rawMessage?: MessageResponse;
+  variant?: 'user' | 'assistant';
 }
 
-export function MessageContent({ segments, rawMessage }: MessageContentProps) {
+export function MessageContent({ segments, rawMessage, variant }: MessageContentProps) {
   const [showModal, setShowModal] = useState(false);
   const openModal = useCallback(() => setShowModal(true), []);
 
   return (
     <>
-      {segments.map((seg, i) => renderSegment(seg, i, openModal))}
+      {segments.map((seg, i) => renderSegment(seg, i, openModal, variant))}
       {showModal && rawMessage && (
         <RawJsonModal data={rawMessage.message} onClose={() => setShowModal(false)} />
       )}

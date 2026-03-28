@@ -133,7 +133,7 @@ function UserMessage({ message }: { message: MessageResponse }) {
         {textSegments.length > 0 && (
           <div className="bg-primary text-primary-fg p-5 rounded-xl shadow-sm">
             <div className="text-[15px] leading-relaxed">
-              <MessageContent segments={textSegments} rawMessage={message} />
+              <MessageContent segments={textSegments} rawMessage={message} variant="user" />
             </div>
           </div>
         )}
