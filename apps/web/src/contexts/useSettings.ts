@@ -8,7 +8,6 @@ export const defaults: Settings = {
   dateFormat: 'relative',
   autoFollow: false,
   refreshInterval: 5000,
-  showCost: true,
   messagesPerPage: 100,
   recentThreshold: 300000,
 };

@@ -14,9 +14,7 @@ func TestDefault(t *testing.T) {
 	if s.PageSize != 100 {
 		t.Errorf("default pageSize = %d, want 100", s.PageSize)
 	}
-	if s.ShowCost != true {
-		t.Error("default showCost should be true")
-	}
+
 	if err := Validate(s); err != nil {
 		t.Errorf("default settings should be valid: %v", err)
 	}
@@ -104,9 +102,6 @@ func TestLoadPartialFile(t *testing.T) {
 	if s.Theme != "system" {
 		t.Errorf("theme = %q, want system", s.Theme)
 	}
-	if s.ShowCost != true {
-		t.Error("showCost should default to true")
-	}
 }
 
 func TestSaveValidation(t *testing.T) {
@@ -134,9 +129,6 @@ func TestMergeJSON(t *testing.T) {
 		t.Errorf("merged theme = %q, want dark", merged.Theme)
 	}
 	// Fields not in partial JSON should keep base values.
-	if merged.ShowCost != true {
-		t.Error("merged showCost should remain true from base")
-	}
 	if merged.RefreshInterval != 5000 {
 		t.Errorf("merged refreshInterval = %d, want 5000", merged.RefreshInterval)
 	}
@@ -145,12 +137,12 @@ func TestMergeJSON(t *testing.T) {
 func TestMergeJSONBoolOverride(t *testing.T) {
 	base := Default()
 
-	// Explicitly setting showCost to false should work.
-	merged, err := MergeJSON(base, []byte(`{"showCost": false}`))
+	// Explicitly setting autoFollow to true should work.
+	merged, err := MergeJSON(base, []byte(`{"autoFollow": true}`))
 	if err != nil {
 		t.Fatalf("MergeJSON: %v", err)
 	}
-	if merged.ShowCost != false {
-		t.Error("merged showCost should be false when explicitly set")
+	if merged.AutoFollow != true {
+		t.Error("merged autoFollow should be true when explicitly set")
 	}
 }

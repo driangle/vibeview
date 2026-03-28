@@ -16,16 +16,14 @@ import (
 )
 
 // UsageTotals holds aggregated token and cost data for a session.
-// Cost is accumulated from individual assistant messages using the local
-// pricing table. If a result message with TotalCostUSD is present (from
-// programmatic sessions), it takes precedence as the authoritative value.
+// Cost is only populated when the session file contains an explicit
+// TotalCostUSD value (e.g. from programmatic sessions).
 type UsageTotals struct {
-	InputTokens              int      `json:"inputTokens"`
-	OutputTokens             int      `json:"outputTokens"`
-	CacheCreationInputTokens int      `json:"cacheCreationInputTokens"`
-	CacheReadInputTokens     int      `json:"cacheReadInputTokens"`
-	CostUSD                  float64  `json:"costUSD"`
-	UnknownModels            []string `json:"unknownModels,omitempty"`
+	InputTokens              int     `json:"inputTokens"`
+	OutputTokens             int     `json:"outputTokens"`
+	CacheCreationInputTokens int     `json:"cacheCreationInputTokens"`
+	CacheReadInputTokens     int     `json:"cacheReadInputTokens"`
+	CostUSD                  float64 `json:"costUSD"`
 }
 
 // SessionMeta holds metadata extracted from a session's history entry and JSONL file.
@@ -345,7 +343,6 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 	messages, _, _ := claude.ParseSessionFile(f)
 	meta.MessageCount = len(messages)
 
-	unknownModels := map[string]bool{}
 	for _, msg := range messages {
 		if msg.Type == claude.MessageTypeAssistant && msg.Message != nil {
 			if meta.Model == "" && msg.Message.Model != "" {
@@ -357,28 +354,14 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 				meta.Usage.OutputTokens += u.OutputTokens
 				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
 				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
-				cost, ok := claude.CalculateCost(msg.Message.Model, *u)
-				meta.Usage.CostUSD += cost
-				if !ok && msg.Message.Model != "" && !isSyntheticModel(msg.Message.Model) {
-					if !unknownModels[msg.Message.Model] {
-						logutil.Warnf("no pricing data for model %q, cost will be $0 for this message", msg.Message.Model)
-						unknownModels[msg.Message.Model] = true
-					}
-				}
 			}
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
 			meta.CustomTitle = msg.CustomTitle
 		}
-		// Programmatic sessions (claude -p --output-format stream-json) emit a
-		// result message with the CLI's own authoritative cost. Prefer it over
-		// our local pricing-table estimate when available.
 		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
-	}
-	for model := range unknownModels {
-		meta.Usage.UnknownModels = append(meta.Usage.UnknownModels, model)
 	}
 
 	for _, msg := range messages {
@@ -586,7 +569,6 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		meta.Timestamp = ts
 	}
 
-	unknownModels := map[string]bool{}
 	for _, msg := range messages {
 		if msg.Type == claude.MessageTypeAssistant && msg.Message != nil {
 			if meta.Model == "" && msg.Message.Model != "" {
@@ -598,14 +580,6 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 				meta.Usage.OutputTokens += u.OutputTokens
 				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
 				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
-				cost, ok := claude.CalculateCost(msg.Message.Model, *u)
-				meta.Usage.CostUSD += cost
-				if !ok && msg.Message.Model != "" && !isSyntheticModel(msg.Message.Model) {
-					if !unknownModels[msg.Message.Model] {
-						logutil.Warnf("no pricing data for model %q, cost will be $0 for this message", msg.Message.Model)
-						unknownModels[msg.Message.Model] = true
-					}
-				}
 			}
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
@@ -614,9 +588,6 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
-	}
-	for model := range unknownModels {
-		meta.Usage.UnknownModels = append(meta.Usage.UnknownModels, model)
 	}
 
 	// Derive slug from first user message.
@@ -642,12 +613,6 @@ var (
 	commandNamePattern = regexp.MustCompile(`<command-name>[^<]*</command-name>`)
 	xmlTagPattern      = regexp.MustCompile(`<[^>]+>`)
 )
-
-// isSyntheticModel returns true for model names that are internal markers
-// (e.g. "<synthetic>") rather than real API model identifiers.
-func isSyntheticModel(model string) bool {
-	return strings.HasPrefix(model, "<") && strings.HasSuffix(model, ">")
-}
 
 // truncateSlug shortens text to maxLen, breaking at a word boundary.
 // It strips XML/HTML tags before truncating.

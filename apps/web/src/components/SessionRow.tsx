@@ -51,7 +51,6 @@ interface SessionRowProps {
   onModelClick: (model: string) => void;
   isSelected?: boolean;
   rowIndex?: number;
-  showCost?: boolean;
   dateFormat?: string;
 }
 
@@ -61,7 +60,6 @@ export function SessionRow({
   onModelClick,
   isSelected,
   rowIndex,
-  showCost = true,
   dateFormat = 'relative',
 }: SessionRowProps) {
   const navigate = useNavigate();
@@ -134,11 +132,9 @@ export function SessionRow({
       </td>
 
       {/* Cost */}
-      {showCost && (
-        <td className="px-4 py-3 text-sm text-fg text-right whitespace-nowrap font-medium">
-          ${session.usage.costUSD.toFixed(2)}
-        </td>
-      )}
+      <td className="px-4 py-3 text-sm text-fg text-right whitespace-nowrap font-medium">
+        {session.usage.costUSD > 0 ? `$${session.usage.costUSD.toFixed(2)}` : '—'}
+      </td>
     </tr>
   );
 }

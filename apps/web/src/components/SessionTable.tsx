@@ -13,7 +13,6 @@ interface SessionTableProps {
   selectedIndex?: number;
   isLoaded?: boolean;
   hasFilters?: boolean;
-  showCost?: boolean;
   dateFormat?: string;
 }
 
@@ -27,7 +26,6 @@ export function SessionTable({
   selectedIndex,
   isLoaded,
   hasFilters,
-  showCost = true,
   dateFormat,
 }: SessionTableProps) {
   return (
@@ -95,17 +93,15 @@ export function SessionTable({
               onToggle={onToggleSort}
               className="w-[13%]"
             />
-            {showCost && (
-              <SortHeader
-                label="Cost"
-                column="cost"
-                sortColumn={sortColumn}
-                sortDirection={sortDirection}
-                onToggle={onToggleSort}
-                className="w-[10%]"
-                icon="dollar"
-              />
-            )}
+            <SortHeader
+              label="Cost"
+              column="cost"
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onToggle={onToggleSort}
+              className="w-[10%]"
+              icon="dollar"
+            />
           </tr>
         </thead>
         <tbody>
@@ -117,16 +113,12 @@ export function SessionTable({
               onModelClick={onModelClick}
               isSelected={selectedIndex === index}
               rowIndex={index}
-              showCost={showCost}
               dateFormat={dateFormat}
             />
           ))}
           {isLoaded && sessions.length === 0 && (
             <tr>
-              <td
-                colSpan={showCost ? 7 : 6}
-                className="px-4 py-12 text-center text-sm text-muted-fg"
-              >
+              <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-fg">
                 {hasFilters ? 'No sessions match your filters' : 'No sessions found'}
               </td>
             </tr>

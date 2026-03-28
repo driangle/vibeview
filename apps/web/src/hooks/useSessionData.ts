@@ -8,7 +8,6 @@ import type {
   MessageResponse,
   UsageTotals,
 } from '../types';
-import { calculateCost } from '../pricing';
 import { useSessionStream } from './useSessionStream';
 
 function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
@@ -78,7 +77,7 @@ export function useSessionData(id: string | undefined) {
         base.outputTokens += u.output_tokens;
         base.cacheCreationInputTokens += u.cache_creation_input_tokens;
         base.cacheReadInputTokens += u.cache_read_input_tokens;
-        base.costUSD += calculateCost(msg.message.model ?? '', u);
+        base.costUSD += u.costUSD ?? 0;
       }
     }
     return base;

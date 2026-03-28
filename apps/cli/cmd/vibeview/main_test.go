@@ -98,8 +98,9 @@ func TestBuildUsageReport(t *testing.T) {
 	if u.TotalTokens != 460 {
 		t.Errorf("TotalTokens = %d, want 460", u.TotalTokens)
 	}
-	if u.Cost <= 0 {
-		t.Error("expected positive cost")
+	// Cost is no longer calculated — only populated from result messages.
+	if u.Cost != 0 {
+		t.Errorf("Cost = %f, want 0 (no result message)", u.Cost)
 	}
 }
 

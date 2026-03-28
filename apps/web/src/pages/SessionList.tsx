@@ -208,7 +208,7 @@ export function SessionList() {
 
         {/* Stats */}
         {loaded && (
-          <div className={`grid gap-4 ${settings.showCost ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className="grid gap-4 grid-cols-3">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-xs text-muted-fg uppercase tracking-wider">Sessions</div>
               <div className="mt-1 text-2xl font-bold text-fg font-sans">{statsTotal}</div>
@@ -219,14 +219,12 @@ export function SessionList() {
                 {formatStatTokens(totalTokens)}
               </div>
             </div>
-            {settings.showCost && (
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="text-xs text-muted-fg uppercase tracking-wider">Total Cost</div>
-                <div className="mt-1 text-2xl font-bold text-fg font-sans">
-                  ${totalCost.toFixed(2)}
-                </div>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <div className="text-xs text-muted-fg uppercase tracking-wider">Total Cost</div>
+              <div className="mt-1 text-2xl font-bold text-fg font-sans">
+                {totalCost > 0 ? `$${totalCost.toFixed(2)}` : '—'}
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -345,7 +343,6 @@ export function SessionList() {
               selectedIndex={selectedIndex}
               isLoaded={!!loaded}
               hasFilters={hasFilters}
-              showCost={settings.showCost}
               dateFormat={settings.dateFormat}
             />
             {loaded && sortedSessions.length > 0 && (

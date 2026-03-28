@@ -36,14 +36,16 @@ function InlineMetrics({ usage }: { usage: UsageTotals }) {
           {formatTokenCount(totalTokens)}
         </span>
       </div>
-      <div className="flex flex-col">
-        <span className="font-headline text-[10px] text-muted-fg uppercase tracking-tighter">
-          Cost
-        </span>
-        <span className="font-headline text-xl font-medium text-fg">
-          {formatCost(usage.costUSD)}
-        </span>
-      </div>
+      {usage.costUSD > 0 && (
+        <div className="flex flex-col">
+          <span className="font-headline text-[10px] text-muted-fg uppercase tracking-tighter">
+            Cost
+          </span>
+          <span className="font-headline text-xl font-medium text-fg">
+            {formatCost(usage.costUSD)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

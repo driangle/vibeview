@@ -171,7 +171,6 @@ export interface Settings {
   dateFormat: string;
   autoFollow: boolean;
   refreshInterval: number;
-  showCost: boolean;
   messagesPerPage: number;
   recentThreshold: number;
 }

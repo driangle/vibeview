@@ -10,11 +10,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	claude.LoadPricing([]byte(`{
-		"claude-opus-4":   {"inputPerM": 15, "outputPerM": 75, "cacheReadPerM": 1.5, "cacheWritePerM": 18.75},
-		"claude-sonnet-4": {"inputPerM": 3, "outputPerM": 15, "cacheReadPerM": 0.30, "cacheWritePerM": 3.75},
-		"claude-haiku-4":  {"inputPerM": 0.80, "outputPerM": 4, "cacheReadPerM": 0.08, "cacheWritePerM": 1}
-	}`))
 	os.Exit(m.Run())
 }
 
@@ -140,10 +135,9 @@ func TestDiscoverUsageTotals(t *testing.T) {
 	if sess1.Usage.CacheReadInputTokens != 20 {
 		t.Errorf("sess-1 usage.CacheReadInputTokens = %d, want 20", sess1.Usage.CacheReadInputTokens)
 	}
-	// Cost is calculated from token counts and model pricing, not from the costUSD field in JSONL.
-	// sonnet-4: (100×3 + 50×15 + 20×0.30 + 10×3.75) / 1M = 0.0010935
-	if math.Abs(sess1.Usage.CostUSD-0.0010935) > 1e-9 {
-		t.Errorf("sess-1 usage.CostUSD = %f, want ~0.0010935", sess1.Usage.CostUSD)
+	// Cost is not calculated — only populated from explicit TotalCostUSD in result messages.
+	if sess1.Usage.CostUSD != 0 {
+		t.Errorf("sess-1 usage.CostUSD = %f, want 0 (no result message)", sess1.Usage.CostUSD)
 	}
 
 	// Find sess-2: one assistant message with usage.
@@ -158,9 +152,8 @@ func TestDiscoverUsageTotals(t *testing.T) {
 	if sess2.Usage.InputTokens != 200 {
 		t.Errorf("sess-2 usage.InputTokens = %d, want 200", sess2.Usage.InputTokens)
 	}
-	// opus-4: (200×15 + 100×75) / 1M = 0.0105
-	if math.Abs(sess2.Usage.CostUSD-0.0105) > 1e-9 {
-		t.Errorf("sess-2 usage.CostUSD = %f, want ~0.0105", sess2.Usage.CostUSD)
+	if sess2.Usage.CostUSD != 0 {
+		t.Errorf("sess-2 usage.CostUSD = %f, want 0 (no result message)", sess2.Usage.CostUSD)
 	}
 
 	// sess-3 has no session file — usage should be zero.
@@ -224,11 +217,9 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 	if u.CacheReadInputTokens != 40 {
 		t.Errorf("CacheReadInputTokens = %d, want 40", u.CacheReadInputTokens)
 	}
-	// sonnet-4 msg1: (100×3 + 50×15 + 10×0.30 + 5×3.75) / 1M = 0.00107175
-	// sonnet-4 msg2: (200×3 + 100×15 + 30×0.30 + 15×3.75) / 1M = 0.00216525
-	// total = 0.003237
-	if math.Abs(u.CostUSD-0.003237) > 1e-9 {
-		t.Errorf("CostUSD = %f, want ~0.003237", u.CostUSD)
+	// Cost is not calculated — no result message present.
+	if u.CostUSD != 0 {
+		t.Errorf("CostUSD = %f, want 0 (no result message)", u.CostUSD)
 	}
 }
 
@@ -247,8 +238,7 @@ func TestResultMessageCostTakesPrecedence(t *testing.T) {
 	}
 
 	// Programmatic sessions (claude -p) emit a result message with the CLI's
-	// authoritative TotalCostUSD. It should take precedence over our local
-	// pricing-table estimate.
+	// authoritative TotalCostUSD. This should be used as the session cost.
 	sess := `{"type":"user","uuid":"u1","sessionId":"sess-result","timestamp":5000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]}}
 {"type":"assistant","uuid":"a1","sessionId":"sess-result","timestamp":5001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hello"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":5,"cache_read_input_tokens":10}}}
 {"type":"result","uuid":"r1","sessionId":"sess-result","timestamp":5002,"total_cost_usd":0.0042}
@@ -265,55 +255,7 @@ func TestResultMessageCostTakesPrecedence(t *testing.T) {
 
 	u := idx.Sessions[0].Usage
 	if math.Abs(u.CostUSD-0.0042) > 1e-9 {
-		t.Errorf("CostUSD = %f, want 0.0042 (result message should take precedence)", u.CostUSD)
-	}
-}
-
-func TestUnknownModelTracking(t *testing.T) {
-	dir := t.TempDir()
-
-	history := `{"sessionId":"sess-unknown","project":"/Users/me/proj","display":"unknown model","timestamp":6000}
-`
-	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
-	if err := os.MkdirAll(projDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	// Session with a known model and an unknown model.
-	sess := `{"type":"user","uuid":"u1","sessionId":"sess-unknown","timestamp":6000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]}}
-{"type":"assistant","uuid":"a1","sessionId":"sess-unknown","timestamp":6001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hello"}],"usage":{"input_tokens":100,"output_tokens":50}}}
-{"type":"assistant","uuid":"a2","sessionId":"sess-unknown","timestamp":6002,"message":{"role":"assistant","model":"claude-future-99","content":[{"type":"text","text":"from the future"}],"usage":{"input_tokens":200,"output_tokens":100}}}
-`
-	if err := os.WriteFile(filepath.Join(projDir, "sess-unknown.jsonl"), []byte(sess), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	idx, err := Discover(dir, nil)
-	if err != nil {
-		t.Fatalf("Discover: %v", err)
-	}
-	idx.Enrich(dir)
-
-	u := idx.Sessions[0].Usage
-
-	// Token counts should include both models.
-	if u.InputTokens != 300 {
-		t.Errorf("InputTokens = %d, want 300", u.InputTokens)
-	}
-
-	// Cost should only reflect the known model (unknown model contributes $0).
-	// sonnet-4: (100×3 + 50×15) / 1M = 0.00105
-	if math.Abs(u.CostUSD-0.00105) > 1e-9 {
-		t.Errorf("CostUSD = %f, want ~0.00105", u.CostUSD)
-	}
-
-	// UnknownModels should contain the unknown model.
-	if len(u.UnknownModels) != 1 || u.UnknownModels[0] != "claude-future-99" {
-		t.Errorf("UnknownModels = %v, want [claude-future-99]", u.UnknownModels)
+		t.Errorf("CostUSD = %f, want 0.0042 (from result message)", u.CostUSD)
 	}
 }
 

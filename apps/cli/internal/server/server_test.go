@@ -507,24 +507,6 @@ func TestConfigEndpoint(t *testing.T) {
 	}
 }
 
-func TestPricingEndpoint(t *testing.T) {
-	srv := newTestServer(t)
-	req := httptest.NewRequest("GET", "/api/pricing", nil)
-	w := httptest.NewRecorder()
-	srv.mux.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
-	}
-	ct := w.Header().Get("Content-Type")
-	if ct != "application/json" {
-		t.Errorf("expected Content-Type application/json, got %q", ct)
-	}
-	if w.Body.Len() == 0 {
-		t.Error("expected non-empty pricing response")
-	}
-}
-
 func TestSettingsEndpoints(t *testing.T) {
 	dir := setupTestDir(t)
 	settingsPath := filepath.Join(dir, "settings.json")

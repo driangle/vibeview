@@ -658,8 +658,6 @@ func buildUsageReport(messages []claude.Message) *usageReport {
 		u.OutputTokens += mu.OutputTokens
 		u.CacheCreationTokens += mu.CacheCreationInputTokens
 		u.CacheReadTokens += mu.CacheReadInputTokens
-		cost, _ := claude.CalculateCost(msg.Message.Model, *mu)
-		u.Cost += cost
 	}
 	u.TotalTokens = u.InputTokens + u.OutputTokens + u.CacheCreationTokens + u.CacheReadTokens
 	return &u

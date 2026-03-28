@@ -17,7 +17,6 @@ type Settings struct {
 	DateFormat      string       `json:"dateFormat"`
 	AutoFollow      bool         `json:"autoFollow"`
 	RefreshInterval int          `json:"refreshInterval"`
-	ShowCost        bool         `json:"showCost"`
 	MessagesPerPage int          `json:"messagesPerPage"`
 	RecentThreshold int          `json:"recentThreshold"`
 }
@@ -44,7 +43,6 @@ func Default() Settings {
 		DateFormat:      "relative",
 		AutoFollow:      false,
 		RefreshInterval: 5000,
-		ShowCost:        true,
 		MessagesPerPage: 100,
 		RecentThreshold: 300000,
 	}
