@@ -1,7 +1,7 @@
 ---
 title: "Add projects with folder grouping and global filter"
 id: "01kkrz4j6"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["projects", "filtering", "ux"]
@@ -16,15 +16,15 @@ Allow users to create "projects" by selecting a set of folders that belong toget
 
 ## Tasks
 
-- [ ] Design the project data model (name, list of folder paths, optional description/color)
-- [ ] Build project CRUD — create, edit, rename, and delete projects
-- [ ] Build a project creation/edit UI with a folder picker for selecting directories
-- [ ] Add a global project selector (e.g., dropdown in the nav bar) that persists across page navigations
-- [ ] Implement filtering logic so the active project scopes sessions by its folder list
-- [ ] Apply the global project filter to the session list page
-- [ ] Apply the global project filter to stats and any other data-driven pages
-- [ ] Persist the selected project across page reloads (e.g., URL param or local storage)
-- [ ] Support an "All Projects" / no-filter default state
+- [x] Design the project data model (name, list of folder paths, optional description/color)
+- [x] Build project CRUD — create, edit, rename, and delete projects
+- [x] Build a project creation/edit UI with a folder picker for selecting directories
+- [x] Add a global project selector (e.g., dropdown in the nav bar) that persists across page navigations
+- [x] Implement filtering logic so the active project scopes sessions by its folder list
+- [x] Apply the global project filter to the session list page
+- [x] Apply the global project filter to stats and any other data-driven pages
+- [x] Persist the selected project across page reloads (e.g., URL param or local storage)
+- [x] Support an "All Projects" / no-filter default state
 
 ## Sub-tasks
 
