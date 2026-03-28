@@ -13,8 +13,9 @@ import {
 import { FilesTouched } from './FilesTouched';
 import { FileViewer } from './FileViewer';
 import type { FileOperation } from './FileViewer';
+import { DirectoryName } from './DirectoryName';
 import type { ContentBlock, SessionInsights } from '../types';
-import { formatDate, projectName } from '../utils';
+import { formatDate } from '../utils';
 
 interface SessionSidebarProps {
   filePath?: string;
@@ -155,7 +156,7 @@ export function SessionSidebar({
                 to={`/?dir=${encodeURIComponent(project)}${activeProjectId ? `&project=${encodeURIComponent(activeProjectId)}` : ''}`}
                 className="text-xs font-medium text-fg hover:text-primary transition-colors"
               >
-                {projectName(project)}
+                <DirectoryName dir={project} />
               </Link>
             </div>
             {model && (

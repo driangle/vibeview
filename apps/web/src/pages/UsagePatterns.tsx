@@ -114,7 +114,7 @@ export function UsagePatterns() {
             <select
               value={dirFilter}
               onChange={(e) => setDirFilter(e.target.value)}
-              className="rounded border border-border bg-card px-2 py-1 text-sm text-fg"
+              className="rounded border border-border bg-card px-2 py-1 text-sm text-fg font-mono"
             >
               <option value="">All folders</option>
               {data.dirs.map((p) => (

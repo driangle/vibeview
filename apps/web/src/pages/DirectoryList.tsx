@@ -4,8 +4,9 @@ import useSWR from 'swr';
 import { fetcher } from '../api';
 import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { DirectoryName } from '../components/DirectoryName';
 import type { PaginatedSessions, Session } from '../types';
-import { formatTime, projectName } from '../utils';
+import { formatTime } from '../utils';
 
 interface DirectorySummary {
   dir: string;
@@ -115,9 +116,9 @@ export function DirectoryList() {
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {projectName(entry.dir)}
+                    <DirectoryName dir={entry.dir} />
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate font-mono">
                     {entry.dir}
                   </p>
                 </div>

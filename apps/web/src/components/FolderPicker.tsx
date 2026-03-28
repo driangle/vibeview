@@ -67,10 +67,10 @@ export function FolderPicker({ selected, onChange }: FolderPickerProps) {
                     aria-label={dir}
                   />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-fg">
+                    <span className="block truncate text-sm font-medium text-fg font-mono">
                       {projectName(dir)}
                     </span>
-                    <span className="block truncate text-xs text-muted-fg">{dir}</span>
+                    <span className="block truncate text-xs text-muted-fg font-mono">{dir}</span>
                   </span>
                 </label>
               </li>

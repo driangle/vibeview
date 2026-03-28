@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { DirectoryName } from './DirectoryName';
+import { SessionName } from './SessionName';
 import type { SearchResult } from '../types';
-import { formatTime, projectName } from '../utils';
+import { formatTime } from '../utils';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -66,7 +68,6 @@ export function SearchResults({ results, query, isLoading }: SearchResultsProps)
         {results.length} result{results.length !== 1 ? 's' : ''} found
       </div>
       {results.map((result) => {
-        const name = result.session.customTitle || result.session.slug || result.session.id;
         return (
           <Link
             key={result.session.id}
@@ -74,13 +75,16 @@ export function SearchResults({ results, query, isLoading }: SearchResultsProps)
             className="block rounded-lg border border-border bg-card p-4 hover:border-ring transition-colors"
           >
             <div className="flex items-baseline justify-between gap-2 mb-1">
-              <span className="text-sm font-medium text-fg truncate">{name}</span>
+              <SessionName
+                session={result.session}
+                className="text-sm font-medium text-fg truncate"
+              />
               <span className="text-xs text-muted-fg whitespace-nowrap">
                 {formatTime(result.session.timestamp)}
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-fg mb-2">
-              <span>{projectName(result.session.dir)}</span>
+              <DirectoryName dir={result.session.dir} />
               {result.session.model && (
                 <>
                   <span>&middot;</span>

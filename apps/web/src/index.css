@@ -6,8 +6,8 @@
 
 @theme {
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-headline: 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Inter', 'Roboto', Arial, sans-serif;
+  --font-headline: 'Inter', 'Roboto', Arial, sans-serif;
 
   --color-bg: var(--bg);
   --color-fg: var(--fg);
@@ -103,7 +103,7 @@
   }
 
   body {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     color: var(--fg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

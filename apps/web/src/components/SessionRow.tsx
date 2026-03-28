@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ActivityBadge } from './ActivityBadge';
+import { DirectoryName } from './DirectoryName';
 import { ModelBadge } from './ModelBadge';
+import { SessionName } from './SessionName';
 import type { Session } from '../types';
-import { projectName } from '../utils';
 
 function formatTokens(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -79,7 +80,7 @@ export function SessionRow({
           onClick={(e) => e.stopPropagation()}
           className="block truncate font-medium text-fg hover:text-primary transition-colors"
         >
-          {session.customTitle || session.slug || session.id}
+          <SessionName session={session} />
         </Link>
         {session.activityState && session.activityState !== 'idle' && (
           <div className="mt-0.5">
@@ -98,7 +99,7 @@ export function SessionRow({
           }}
           className="text-muted-fg hover:text-primary hover:underline transition-colors"
         >
-          {projectName(session.dir)}
+          <DirectoryName dir={session.dir} />
         </button>
       </td>
 

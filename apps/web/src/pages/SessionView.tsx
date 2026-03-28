@@ -14,7 +14,8 @@ import { useMessagePagination } from '../hooks/useMessagePagination';
 import { ConversationSearch } from '../components/ConversationSearch';
 import { SessionSidebar } from '../components/SessionSidebar';
 import type { UsageTotals } from '../types';
-import { formatDate, formatTokenCount, formatCost, formatDuration, projectName } from '../utils';
+import { DirectoryName } from '../components/DirectoryName';
+import { formatDate, formatTokenCount, formatCost, formatDuration } from '../utils';
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
   const totalTokens =
@@ -178,9 +179,11 @@ export function SessionView() {
                 </button>
               </div>
             </div>
-            <h1 className="text-xl font-headline font-medium tracking-tight text-fg">{title}</h1>
+            <h1 className="text-xl font-headline font-medium tracking-tight text-fg font-mono">
+              {title}
+            </h1>
             <p className="text-muted-fg text-xs">
-              {formatDate(session.timestamp)} &middot; {projectName(session.dir)} &middot;{' '}
+              {formatDate(session.timestamp)} &middot; <DirectoryName dir={session.dir} /> &middot;{' '}
               {displayMessages.length} message{displayMessages.length !== 1 ? 's' : ''}
               {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
             </p>

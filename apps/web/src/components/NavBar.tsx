@@ -214,7 +214,7 @@ export function NavBar() {
   return (
     <nav className="border-b border-border bg-card">
       <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-8">
-        <span className="flex items-center gap-2 text-sm font-semibold text-fg font-mono">
+        <span className="flex items-center gap-2 text-sm font-semibold text-fg">
           <img src="/favicon.svg" alt="" className="h-5 w-5" />
           vibeview
         </span>

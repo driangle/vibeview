@@ -260,7 +260,7 @@ export function SessionList() {
           <select
             value={dirFilter}
             onChange={(e) => setDirFilter(e.target.value)}
-            className={`w-[200px] truncate ${dirFilter ? selectActive : selectDefault}`}
+            className={`w-[200px] truncate font-mono ${dirFilter ? selectActive : selectDefault}`}
           >
             <option value="">All folders</option>
             {uniqueProjects.map((project) => (
