@@ -140,12 +140,15 @@ Examples:
 				}
 			}
 
-			settingsPath := filepath.Join(home, ".config", "vibeview", "settings.json")
+			configDir := filepath.Join(home, ".config", "vibeview")
+			settingsPath := filepath.Join(configDir, "settings.json")
+			projectsPath := filepath.Join(configDir, "projects.json")
 
 			cfg := server.Config{
 				ClaudeDir:    *claudeDir,
 				Dirs:         dirs,
 				SettingsPath: settingsPath,
+				ProjectsPath: projectsPath,
 			}
 
 			if len(args) > 0 {

@@ -17,6 +17,7 @@ import (
 	"github.com/driangle/vibeview/internal/claude"
 	"github.com/driangle/vibeview/internal/insights"
 	"github.com/driangle/vibeview/internal/pidcheck"
+	"github.com/driangle/vibeview/internal/projects"
 	"github.com/driangle/vibeview/internal/redact"
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/session"
@@ -33,6 +34,7 @@ type Config struct {
 	Paths        []string       // Explicit file/directory paths (standalone mode).
 	Dirs         []string       // Filter to these project directory names (under ~/.claude/projects/).
 	SettingsPath string         // Path to the settings JSON file.
+	ProjectsPath string         // Path to the projects JSON file.
 }
 
 // Server serves the VibeView HTTP API.
@@ -42,6 +44,7 @@ type Server struct {
 	paths        []string
 	dirs         []string
 	settingsPath string
+	projectsPath string
 	index        *session.Index
 	broker       *watcher.Broker
 	mux          *http.ServeMux
@@ -80,6 +83,7 @@ func New(cfg Config) (*Server, error) {
 		paths:        cfg.Paths,
 		dirs:         cfg.Dirs,
 		settingsPath: cfg.SettingsPath,
+		projectsPath: cfg.ProjectsPath,
 		index:        idx,
 		broker:       broker,
 		mux:          http.NewServeMux(),
@@ -102,6 +106,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/pricing", s.handlePricing)
 	s.mux.HandleFunc("GET /api/settings", s.handleGetSettings)
 	s.mux.HandleFunc("PUT /api/settings", s.handleUpdateSettings)
+	s.mux.HandleFunc("GET /api/projects", s.handleGetProjects)
+	s.mux.HandleFunc("PUT /api/projects", s.handleUpdateProjects)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
@@ -223,6 +229,41 @@ func (s *Server) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, merged)
+}
+
+func (s *Server) handleGetProjects(w http.ResponseWriter, r *http.Request) {
+	list, err := projects.Load(s.projectsPath)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+func (s *Server) handleUpdateProjects(w http.ResponseWriter, r *http.Request) {
+	const maxBodySize = 100 * 1024 // 100 KB
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize+1))
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "failed to read body"})
+		return
+	}
+	if len(body) > maxBodySize {
+		writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "request body too large"})
+		return
+	}
+
+	var list []projects.Project
+	if err := json.Unmarshal(body, &list); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid JSON: %v", err)})
+		return
+	}
+
+	if err := projects.Save(s.projectsPath, list); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, list)
 }
 
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {

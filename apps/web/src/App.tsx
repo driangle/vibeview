@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { NavBar } from './components/NavBar';
 import { Footer } from './components/Footer';
+import { ProjectsProvider } from './contexts/ProjectsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { SessionList } from './pages/SessionList';
 
@@ -24,24 +25,26 @@ export function App() {
   return (
     <BrowserRouter>
       <SettingsProvider>
-        <div className="flex h-dvh flex-col bg-bg">
-          <NavBar />
-          <main className="min-h-0 flex-1 overflow-auto">
-            <ErrorBoundary>
-              <Suspense>
-                <Routes>
-                  <Route path="/" element={<SessionList />} />
-                  <Route path="/directories" element={<DirectoryList />} />
-                  <Route path="/projects" element={<ProjectList />} />
-                  <Route path="/session/:id" element={<SessionView />} />
-                  <Route path="/activity" element={<UsagePatterns />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </main>
-          <Footer />
-        </div>
+        <ProjectsProvider>
+          <div className="flex h-dvh flex-col bg-bg">
+            <NavBar />
+            <main className="min-h-0 flex-1 overflow-auto">
+              <ErrorBoundary>
+                <Suspense>
+                  <Routes>
+                    <Route path="/" element={<SessionList />} />
+                    <Route path="/directories" element={<DirectoryList />} />
+                    <Route path="/projects" element={<ProjectList />} />
+                    <Route path="/session/:id" element={<SessionView />} />
+                    <Route path="/activity" element={<UsagePatterns />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
+            </main>
+            <Footer />
+          </div>
+        </ProjectsProvider>
       </SettingsProvider>
     </BrowserRouter>
   );

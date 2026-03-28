@@ -1,7 +1,7 @@
 ---
 title: "Persist projects to backend storage"
 id: "01kmsgn5z"
-status: pending
+status: completed
 priority: medium
 type: feature
 effort: medium
@@ -18,12 +18,12 @@ Move project storage from browser localStorage to a backend JSON file so that pr
 
 ## Tasks
 
-- [ ] Add a `projects.json` file-based store in the Go backend (similar to `internal/settings`)
-- [ ] Add `GET /api/projects` and `PUT /api/projects` endpoints to the server
-- [ ] Update `useProjects` hook to fetch/save via the API instead of localStorage
-- [ ] Migrate existing localStorage projects to the backend on first load (one-time migration)
-- [ ] Add backend tests for the new endpoints
-- [ ] Update frontend tests for the changed hook behavior
+- [x] Add a `projects.json` file-based store in the Go backend (similar to `internal/settings`)
+- [x] Add `GET /api/projects` and `PUT /api/projects` endpoints to the server
+- [x] Update `useProjects` hook to fetch/save via the API instead of localStorage
+- [x] Migrate existing localStorage projects to the backend on first load (one-time migration)
+- [x] Add backend tests for the new endpoints
+- [x] Update frontend tests for the changed hook behavior
 
 ## Acceptance Criteria
 

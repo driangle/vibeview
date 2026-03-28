@@ -791,3 +791,92 @@ func TestToMessageResponse(t *testing.T) {
 		t.Error("expected non-nil message")
 	}
 }
+
+func TestProjectsEndpoints(t *testing.T) {
+	dir := setupTestDir(t)
+	projectsPath := filepath.Join(dir, "projects.json")
+
+	srv, err := New(Config{ClaudeDir: dir, SettingsPath: filepath.Join(dir, "settings.json"), ProjectsPath: projectsPath})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+
+	// GET projects should return empty list.
+	req := httptest.NewRequest("GET", "/api/projects", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET projects: expected 200, got %d", w.Code)
+	}
+
+	var initial []any
+	json.NewDecoder(w.Body).Decode(&initial)
+	if len(initial) != 0 {
+		t.Errorf("expected empty list, got %d items", len(initial))
+	}
+
+	// PUT projects with valid body.
+	body := `[{"id":"1","name":"Alpha","folderPaths":["/path/a"]},{"id":"2","name":"Beta","folderPaths":["/path/b"]}]`
+	req = httptest.NewRequest("PUT", "/api/projects", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("PUT projects: expected 200, got %d; body: %s", w.Code, w.Body.String())
+	}
+
+	// Verify projects persisted via GET.
+	req = httptest.NewRequest("GET", "/api/projects", nil)
+	w = httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	var projects []map[string]any
+	json.NewDecoder(w.Body).Decode(&projects)
+	if len(projects) != 2 {
+		t.Fatalf("expected 2 projects, got %d", len(projects))
+	}
+	if projects[0]["name"] != "Alpha" {
+		t.Errorf("expected Alpha, got %v", projects[0]["name"])
+	}
+}
+
+func TestProjectsEndpointValidation(t *testing.T) {
+	dir := setupTestDir(t)
+	projectsPath := filepath.Join(dir, "projects.json")
+
+	srv, err := New(Config{ClaudeDir: dir, SettingsPath: filepath.Join(dir, "settings.json"), ProjectsPath: projectsPath})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+
+	// PUT with missing required fields should fail.
+	body := `[{"id":"","name":""}]`
+	req := httptest.NewRequest("PUT", "/api/projects", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestProjectsEndpointTooLargeBody(t *testing.T) {
+	dir := setupTestDir(t)
+	projectsPath := filepath.Join(dir, "projects.json")
+
+	srv, err := New(Config{ClaudeDir: dir, SettingsPath: filepath.Join(dir, "settings.json"), ProjectsPath: projectsPath})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+
+	bigBody := strings.Repeat("x", 101*1024)
+	req := httptest.NewRequest("PUT", "/api/projects", strings.NewReader(bigBody))
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusRequestEntityTooLarge {
+		t.Errorf("expected 413, got %d", w.Code)
+	}
+}
