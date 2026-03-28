@@ -129,7 +129,9 @@ describe('useProjects', () => {
     it('throws when renaming to an existing name', () => {
       const { result } = renderHook(() => useProjects());
       let counter = 0;
-      vi.mocked(crypto.randomUUID).mockImplementation(() => `uuid-${++counter}`);
+      vi.mocked(crypto.randomUUID).mockImplementation(
+        () => `${++counter}-0000-0000-0000-000000000000` as ReturnType<typeof crypto.randomUUID>,
+      );
 
       act(() => {
         result.current.createProject(makeProject({ name: 'Alpha' }));
@@ -140,7 +142,7 @@ describe('useProjects', () => {
 
       expect(() => {
         act(() => {
-          result.current.updateProject('uuid-2', { name: 'Alpha' });
+          result.current.updateProject('2-0000-0000-0000-000000000000', { name: 'Alpha' });
         });
       }).toThrow(DuplicateProjectNameError);
     });
@@ -195,7 +197,9 @@ describe('useProjects', () => {
     it('does not affect other projects', () => {
       const { result } = renderHook(() => useProjects());
       let counter = 0;
-      vi.mocked(crypto.randomUUID).mockImplementation(() => `uuid-${++counter}`);
+      vi.mocked(crypto.randomUUID).mockImplementation(
+        () => `${++counter}-0000-0000-0000-000000000000` as ReturnType<typeof crypto.randomUUID>,
+      );
 
       act(() => {
         result.current.createProject(makeProject({ name: 'Keep' }));
@@ -205,7 +209,7 @@ describe('useProjects', () => {
       });
 
       act(() => {
-        result.current.deleteProject('uuid-2');
+        result.current.deleteProject('2-0000-0000-0000-000000000000');
       });
 
       expect(result.current.projects).toHaveLength(1);
