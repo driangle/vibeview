@@ -12,8 +12,9 @@ const DirectoryList = lazy(() =>
 const SessionView = lazy(() =>
   import('./pages/SessionView').then((m) => ({ default: m.SessionView })),
 );
-const Settings = lazy(() =>
-  import('./pages/Settings').then((m) => ({ default: m.Settings })),
+const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
+const ProjectList = lazy(() =>
+  import('./pages/ProjectList').then((m) => ({ default: m.ProjectList })),
 );
 const UsagePatterns = lazy(() =>
   import('./pages/UsagePatterns').then((m) => ({ default: m.UsagePatterns })),
@@ -31,6 +32,7 @@ export function App() {
                 <Routes>
                   <Route path="/" element={<SessionList />} />
                   <Route path="/directories" element={<DirectoryList />} />
+                  <Route path="/projects" element={<ProjectList />} />
                   <Route path="/session/:id" element={<SessionView />} />
                   <Route path="/activity" element={<UsagePatterns />} />
                   <Route path="/settings" element={<Settings />} />
