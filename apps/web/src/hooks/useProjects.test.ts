@@ -191,7 +191,7 @@ describe('useProjects', () => {
       const local: Project[] = [{ id: 'local-1', name: 'From LS', folderPaths: ['/ls'] }];
       localStorage.setItem('vibeview:projects', JSON.stringify(local));
 
-      const { result } = renderHook(() => useProjects(), { wrapper });
+      renderHook(() => useProjects(), { wrapper });
       await waitFor(() => {
         expect(putBody).not.toBeNull();
       });
@@ -228,7 +228,7 @@ describe('useProjects', () => {
 
       // PUT should NOT have been called since all IDs already exist on server.
       const putCalls = (fetch as Mock).mock.calls.filter(
-        ([, init]: [string, RequestInit | undefined]) => init?.method === 'PUT',
+        (call) => (call[1] as RequestInit | undefined)?.method === 'PUT',
       );
       expect(putCalls).toHaveLength(0);
     });
