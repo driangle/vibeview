@@ -14,6 +14,28 @@ import { useSessionSort } from '../hooks/useSessionSort';
 import type { PaginatedSessions, SearchResponse } from '../types';
 import { projectName } from '../utils';
 
+function ClearFilterButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-fg hover:text-fg p-0.5"
+    >
+      <svg
+        className="h-3.5 w-3.5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  );
+}
+
 function buildSessionsUrl(
   project: string,
   q: string,
@@ -257,41 +279,50 @@ export function SessionList() {
               </button>
             )}
           </div>
-          <select
-            value={dirFilter}
-            onChange={(e) => setDirFilter(e.target.value)}
-            className={`w-[200px] truncate font-mono ${dirFilter ? selectActive : selectDefault}`}
-          >
-            <option value="">All folders</option>
-            {uniqueProjects.map((project) => (
-              <option key={project} value={project}>
-                {projectName(project, uniqueProjects)}
-              </option>
-            ))}
-          </select>
-          <select
-            value={modelFilter}
-            onChange={(e) => setModelFilter(e.target.value)}
-            className={`w-[180px] truncate ${modelFilter ? selectActive : selectDefault}`}
-          >
-            <option value="">All models</option>
-            {uniqueModels.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <select
-            value={activityFilter}
-            onChange={(e) => setActivityFilter(e.target.value)}
-            className={`w-[180px] truncate ${activityFilter ? selectActive : selectDefault}`}
-          >
-            <option value="">All states</option>
-            <option value="working">Working</option>
-            <option value="waiting_for_approval">Waiting for approval</option>
-            <option value="waiting_for_input">Waiting for input</option>
-            <option value="idle">Idle</option>
-          </select>
+          <div className="relative">
+            <select
+              value={dirFilter}
+              onChange={(e) => setDirFilter(e.target.value)}
+              className={`w-[200px] truncate font-mono ${dirFilter ? `pr-7 ${selectActive}` : selectDefault}`}
+            >
+              <option value="">All folders</option>
+              {uniqueProjects.map((project) => (
+                <option key={project} value={project}>
+                  {projectName(project, uniqueProjects)}
+                </option>
+              ))}
+            </select>
+            {dirFilter && <ClearFilterButton onClick={() => setDirFilter('')} />}
+          </div>
+          <div className="relative">
+            <select
+              value={modelFilter}
+              onChange={(e) => setModelFilter(e.target.value)}
+              className={`w-[180px] truncate ${modelFilter ? `pr-7 ${selectActive}` : selectDefault}`}
+            >
+              <option value="">All models</option>
+              {uniqueModels.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            {modelFilter && <ClearFilterButton onClick={() => setModelFilter('')} />}
+          </div>
+          <div className="relative">
+            <select
+              value={activityFilter}
+              onChange={(e) => setActivityFilter(e.target.value)}
+              className={`w-[180px] truncate ${activityFilter ? `pr-7 ${selectActive}` : selectDefault}`}
+            >
+              <option value="">All states</option>
+              <option value="working">Working</option>
+              <option value="waiting_for_approval">Waiting for approval</option>
+              <option value="waiting_for_input">Waiting for input</option>
+              <option value="idle">Idle</option>
+            </select>
+            {activityFilter && <ClearFilterButton onClick={() => setActivityFilter('')} />}
+          </div>
           <DateRangeFilter from={fromFilter} to={toFilter} onChange={setDateRange} />
         </div>
 

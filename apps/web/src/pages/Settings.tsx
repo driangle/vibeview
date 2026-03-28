@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '../api';
 import { useSettings } from '../contexts/useSettings';
-import type { AppConfig, Settings as SettingsType, ModelPricing } from '../types';
+import type { AppConfig, Settings as SettingsType } from '../types';
 
 function applyThemePreview(theme: string) {
   const resolved =
@@ -100,88 +100,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-fg">{title}</h2>
       <div className="divide-y divide-border rounded-lg border border-border bg-card px-4">
         {children}
-      </div>
-    </div>
-  );
-}
-
-function CustomPricingEditor({
-  pricing,
-  onChange,
-}: {
-  pricing: Record<string, ModelPricing>;
-  onChange: (p: Record<string, ModelPricing>) => void;
-}) {
-  const entries = Object.entries(pricing);
-  const [newModel, setNewModel] = useState('');
-
-  function updateEntry(model: string, field: keyof ModelPricing, val: string) {
-    const num = parseFloat(val);
-    if (isNaN(num)) return;
-    onChange({ ...pricing, [model]: { ...pricing[model], [field]: num } });
-  }
-
-  function addEntry() {
-    const name = newModel.trim();
-    if (!name || pricing[name]) return;
-    onChange({ ...pricing, [name]: { inputPerM: 0, outputPerM: 0 } });
-    setNewModel('');
-  }
-
-  function removeEntry(model: string) {
-    const next = { ...pricing };
-    delete next[model];
-    onChange(next);
-  }
-
-  return (
-    <div className="space-y-2">
-      {entries.map(([model, p]) => (
-        <div key={model} className="flex items-center gap-2 text-xs">
-          <span className="w-32 truncate font-mono text-fg" title={model}>
-            {model}
-          </span>
-          <label className="text-muted-fg">In:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={p.inputPerM}
-            onChange={(e) => updateEntry(model, 'inputPerM', e.target.value)}
-            className={`${inputClass} w-20`}
-          />
-          <label className="text-muted-fg">Out:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={p.outputPerM}
-            onChange={(e) => updateEntry(model, 'outputPerM', e.target.value)}
-            className={`${inputClass} w-20`}
-          />
-          <button
-            type="button"
-            onClick={() => removeEntry(model)}
-            className="text-muted-fg hover:text-destructive transition-colors"
-          >
-            &times;
-          </button>
-        </div>
-      ))}
-      <div className="flex items-center gap-2 text-xs">
-        <input
-          type="text"
-          value={newModel}
-          onChange={(e) => setNewModel(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && addEntry()}
-          placeholder="model-name"
-          className={`${inputClass} w-32 font-mono`}
-        />
-        <button
-          type="button"
-          onClick={addEntry}
-          className="rounded bg-secondary px-2 py-1.5 text-xs text-secondary-fg hover:bg-muted transition-colors"
-        >
-          Add
-        </button>
       </div>
     </div>
   );
@@ -441,18 +359,6 @@ export function Settings() {
               ))}
             </select>
           </Field>
-        </Section>
-
-        <Section title="Custom Model Pricing">
-          <div className="py-4">
-            <p className="mb-3 text-xs text-muted-fg">
-              Override per-million-token pricing for specific models.
-            </p>
-            <CustomPricingEditor
-              pricing={form.customModelPricing}
-              onChange={(p) => update('customModelPricing', p)}
-            />
-          </div>
         </Section>
 
         {config && <StorageInfo config={config} />}

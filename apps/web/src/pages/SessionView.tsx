@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ActivityBadge } from '../components/ActivityBadge';
 import { MessageBubble } from '../components/MessageBubble';
 import { CopyableText } from '../components/CopyableText';
-import { Pagination, FollowToggle } from '../components/SessionControls';
+import { Pagination } from '../components/SessionControls';
 import { WorkingIndicator } from '../components/WorkingIndicator';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/useSettings';
@@ -257,23 +257,21 @@ export function SessionView() {
                   setPage(totalPages - 1);
                   scrollToEnd();
                 }}
+                follow={{
+                  enabled: followMode,
+                  onToggle: () => {
+                    setFollowMode((prev: boolean) => {
+                      if (!prev) {
+                        scrollToEnd();
+                      }
+                      return !prev;
+                    });
+                  },
+                }}
               />
             )}
           </div>
         </section>
-
-        {/* Auto-follow toggle */}
-        <FollowToggle
-          enabled={followMode}
-          onToggle={() => {
-            setFollowMode((prev: boolean) => {
-              if (!prev) {
-                scrollToEnd();
-              }
-              return !prev;
-            });
-          }}
-        />
       </div>
 
       {/* Right Panel: Context & Metadata */}

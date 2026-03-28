@@ -80,7 +80,8 @@ export interface MessageResponse {
     | 'result'
     | 'system'
     | 'file-history-snapshot'
-    | 'custom-title';
+    | 'custom-title'
+    | 'agent-name';
   timestamp: string;
   isMeta?: boolean;
   messageKind?: string;
@@ -163,11 +164,6 @@ export interface SortSettings {
   direction: string;
 }
 
-export interface ModelPricing {
-  inputPerM: number;
-  outputPerM: number;
-}
-
 export interface Settings {
   theme: string;
   defaultSort: SortSettings;
@@ -176,7 +172,6 @@ export interface Settings {
   autoFollow: boolean;
   refreshInterval: number;
   showCost: boolean;
-  customModelPricing: Record<string, ModelPricing>;
   messagesPerPage: number;
   recentThreshold: number;
 }

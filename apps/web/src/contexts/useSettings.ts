@@ -9,7 +9,6 @@ export const defaults: Settings = {
   autoFollow: false,
   refreshInterval: 5000,
   showCost: true,
-  customModelPricing: {},
   messagesPerPage: 100,
   recentThreshold: 300000,
 };

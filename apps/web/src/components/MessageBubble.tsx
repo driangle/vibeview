@@ -255,6 +255,22 @@ export function MessageBubble({
   agentGroupFirstIds,
   isLastMessage,
 }: MessageBubbleProps) {
+  if (message.type === 'custom-title' || message.type === 'agent-name') {
+    const label = message.type === 'custom-title' ? 'Title set' : 'Agent';
+    const detail =
+      message.type === 'custom-title'
+        ? String(message.data?.title ?? '')
+        : String(message.data?.name ?? '');
+    return (
+      <div className="flex items-center">
+        <span className="border-l-2 border-gray-200 dark:border-gray-700 py-0.5 pl-2 pr-2 text-xs text-gray-400 dark:text-gray-500">
+          <span className="font-medium">{label}</span>
+          {detail && <span className="ml-1.5 text-gray-400 dark:text-gray-500">{detail}</span>}
+        </span>
+      </div>
+    );
+  }
+
   if (message.type === 'file-history-snapshot') return null;
 
   if (message.type === 'user' && message.message) {

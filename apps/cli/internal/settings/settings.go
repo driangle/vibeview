@@ -11,28 +11,21 @@ import (
 
 // Settings holds all user-configurable preferences.
 type Settings struct {
-	Theme              string                  `json:"theme"`
-	DefaultSort        SortSettings            `json:"defaultSort"`
-	PageSize           int                     `json:"pageSize"`
-	DateFormat         string                  `json:"dateFormat"`
-	AutoFollow         bool                    `json:"autoFollow"`
-	RefreshInterval    int                     `json:"refreshInterval"`
-	ShowCost           bool                    `json:"showCost"`
-	CustomModelPricing map[string]ModelPricing `json:"customModelPricing"`
-	MessagesPerPage    int                     `json:"messagesPerPage"`
-	RecentThreshold    int                     `json:"recentThreshold"`
+	Theme           string       `json:"theme"`
+	DefaultSort     SortSettings `json:"defaultSort"`
+	PageSize        int          `json:"pageSize"`
+	DateFormat      string       `json:"dateFormat"`
+	AutoFollow      bool         `json:"autoFollow"`
+	RefreshInterval int          `json:"refreshInterval"`
+	ShowCost        bool         `json:"showCost"`
+	MessagesPerPage int          `json:"messagesPerPage"`
+	RecentThreshold int          `json:"recentThreshold"`
 }
 
 // SortSettings configures default sort column and direction.
 type SortSettings struct {
 	Column    string `json:"column"`
 	Direction string `json:"direction"`
-}
-
-// ModelPricing holds per-million-token prices for a custom model.
-type ModelPricing struct {
-	InputPerM  float64 `json:"inputPerM"`
-	OutputPerM float64 `json:"outputPerM"`
 }
 
 var (
@@ -45,16 +38,15 @@ var (
 // Default returns settings with sensible defaults.
 func Default() Settings {
 	return Settings{
-		Theme:              "system",
-		DefaultSort:        SortSettings{Column: "date", Direction: "desc"},
-		PageSize:           100,
-		DateFormat:         "relative",
-		AutoFollow:         false,
-		RefreshInterval:    5000,
-		ShowCost:           true,
-		CustomModelPricing: map[string]ModelPricing{},
-		MessagesPerPage:    100,
-		RecentThreshold:    300000,
+		Theme:           "system",
+		DefaultSort:     SortSettings{Column: "date", Direction: "desc"},
+		PageSize:        100,
+		DateFormat:      "relative",
+		AutoFollow:      false,
+		RefreshInterval: 5000,
+		ShowCost:        true,
+		MessagesPerPage: 100,
+		RecentThreshold: 300000,
 	}
 }
 
@@ -73,11 +65,6 @@ func Load(path string) (Settings, error) {
 
 	if err := json.Unmarshal(data, &s); err != nil {
 		return Default(), fmt.Errorf("parse settings: %w", err)
-	}
-
-	// Ensure map is never nil after unmarshal.
-	if s.CustomModelPricing == nil {
-		s.CustomModelPricing = map[string]ModelPricing{}
 	}
 
 	return s, nil
@@ -206,10 +193,6 @@ func MergeJSON(base Settings, partialJSON []byte) (Settings, error) {
 	var result Settings
 	if err := json.Unmarshal(mergedRaw, &result); err != nil {
 		return base, err
-	}
-
-	if result.CustomModelPricing == nil {
-		result.CustomModelPricing = map[string]ModelPricing{}
 	}
 
 	return result, nil
