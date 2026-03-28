@@ -38,11 +38,11 @@ install: web ## Build and install the CLI binary
 	cp -r apps/web/dist apps/cli/internal/spa/dist
 	cd apps/cli && go install -ldflags "$(DEV_LDFLAGS)" ./cmd/vibeview
 
-install-dev: ## Install CLI in dev mode
-	cd apps/cli && go install -ldflags "$(DEV_LDFLAGS)" ./cmd/vibeview
+install-dev: ## Install CLI in dev mode as vibeview-dev
+	cd apps/cli && go build -ldflags "$(DEV_LDFLAGS)" -o "$$(go env GOPATH)/bin/vibeview-dev" ./cmd/vibeview
 
-install-dev-full: ## Install CLI + web dependencies
-	cd apps/cli && go install -ldflags "$(DEV_LDFLAGS)" ./cmd/vibeview
+install-dev-full: ## Install CLI + web dependencies as vibeview-dev
+	cd apps/cli && go build -ldflags "$(DEV_LDFLAGS)" -o "$$(go env GOPATH)/bin/vibeview-dev" ./cmd/vibeview
 	cd apps/web && npm install
 
 docs-dev: ## Start VitePress dev server

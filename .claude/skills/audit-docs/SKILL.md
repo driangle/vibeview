@@ -29,19 +29,19 @@ If no arguments are provided, run a full audit and produce a report (no fixes).
    ```
 2. Verify the binary works:
    ```bash
-   vibeview --version
+   vibeview-dev --version
    ```
 
 ### Phase 2: Discover CLI commands and flags
 
-1. **Get the top-level help**: Run `vibeview --help` and parse the list of available commands.
-2. **For each command**, run `vibeview <command> --help` to capture:
+1. **Get the top-level help**: Run `vibeview-dev --help` and parse the list of available commands.
+2. **For each command**, run `vibeview-dev <command> --help` to capture:
    - Usage string
    - Description (Short + Long)
    - All flags (name, type, default, description)
    - Subcommands (if any)
-3. For commands with subcommands, recurse: run `vibeview <command> <subcommand> --help`.
-4. Also capture global flags from `vibeview --help`.
+3. For commands with subcommands, recurse: run `vibeview-dev <command> <subcommand> --help`.
+4. Also capture global flags from `vibeview-dev --help`.
 5. Store all of this as a structured inventory for comparison.
 
 ### Phase 3: Discover web features
