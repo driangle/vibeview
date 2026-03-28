@@ -5,7 +5,7 @@ status: pending
 priority: medium
 type: feature
 tags: ["inspect", "llm"]
-dependencies: ["01kmnygwh"]
+dependencies: ["01kmnygwh", "01kma9rhy"]
 created: "2026-03-26"
 ---
 
@@ -19,13 +19,10 @@ Add an opt-in `--enrich` flag to `vibeview inspect` that uses an LLM (via Claude
 
 - [ ] Add `--enrich` flag to the inspect command
 - [ ] Prompt the user for confirmation before calling the LLM (e.g. "This will send session data to Claude. Continue? [y/N]")
-- [ ] Integrate [agent-runner](https://github.com/driangle/agent-runner) as a dependency for invoking Claude CLI
-- [ ] Design the prompt: pass session metadata, tool usage, errors, files changed, and conversation content to Claude for analysis
-- [ ] Parse LLM response into structured sections: summary, key decisions, session quality assessment
+- [ ] Call the core enrichment service (from 01kma9rhy) with the session data
 - [ ] Render enriched sections in the styled terminal output (appended after the mechanical sections)
-- [ ] Handle errors gracefully (Claude CLI not installed, agent-runner failure, timeout)
 - [ ] Skip confirmation with `--enrich --yes` for scripting use cases
-- [ ] Add tests for the enrichment flow (mock agent-runner calls)
+- [ ] Add tests for the enrichment flow (mock enrichment service calls)
 
 ## Acceptance Criteria
 
@@ -33,6 +30,5 @@ Add an opt-in `--enrich` flag to `vibeview inspect` that uses an LLM (via Claude
 - `--enrich` prompts for user confirmation before proceeding
 - `--enrich --yes` skips the confirmation prompt
 - LLM-derived sections are clearly labeled as AI-generated in the output
-- If Claude CLI is not available, `--enrich` fails with a clear error message
-- Session data is sent to Claude via agent-runner (not a direct API call)
+- If Claude CLI is not available, `--enrich` fails with a clear error message (error surfaced from core enrichment service)
 - Enriched output includes at minimum: a 1-2 sentence summary and key decisions list

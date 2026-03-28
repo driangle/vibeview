@@ -17,22 +17,22 @@ Add backend API endpoints that let the frontend trigger AI-powered semantic enri
 
 ## Tasks
 
+### Core enrichment service (shared by CLI and API)
 - [ ] Add `agentrunner` Go dependency to the CLI module
-- [ ] Create `POST /api/sessions/{id}/enrich` endpoint that:
-  - Reads the session's messages
-  - Constructs a prompt asking Claude to analyze the conversation and produce structured enrichment JSON
-  - Invokes Claude CLI via `agentrunner.Run()` with a budget cap
-  - Parses the result into a `SessionEnrichment` struct
-  - Stores the result as `{sessionId}.enrichment.json` in VibeView's data directory
-  - Returns the enrichment JSON to the caller
-- [ ] Create `GET /api/sessions/{id}/enrichment` endpoint that returns cached enrichment if available (404 if not)
 - [ ] Define the enrichment data model in Go: `SessionEnrichment`, `PhaseEnrichment`, `CycleEnrichment`, `KeyDecision`
 - [ ] Design the enrichment prompt — include session messages (or a summary for very long sessions) and request structured JSON output matching the enrichment schema
-- [ ] Add error handling: agent-runner failures, budget exceeded, Claude CLI not installed
+- [ ] Create a core enrichment service that accepts session data, invokes Claude CLI via `agentrunner.Run()` with a budget cap, and returns a parsed `SessionEnrichment`
+- [ ] Add error handling in the service: agent-runner failures, budget exceeded, Claude CLI not installed
+- [ ] Add caching: store/load enrichment results as `{sessionId}.enrichment.json` in VibeView's data directory
+
+### API endpoints
+- [ ] Create `POST /api/sessions/{id}/enrich` endpoint that calls the enrichment service and returns the result
+- [ ] Create `GET /api/sessions/{id}/enrichment` endpoint that returns cached enrichment if available (404 if not)
 - [ ] Support re-enrichment (POST overwrites existing cached result)
 
 ## Acceptance Criteria
 
+- Core enrichment service is reusable by both API endpoints and CLI commands
 - `POST /api/sessions/{id}/enrich` triggers a Claude CLI call and returns valid enrichment JSON
 - `GET /api/sessions/{id}/enrichment` returns cached results or 404
 - Enrichment results persist across server restarts
