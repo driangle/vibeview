@@ -153,7 +153,7 @@ export function SessionView() {
       >
         {/* Session Header */}
         <section className="sticky top-0 z-10 px-8 py-4 border-b border-border bg-card">
-          <div className="max-w-3xl mx-auto space-y-2">
+          <div className="max-w-4xl mx-auto space-y-2">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <CopyableText
@@ -192,7 +192,7 @@ export function SessionView() {
 
         {/* Conversation Flow */}
         <section className="flex-1 bg-bg p-8">
-          <div className="max-w-3xl mx-auto space-y-4 pb-32 print:pb-0">
+          <div className="max-w-4xl mx-auto space-y-4 pb-32 print:pb-0">
             {/* Pagination (top) */}
             {totalPages > 1 && (
               <Pagination

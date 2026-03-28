@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import Markdown from 'react-markdown';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
-import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import type { Options as RehypeSanitizeOptions } from 'rehype-sanitize';
 import { CodeBlock } from './CodeBlock';
@@ -27,9 +26,9 @@ const sanitizeSchema: RehypeSanitizeOptions = {
 
 function TextSegment({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:rounded prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.8em] prose-code:font-mono">
       <Markdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
+        remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeSanitize, sanitizeSchema]]}
         components={{
           code({ className, children, ...props }) {
