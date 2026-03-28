@@ -685,6 +685,111 @@ func TestActivityEndpointWithDirFilter(t *testing.T) {
 	}
 }
 
+func newTestServerWithProjects(t *testing.T) *Server {
+	t.Helper()
+	dir := setupTestDir(t)
+	projectsPath := filepath.Join(dir, "projects.json")
+	projectsJSON := `[{"id":"proj-1","name":"Project A","folderPaths":["/users/me/project-a"]},{"id":"proj-2","name":"Both","folderPaths":["/users/me/project-a","/users/me/project-b"]}]`
+	if err := os.WriteFile(projectsPath, []byte(projectsJSON), 0644); err != nil {
+		t.Fatal(err)
+	}
+	srv, err := New(Config{ClaudeDir: dir, ProjectsPath: projectsPath})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	return srv
+}
+
+func TestListSessionsFilterByProject(t *testing.T) {
+	srv := newTestServerWithProjects(t)
+
+	// proj-1 has only project-a, should return 1 session.
+	req := httptest.NewRequest("GET", "/api/sessions?project=proj-1", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	var page PaginatedSessionsResponse
+	json.NewDecoder(w.Body).Decode(&page)
+	if len(page.Sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(page.Sessions))
+	}
+	if page.Sessions[0].ID != "sess-1" {
+		t.Errorf("expected sess-1, got %s", page.Sessions[0].ID)
+	}
+
+	// proj-2 has both dirs, should return 2 sessions.
+	req = httptest.NewRequest("GET", "/api/sessions?project=proj-2", nil)
+	w = httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	json.NewDecoder(w.Body).Decode(&page)
+	if len(page.Sessions) != 2 {
+		t.Fatalf("expected 2 sessions for proj-2, got %d", len(page.Sessions))
+	}
+}
+
+func TestListSessionsFilterByProjectAndDir(t *testing.T) {
+	srv := newTestServerWithProjects(t)
+
+	// proj-2 has both dirs, but secondary dir filter narrows to project-a only.
+	req := httptest.NewRequest("GET", "/api/sessions?project=proj-2&dir=project-a", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	var page PaginatedSessionsResponse
+	json.NewDecoder(w.Body).Decode(&page)
+	if len(page.Sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(page.Sessions))
+	}
+	if page.Sessions[0].ID != "sess-1" {
+		t.Errorf("expected sess-1, got %s", page.Sessions[0].ID)
+	}
+}
+
+func TestListSessionsFilterByUnknownProject(t *testing.T) {
+	srv := newTestServerWithProjects(t)
+
+	// Unknown project ID should return all sessions (no filtering).
+	req := httptest.NewRequest("GET", "/api/sessions?project=nonexistent", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	var page PaginatedSessionsResponse
+	json.NewDecoder(w.Body).Decode(&page)
+	if len(page.Sessions) != 2 {
+		t.Fatalf("expected 2 sessions for unknown project, got %d", len(page.Sessions))
+	}
+}
+
+func TestActivityEndpointWithProjectFilter(t *testing.T) {
+	srv := newTestServerWithProjects(t)
+
+	req := httptest.NewRequest("GET", "/api/activity?project=proj-1", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var resp ActivityResponse
+	json.NewDecoder(w.Body).Decode(&resp)
+
+	// Dirs should be scoped to project-a only.
+	if len(resp.Dirs) != 1 {
+		t.Errorf("expected 1 dir for proj-1, got %d: %v", len(resp.Dirs), resp.Dirs)
+	}
+
+	// Day counts should only reflect project-a sessions.
+	totalCount := 0
+	for _, d := range resp.Days {
+		totalCount += d.Count
+	}
+	if totalCount != 1 {
+		t.Errorf("expected 1 session day count for proj-1, got %d", totalCount)
+	}
+}
+
 func TestCORSAllowsIPv6Origin(t *testing.T) {
 	srv := newTestServer(t)
 	handler := corsHandler(3000, srv.mux)

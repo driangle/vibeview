@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useSearchParams } from 'react-router-dom';
 import useSWR from 'swr';
 import { fetcher } from '../api';
+import { useActiveProject } from '../hooks/useActiveProject';
 import { useBackendStatus } from '../hooks/useBackendStatus';
+import { useProjects } from '../hooks/useProjects';
 import { useTheme } from '../hooks/useTheme';
 import type { AppConfig } from '../types';
 import { ConnectionBadge } from './ConnectionBadge';
@@ -156,6 +158,55 @@ function ThemeToggle() {
   );
 }
 
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `text-sm font-medium transition-colors ${
+    isActive
+      ? 'text-primary border-b-2 border-primary pb-[13px] pt-[15px]'
+      : 'text-muted-fg hover:text-fg'
+  }`;
+
+function NavBarLink({
+  to,
+  end,
+  children,
+}: {
+  to: string;
+  end?: boolean;
+  children: React.ReactNode;
+}) {
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get('project');
+  const target = projectId ? `${to}?project=${encodeURIComponent(projectId)}` : to;
+
+  return (
+    <NavLink to={target} end={end} className={navLinkClass}>
+      {children}
+    </NavLink>
+  );
+}
+
+function ProjectSelector() {
+  const { projects } = useProjects();
+  const { activeProjectId, setActiveProject } = useActiveProject();
+
+  if (projects.length === 0) return null;
+
+  return (
+    <select
+      value={activeProjectId}
+      onChange={(e) => setActiveProject(e.target.value)}
+      className="rounded border border-border bg-card px-2 py-1 text-sm text-fg"
+    >
+      <option value="">All projects</option>
+      {projects.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function NavBar() {
   const { data: config } = useSWR<AppConfig>('/api/config', fetcher);
   const backendStatus = useBackendStatus();
@@ -167,56 +218,14 @@ export function NavBar() {
           <img src="/favicon.svg" alt="" className="h-5 w-5" />
           vibeview
         </span>
-        <NavLink
-          to="/"
-          end
-          className={({ isActive }) =>
-            `text-sm font-medium transition-colors ${
-              isActive
-                ? 'text-primary border-b-2 border-primary pb-[13px] pt-[15px]'
-                : 'text-muted-fg hover:text-fg'
-            }`
-          }
-        >
+        <NavBarLink to="/" end>
           Sessions
-        </NavLink>
-        <NavLink
-          to="/directories"
-          className={({ isActive }) =>
-            `text-sm font-medium transition-colors ${
-              isActive
-                ? 'text-primary border-b-2 border-primary pb-[13px] pt-[15px]'
-                : 'text-muted-fg hover:text-fg'
-            }`
-          }
-        >
-          Directories
-        </NavLink>
-        <NavLink
-          to="/projects"
-          className={({ isActive }) =>
-            `text-sm font-medium transition-colors ${
-              isActive
-                ? 'text-primary border-b-2 border-primary pb-[13px] pt-[15px]'
-                : 'text-muted-fg hover:text-fg'
-            }`
-          }
-        >
-          Projects
-        </NavLink>
-        <NavLink
-          to="/activity"
-          className={({ isActive }) =>
-            `text-sm font-medium transition-colors ${
-              isActive
-                ? 'text-primary border-b-2 border-primary pb-[13px] pt-[15px]'
-                : 'text-muted-fg hover:text-fg'
-            }`
-          }
-        >
-          Activity
-        </NavLink>
+        </NavBarLink>
+        <NavBarLink to="/directories">Directories</NavBarLink>
+        <NavBarLink to="/projects">Projects</NavBarLink>
+        <NavBarLink to="/activity">Activity</NavBarLink>
         <div className="ml-auto flex items-center gap-2">
+          <ProjectSelector />
           <ConnectionBadge status={backendStatus} />
           {config && <ConfigLabel config={config} />}
           <NavLink

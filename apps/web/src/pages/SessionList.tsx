@@ -7,6 +7,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
 import { SessionTable } from '../components/SessionTable';
 import { useSettings } from '../contexts/useSettings';
+import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSessionFilters } from '../hooks/useSessionFilters';
 import { useSessionSort } from '../hooks/useSessionSort';
@@ -22,8 +23,10 @@ function buildSessionsUrl(
   activityState: string,
   pageSize: number,
   page?: number,
+  projectId?: string,
 ): string {
   const params = new URLSearchParams();
+  if (projectId) params.set('project', projectId);
   if (project) params.set('dir', project);
   if (q) params.set('q', q);
   if (from) params.set('from', from);
@@ -52,6 +55,7 @@ function formatStatTokens(n: number): string {
 export function SessionList() {
   const navigate = useNavigate();
   const { settings } = useSettings();
+  const { activeProjectId } = useActiveProject();
 
   const {
     search,
@@ -82,6 +86,7 @@ export function SessionList() {
     activityFilter,
     pageSize,
     currentPage,
+    activeProjectId,
   );
   const {
     data: paginated,
@@ -93,7 +98,10 @@ export function SessionList() {
     keepPreviousData: true,
   });
 
-  const { data: allPaginated } = useSWR<PaginatedSessions>('/api/sessions', fetcher, {
+  const allSessionsUrl = activeProjectId
+    ? `/api/sessions?project=${encodeURIComponent(activeProjectId)}`
+    : '/api/sessions';
+  const { data: allPaginated } = useSWR<PaginatedSessions>(allSessionsUrl, fetcher, {
     refreshInterval: settings.refreshInterval,
   });
 

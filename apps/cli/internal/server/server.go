@@ -266,8 +266,44 @@ func (s *Server) handleUpdateProjects(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, list)
 }
 
+// resolveProjectDirs looks up a project by ID and returns its folder paths.
+func (s *Server) resolveProjectDirs(projectID string) []string {
+	if projectID == "" {
+		return nil
+	}
+	list, err := projects.Load(s.projectsPath)
+	if err != nil {
+		return nil
+	}
+	for _, p := range list {
+		if p.ID == projectID {
+			return p.FolderPaths
+		}
+	}
+	return nil
+}
+
+// filterByDirs returns sessions whose Project matches any of the given directories.
+func filterByDirs(sessions []session.SessionMeta, dirs []string) []session.SessionMeta {
+	filtered := make([]session.SessionMeta, 0)
+	for _, sm := range sessions {
+		for _, d := range dirs {
+			if strings.Contains(sm.Project, d) {
+				filtered = append(filtered, sm)
+				break
+			}
+		}
+	}
+	return filtered
+}
+
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	sessions := s.index.GetSessions()
+	if projectID := r.URL.Query().Get("project"); projectID != "" {
+		if projectDirs := s.resolveProjectDirs(projectID); len(projectDirs) > 0 {
+			sessions = filterByDirs(sessions, projectDirs)
+		}
+	}
 	if dir := r.URL.Query().Get("dir"); dir != "" {
 		filtered := make([]session.SessionMeta, 0)
 		for _, sm := range sessions {
@@ -508,8 +544,24 @@ func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Strings(dirs)
 
-	// Apply dir filter only for day counts.
+	// Apply project and dir filters for day/hour counts.
 	sessions := allSessions
+	if projectID := r.URL.Query().Get("project"); projectID != "" {
+		if projectDirs := s.resolveProjectDirs(projectID); len(projectDirs) > 0 {
+			sessions = filterByDirs(sessions, projectDirs)
+			// Scope the dirs dropdown to only show directories within the project.
+			scopedDirs := make([]string, 0)
+			for _, d := range dirs {
+				for _, pd := range projectDirs {
+					if strings.Contains(d, pd) {
+						scopedDirs = append(scopedDirs, d)
+						break
+					}
+				}
+			}
+			dirs = scopedDirs
+		}
+	}
 	if dir := r.URL.Query().Get("dir"); dir != "" {
 		filtered := make([]session.SessionMeta, 0)
 		for _, sm := range sessions {

@@ -5,6 +5,7 @@ import { fetcher } from '../api';
 import { ContributionGraph, ContributionLegend } from '../components/ContributionGraph';
 import type { CellRange } from '../components/ContributionGraph';
 import { HourOfDayChart } from '../components/HourOfDayChart';
+import { useActiveProject } from '../hooks/useActiveProject';
 import type { ActivityResponse } from '../types';
 import { projectName } from '../utils';
 
@@ -19,7 +20,8 @@ const LEGEND_SPACE = 40;
 
 export function UsagePatterns() {
   const navigate = useNavigate();
-  const [project, setProject] = useState('');
+  const { activeProjectId } = useActiveProject();
+  const [dirFilter, setDirFilter] = useState('');
   const [view, setView] = useState<ViewMode>('day');
   const headerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -47,18 +49,27 @@ export function UsagePatterns() {
     return () => window.removeEventListener('resize', recalc);
   }, []);
 
+  // Reset dir filter when active project changes.
+  useEffect(() => {
+    setDirFilter('');
+  }, [activeProjectId]);
+
   const handleCellClick = useCallback(
     (range: CellRange) => {
       const params = new URLSearchParams();
       params.set('from', String(range.from));
       params.set('to', String(range.to));
-      if (project) params.set('dir', project);
+      if (dirFilter) params.set('dir', dirFilter);
+      if (activeProjectId) params.set('project', activeProjectId);
       navigate(`/?${params.toString()}`);
     },
-    [navigate, project],
+    [navigate, dirFilter, activeProjectId],
   );
 
-  const url = project ? `/api/activity?dir=${encodeURIComponent(project)}` : '/api/activity';
+  const activityParams = new URLSearchParams();
+  if (activeProjectId) activityParams.set('project', activeProjectId);
+  if (dirFilter) activityParams.set('dir', dirFilter);
+  const url = activityParams.toString() ? `/api/activity?${activityParams}` : '/api/activity';
   const { data, error, isLoading } = useSWR<ActivityResponse>(url, fetcher, {
     refreshInterval: 30000,
   });
@@ -101,11 +112,11 @@ export function UsagePatterns() {
         <div className="flex items-center gap-3">
           {data.dirs.length > 1 && (
             <select
-              value={project}
-              onChange={(e) => setProject(e.target.value)}
+              value={dirFilter}
+              onChange={(e) => setDirFilter(e.target.value)}
               className="rounded border border-border bg-card px-2 py-1 text-sm text-fg"
             >
-              <option value="">All projects</option>
+              <option value="">All folders</option>
               {data.dirs.map((p) => (
                 <option key={p} value={p}>
                   {projectName(p, data.dirs)}

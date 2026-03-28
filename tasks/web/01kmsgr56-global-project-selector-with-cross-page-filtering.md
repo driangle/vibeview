@@ -25,16 +25,15 @@ Add a global project selector (e.g., in the NavBar) that stores the active proje
 
 ## Tasks
 
-- [ ] Add a project selector dropdown to the NavBar (shows all projects, plus "All" option)
-- [ ] Store active project ID in a URL param (`?project=<id>`) that persists across navigation
-- [ ] Create a shared hook (e.g., `useActiveProject`) that reads the URL param, resolves the Project, and returns its `folderPaths`
-- [ ] Update `useSessionFilters` to support filtering by multiple directories (project's `folderPaths`) instead of a single `dir`
-- [ ] Update SessionList to use the active project filter (replace or augment the `dir` dropdown)
-- [ ] Update UsagePatterns/Activity page to respect the global project filter instead of its own local state
-- [ ] Update DirectoryList to filter directories by active project's `folderPaths`
-- [ ] Update the backend `/api/sessions` and `/api/activity` endpoints to support multi-directory filtering (e.g., `?dirs=path1,path2`)
-- [ ] Ensure the `dir` filter still works as a secondary filter within a project
-- [ ] Add tests for the global project filter behavior
+- [x] Add a project selector dropdown to the NavBar (shows all projects, plus "All" option)
+- [x] Store active project ID in a URL param (`?project=<id>`) that persists across navigation
+- [x] Create a shared hook (e.g., `useActiveProject`) that reads the URL param, resolves the Project, and returns its `folderPaths`
+- [x] Update SessionList to use the active project filter (replace or augment the `dir` dropdown)
+- [x] Update UsagePatterns/Activity page to respect the global project filter instead of its own local state
+- [x] Update DirectoryList to filter directories by active project's `folderPaths`
+- [x] Update the backend `/api/sessions` and `/api/activity` endpoints to support project-based filtering via `?project=<id>`
+- [x] Ensure the `dir` filter still works as a secondary filter within a project
+- [x] Add tests for the global project filter behavior
 
 ## Acceptance Criteria
 

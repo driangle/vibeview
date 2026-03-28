@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import { fetcher } from '../api';
+import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import type { PaginatedSessions, Session } from '../types';
 import { formatTime, projectName } from '../utils';
@@ -38,11 +39,15 @@ function summarizeDirectories(sessions: Session[]): DirectorySummary[] {
 
 export function DirectoryList() {
   const navigate = useNavigate();
+  const { activeProjectId } = useActiveProject();
+  const sessionsUrl = activeProjectId
+    ? `/api/sessions?project=${encodeURIComponent(activeProjectId)}`
+    : '/api/sessions';
   const {
     data: paginated,
     error,
     isLoading,
-  } = useSWR<PaginatedSessions>('/api/sessions', fetcher, { refreshInterval: 5000 });
+  } = useSWR<PaginatedSessions>(sessionsUrl, fetcher, { refreshInterval: 5000 });
 
   const sessions = paginated?.sessions;
 
@@ -51,9 +56,14 @@ export function DirectoryList() {
   const onSelect = useCallback(
     (index: number) => {
       const entry = directories[index];
-      if (entry) navigate(`/?dir=${encodeURIComponent(entry.dir)}`);
+      if (entry) {
+        const params = new URLSearchParams();
+        params.set('dir', entry.dir);
+        if (activeProjectId) params.set('project', activeProjectId);
+        navigate(`/?${params.toString()}`);
+      }
     },
-    [directories, navigate],
+    [directories, navigate, activeProjectId],
   );
 
   const { selectedIndex } = useKeyboardNavigation({
@@ -98,7 +108,7 @@ export function DirectoryList() {
           {directories.map((entry, index) => (
             <li key={entry.dir} data-row-index={index}>
               <Link
-                to={`/?dir=${encodeURIComponent(entry.dir)}`}
+                to={`/?dir=${encodeURIComponent(entry.dir)}${activeProjectId ? `&project=${encodeURIComponent(activeProjectId)}` : ''}`}
                 className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50${
                   index === selectedIndex ? ' bg-blue-50 dark:bg-blue-900/30' : ''
                 }`}

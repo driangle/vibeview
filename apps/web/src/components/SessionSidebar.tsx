@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CopyableText } from './CopyableText';
 import {
   SidebarSection,
@@ -37,6 +37,8 @@ export function SessionSidebar({
   toolResults,
   onNavigateToMessage,
 }: SessionSidebarProps) {
+  const [searchParams] = useSearchParams();
+  const activeProjectId = searchParams.get('project') || '';
   const [viewerFile, setViewerFile] = useState<{
     path: string;
     operations: FileOperation[];
@@ -150,7 +152,7 @@ export function SessionSidebar({
             <div className="flex justify-between items-center">
               <span className="text-[11px] font-headline text-muted-fg uppercase">Project</span>
               <Link
-                to={`/?dir=${encodeURIComponent(project)}`}
+                to={`/?dir=${encodeURIComponent(project)}${activeProjectId ? `&project=${encodeURIComponent(activeProjectId)}` : ''}`}
                 className="text-xs font-medium text-fg hover:text-primary transition-colors"
               >
                 {projectName(project)}
