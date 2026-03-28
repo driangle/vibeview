@@ -24,7 +24,7 @@ function buildSessionsUrl(
   page?: number,
 ): string {
   const params = new URLSearchParams();
-  if (project) params.set('project', project);
+  if (project) params.set('dir', project);
   if (q) params.set('q', q);
   if (from) params.set('from', from);
   if (to) params.set('to', to);
@@ -131,7 +131,7 @@ export function SessionList() {
 
   const uniqueProjects = useMemo(() => {
     if (!allPaginated?.sessions) return [];
-    const projects = [...new Set(allPaginated.sessions.map((s) => s.project))];
+    const projects = [...new Set(allPaginated.sessions.map((s) => s.dir))];
     return projects.sort();
   }, [allPaginated]);
 

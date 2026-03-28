@@ -268,10 +268,10 @@ func (s *Server) handleUpdateProjects(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	sessions := s.index.GetSessions()
-	if project := r.URL.Query().Get("project"); project != "" {
+	if dir := r.URL.Query().Get("dir"); dir != "" {
 		filtered := make([]session.SessionMeta, 0)
 		for _, sm := range sessions {
-			if strings.Contains(sm.Project, project) {
+			if strings.Contains(sm.Project, dir) {
 				filtered = append(filtered, sm)
 			}
 		}
@@ -495,25 +495,25 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 	allSessions := s.index.GetSessions()
 
-	// Always build the full projects list so the filter dropdown stays visible.
-	projectSet := make(map[string]struct{})
+	// Always build the full dirs list so the filter dropdown stays visible.
+	dirSet := make(map[string]struct{})
 	for _, sm := range allSessions {
 		if sm.Project != "" {
-			projectSet[sm.Project] = struct{}{}
+			dirSet[sm.Project] = struct{}{}
 		}
 	}
-	projects := make([]string, 0, len(projectSet))
-	for p := range projectSet {
-		projects = append(projects, p)
+	dirs := make([]string, 0, len(dirSet))
+	for p := range dirSet {
+		dirs = append(dirs, p)
 	}
-	sort.Strings(projects)
+	sort.Strings(dirs)
 
-	// Apply project filter only for day counts.
+	// Apply dir filter only for day counts.
 	sessions := allSessions
-	if project := r.URL.Query().Get("project"); project != "" {
+	if dir := r.URL.Query().Get("dir"); dir != "" {
 		filtered := make([]session.SessionMeta, 0)
 		for _, sm := range sessions {
-			if strings.Contains(sm.Project, project) {
+			if strings.Contains(sm.Project, dir) {
 				filtered = append(filtered, sm)
 			}
 		}
@@ -542,7 +542,7 @@ func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 		hours[h] = ActivityHourResponse{Hour: h, Count: hourCounts[h]}
 	}
 
-	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, Hours: hours, Projects: projects})
+	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, Hours: hours, Dirs: dirs})
 }
 
 // --- Response Types ---
@@ -569,15 +569,15 @@ type ActivityHourResponse struct {
 
 // ActivityResponse is the API representation of daily activity data.
 type ActivityResponse struct {
-	Days     []ActivityDayResponse  `json:"days"`
-	Hours    []ActivityHourResponse `json:"hours"`
-	Projects []string               `json:"projects"`
+	Days  []ActivityDayResponse  `json:"days"`
+	Hours []ActivityHourResponse `json:"hours"`
+	Dirs  []string               `json:"dirs"`
 }
 
 // SessionResponse is the API representation of a session in list responses.
 type SessionResponse struct {
 	ID            string              `json:"id"`
-	Project       string              `json:"project"`
+	Dir           string              `json:"dir"`
 	CustomTitle   string              `json:"customTitle"`
 	Timestamp     string              `json:"timestamp"`
 	MessageCount  int                 `json:"messageCount"`
@@ -633,7 +633,7 @@ type MessageResponse struct {
 func toSessionResponse(m session.SessionMeta) SessionResponse {
 	return SessionResponse{
 		ID:            m.SessionID,
-		Project:       m.Project,
+		Dir:           m.Project,
 		CustomTitle:   m.CustomTitle,
 		Timestamp:     msToISO(m.Timestamp),
 		MessageCount:  m.MessageCount,

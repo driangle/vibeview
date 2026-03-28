@@ -7,7 +7,7 @@ import type { PaginatedSessions, Session } from '../types';
 import { formatTime, projectName } from '../utils';
 
 interface DirectorySummary {
-  project: string;
+  dir: string;
   sessionCount: number;
   lastActivity: string;
 }
@@ -16,15 +16,15 @@ function summarizeDirectories(sessions: Session[]): DirectorySummary[] {
   const map = new Map<string, DirectorySummary>();
 
   for (const session of sessions) {
-    const existing = map.get(session.project);
+    const existing = map.get(session.dir);
     if (existing) {
       existing.sessionCount++;
       if (session.timestamp > existing.lastActivity) {
         existing.lastActivity = session.timestamp;
       }
     } else {
-      map.set(session.project, {
-        project: session.project,
+      map.set(session.dir, {
+        dir: session.dir,
         sessionCount: 1,
         lastActivity: session.timestamp,
       });
@@ -50,8 +50,8 @@ export function DirectoryList() {
 
   const onSelect = useCallback(
     (index: number) => {
-      const dir = directories[index];
-      if (dir) navigate(`/?dir=${encodeURIComponent(dir.project)}`);
+      const entry = directories[index];
+      if (entry) navigate(`/?dir=${encodeURIComponent(entry.dir)}`);
     },
     [directories, navigate],
   );
@@ -95,27 +95,27 @@ export function DirectoryList() {
         <p className="text-gray-500 dark:text-gray-400">No directories found.</p>
       ) : (
         <ul className="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          {directories.map((dir, index) => (
-            <li key={dir.project} data-row-index={index}>
+          {directories.map((entry, index) => (
+            <li key={entry.dir} data-row-index={index}>
               <Link
-                to={`/?dir=${encodeURIComponent(dir.project)}`}
+                to={`/?dir=${encodeURIComponent(entry.dir)}`}
                 className={`flex items-center gap-4 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50${
                   index === selectedIndex ? ' bg-blue-50 dark:bg-blue-900/30' : ''
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {projectName(dir.project)}
+                    {projectName(entry.dir)}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {dir.project}
+                    {entry.dir}
                   </p>
                 </div>
                 <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
-                  {dir.sessionCount} session{dir.sessionCount !== 1 ? 's' : ''}
+                  {entry.sessionCount} session{entry.sessionCount !== 1 ? 's' : ''}
                 </span>
                 <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                  {formatTime(dir.lastActivity)}
+                  {formatTime(entry.lastActivity)}
                 </span>
               </Link>
             </li>

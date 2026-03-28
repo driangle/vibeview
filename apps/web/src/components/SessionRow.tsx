@@ -94,11 +94,11 @@ export function SessionRow({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onDirectoryClick(session.project);
+            onDirectoryClick(session.dir);
           }}
           className="text-muted-fg hover:text-primary hover:underline transition-colors"
         >
-          {projectName(session.project)}
+          {projectName(session.dir)}
         </button>
       </td>
 

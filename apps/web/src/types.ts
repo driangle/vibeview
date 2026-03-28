@@ -31,7 +31,7 @@ export type ActivityState = 'working' | 'waiting_for_approval' | 'waiting_for_in
 
 export interface Session {
   id: string;
-  project: string;
+  dir: string;
   customTitle: string;
   timestamp: string;
   messageCount: number;
@@ -153,7 +153,7 @@ export interface ActivityHour {
 export interface ActivityResponse {
   days: ActivityDay[];
   hours: ActivityHour[];
-  projects: string[];
+  dirs: string[];
 }
 
 export interface SortSettings {

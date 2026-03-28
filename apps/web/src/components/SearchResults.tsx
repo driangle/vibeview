@@ -80,7 +80,7 @@ export function SearchResults({ results, query, isLoading }: SearchResultsProps)
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-fg mb-2">
-              <span>{projectName(result.session.project)}</span>
+              <span>{projectName(result.session.dir)}</span>
               {result.session.model && (
                 <>
                   <span>&middot;</span>

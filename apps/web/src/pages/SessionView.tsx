@@ -180,7 +180,7 @@ export function SessionView() {
             </div>
             <h1 className="text-xl font-headline font-medium tracking-tight text-fg">{title}</h1>
             <p className="text-muted-fg text-xs">
-              {formatDate(session.timestamp)} &middot; {projectName(session.project)} &middot;{' '}
+              {formatDate(session.timestamp)} &middot; {projectName(session.dir)} &middot;{' '}
               {displayMessages.length} message{displayMessages.length !== 1 ? 's' : ''}
               {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
             </p>
@@ -276,7 +276,7 @@ export function SessionView() {
       {/* Right Panel: Context & Metadata */}
       <SessionSidebar
         filePath={session.filePath}
-        project={session.project}
+        project={session.dir}
         model={session.model}
         timestamp={session.timestamp}
         sessionId={session.id}

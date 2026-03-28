@@ -6,7 +6,7 @@ import { FolderPicker } from './FolderPicker';
 const mockSessions = {
   sessions: [
     {
-      project: '/home/user/app-a',
+      dir: '/home/user/app-a',
       id: '1',
       customTitle: '',
       timestamp: '',
@@ -22,7 +22,7 @@ const mockSessions = {
       },
     },
     {
-      project: '/home/user/app-b',
+      dir: '/home/user/app-b',
       id: '2',
       customTitle: '',
       timestamp: '',
@@ -38,7 +38,7 @@ const mockSessions = {
       },
     },
     {
-      project: '/home/user/app-a',
+      dir: '/home/user/app-a',
       id: '3',
       customTitle: '',
       timestamp: '',

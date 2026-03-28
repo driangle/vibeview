@@ -58,7 +58,7 @@ export function UsagePatterns() {
     [navigate, project],
   );
 
-  const url = project ? `/api/activity?project=${encodeURIComponent(project)}` : '/api/activity';
+  const url = project ? `/api/activity?dir=${encodeURIComponent(project)}` : '/api/activity';
   const { data, error, isLoading } = useSWR<ActivityResponse>(url, fetcher, {
     refreshInterval: 30000,
   });
@@ -99,16 +99,16 @@ export function UsagePatterns() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {data.projects.length > 1 && (
+          {data.dirs.length > 1 && (
             <select
               value={project}
               onChange={(e) => setProject(e.target.value)}
               className="rounded border border-border bg-card px-2 py-1 text-sm text-fg"
             >
               <option value="">All projects</option>
-              {data.projects.map((p) => (
+              {data.dirs.map((p) => (
                 <option key={p} value={p}>
-                  {projectName(p, data.projects)}
+                  {projectName(p, data.dirs)}
                 </option>
               ))}
             </select>

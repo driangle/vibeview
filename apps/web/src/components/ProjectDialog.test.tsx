@@ -9,7 +9,7 @@ vi.mock('swr', () => ({
     data: {
       sessions: [
         {
-          project: '/home/user/app',
+          dir: '/home/user/app',
           id: '1',
           customTitle: '',
           timestamp: '',

@@ -10,7 +10,7 @@ function getSortValue(session: Session, column: SortColumn): string | number {
     case 'name':
       return (session.customTitle || session.slug || session.id).toLowerCase();
     case 'directory':
-      return session.project.toLowerCase();
+      return session.dir.toLowerCase();
     case 'messages':
       return session.messageCount;
     case 'tokens':

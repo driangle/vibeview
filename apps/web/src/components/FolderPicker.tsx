@@ -15,7 +15,7 @@ export function FolderPicker({ selected, onChange }: FolderPickerProps) {
 
   const directories = useMemo(() => {
     if (!data?.sessions) return [];
-    const unique = [...new Set(data.sessions.map((s) => s.project))];
+    const unique = [...new Set(data.sessions.map((s) => s.dir))];
     return unique.sort((a, b) => a.localeCompare(b));
   }, [data]);
 

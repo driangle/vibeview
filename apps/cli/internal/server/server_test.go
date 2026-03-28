@@ -110,9 +110,9 @@ func TestListSessions(t *testing.T) {
 	}
 }
 
-func TestListSessionsFilterByProject(t *testing.T) {
+func TestListSessionsFilterByDir(t *testing.T) {
 	srv := newTestServer(t)
-	req := httptest.NewRequest("GET", "/api/sessions?project=project-a", nil)
+	req := httptest.NewRequest("GET", "/api/sessions?dir=project-a", nil)
 	w := httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
@@ -346,7 +346,7 @@ func TestContentTypeJSON(t *testing.T) {
 
 func TestEmptySessionList(t *testing.T) {
 	srv := newTestServer(t)
-	req := httptest.NewRequest("GET", "/api/sessions?project=nonexistent", nil)
+	req := httptest.NewRequest("GET", "/api/sessions?dir=nonexistent", nil)
 	w := httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
@@ -651,15 +651,15 @@ func TestActivityEndpoint(t *testing.T) {
 	if len(resp.Hours) != 24 {
 		t.Errorf("expected 24 hours, got %d", len(resp.Hours))
 	}
-	if resp.Projects == nil {
-		t.Error("expected projects array")
+	if resp.Dirs == nil {
+		t.Error("expected dirs array")
 	}
 }
 
-func TestActivityEndpointWithProjectFilter(t *testing.T) {
+func TestActivityEndpointWithDirFilter(t *testing.T) {
 	srv := newTestServer(t)
 
-	req := httptest.NewRequest("GET", "/api/activity?project=project-a", nil)
+	req := httptest.NewRequest("GET", "/api/activity?dir=project-a", nil)
 	w := httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
@@ -670,9 +670,9 @@ func TestActivityEndpointWithProjectFilter(t *testing.T) {
 	var resp ActivityResponse
 	json.NewDecoder(w.Body).Decode(&resp)
 
-	// Should still include all projects in the projects list.
-	if len(resp.Projects) < 2 {
-		t.Errorf("expected at least 2 projects in the list, got %d", len(resp.Projects))
+	// Should still include all dirs in the dirs list.
+	if len(resp.Dirs) < 2 {
+		t.Errorf("expected at least 2 dirs in the list, got %d", len(resp.Dirs))
 	}
 
 	// But day counts should only reflect project-a sessions.
