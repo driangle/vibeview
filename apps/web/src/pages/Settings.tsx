@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { fetcher } from '../api';
 import { useSettings } from '../contexts/useSettings';
-import type { Settings as SettingsType, ModelPricing } from '../types';
+import type { AppConfig, Settings as SettingsType, ModelPricing } from '../types';
 
 function applyThemePreview(theme: string) {
   const resolved =
@@ -202,7 +204,25 @@ const recentThresholdOptions = [
   { label: '1 hour', value: 3600000 },
 ];
 
+function StorageInfo({ config }: { config: AppConfig }) {
+  return (
+    <Section title="Storage">
+      <Field label="Settings file" description="Where your preferences are stored on disk">
+        <code className="rounded bg-secondary px-2 py-1 font-mono text-xs text-secondary-fg">
+          {config.settingsPath}
+        </code>
+      </Field>
+      <Field label="Projects file" description="Where your project definitions are stored on disk">
+        <code className="rounded bg-secondary px-2 py-1 font-mono text-xs text-secondary-fg">
+          {config.projectsPath}
+        </code>
+      </Field>
+    </Section>
+  );
+}
+
 export function Settings() {
+  const { data: config } = useSWR<AppConfig>('/api/config', fetcher);
   const { settings, updateSettings, isLoaded } = useSettings();
 
   const [form, setForm] = useState<SettingsType>(settings);
@@ -434,6 +454,8 @@ export function Settings() {
             />
           </div>
         </Section>
+
+        {config && <StorageInfo config={config} />}
       </div>
     </div>
   );

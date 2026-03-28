@@ -169,10 +169,12 @@ func corsHandler(port int, next http.Handler) http.Handler {
 
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, ConfigResponse{
-		ClaudeDir:  s.claudeDir,
-		Standalone: s.standalone,
-		Paths:      s.paths,
-		Dirs:       s.dirs,
+		ClaudeDir:    s.claudeDir,
+		Standalone:   s.standalone,
+		Paths:        s.paths,
+		Dirs:         s.dirs,
+		SettingsPath: s.settingsPath,
+		ProjectsPath: s.projectsPath,
 	})
 }
 
@@ -607,10 +609,12 @@ func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 
 // ConfigResponse is the API representation of the server configuration.
 type ConfigResponse struct {
-	ClaudeDir  string   `json:"claudeDir"`
-	Standalone bool     `json:"standalone"`
-	Paths      []string `json:"paths,omitempty"`
-	Dirs       []string `json:"dirs,omitempty"`
+	ClaudeDir    string   `json:"claudeDir"`
+	Standalone   bool     `json:"standalone"`
+	Paths        []string `json:"paths,omitempty"`
+	Dirs         []string `json:"dirs,omitempty"`
+	SettingsPath string   `json:"settingsPath"`
+	ProjectsPath string   `json:"projectsPath"`
 }
 
 // ActivityDayResponse is a single day's session count.

@@ -17,6 +17,8 @@ export interface AppConfig {
   standalone: boolean;
   paths?: string[];
   dirs?: string[];
+  settingsPath: string;
+  projectsPath: string;
 }
 
 export interface UsageTotals {

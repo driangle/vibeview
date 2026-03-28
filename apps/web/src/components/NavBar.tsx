@@ -224,7 +224,7 @@ export function NavBar() {
         <NavBarLink to="/directories">Directories</NavBarLink>
         <NavBarLink to="/projects">Projects</NavBarLink>
         <NavBarLink to="/activity">Activity</NavBarLink>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-3">
           <ProjectSelector />
           <ConnectionBadge status={backendStatus} />
           {config && <ConfigLabel config={config} />}
