@@ -136,6 +136,20 @@ results:
     snippet: "...help with the database migration issue..."
 ```
 
+### `vibeview completion`
+
+Generate shell autocompletion scripts for bash, zsh, fish, or powershell.
+
+```bash
+# Generate and load completions for your shell
+vibeview completion bash > /etc/bash_completion.d/vibeview
+vibeview completion zsh > "${fpath[1]}/_vibeview"
+vibeview completion fish > ~/.config/fish/completions/vibeview.fish
+vibeview completion powershell > vibeview.ps1
+```
+
+Supported shells: `bash`, `zsh`, `fish`, `powershell`. Run `vibeview completion <shell> --help` for shell-specific setup instructions.
+
 ## Global flags
 
 These flags are available on all commands:
