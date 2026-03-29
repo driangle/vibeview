@@ -89,7 +89,9 @@ func TestLoadPartialFile(t *testing.T) {
 	path := filepath.Join(dir, "settings.json")
 
 	// Write a partial JSON file (only pageSize).
-	os.WriteFile(path, []byte(`{"pageSize": 50}`), 0o644)
+	if err := os.WriteFile(path, []byte(`{"pageSize": 50}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	s, err := Load(path)
 	if err != nil {

@@ -1,3 +1,7 @@
+## Workflow
+
+- After finishing a task, run `make check` to verify lint, tests, and build all pass.
+
 ## Coding Principles
 
 - **Clarity over cleverness** — straightforward solutions, obvious naming, simple control flow.

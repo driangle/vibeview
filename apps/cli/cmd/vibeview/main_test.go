@@ -219,7 +219,9 @@ func TestBuildLookupReport_InvalidID(t *testing.T) {
 func TestBuildLookupReport_NotInHistory(t *testing.T) {
 	dir := t.TempDir()
 	// Create empty history.
-	os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(""), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	r := buildLookupReport(dir, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
 	if !r.Valid {
@@ -245,18 +247,24 @@ func TestBuildLookupReport_FullPipeline(t *testing.T) {
 		"display":   "test session",
 		"timestamp": 1711000000000,
 	})
-	os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644)
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create encoded project dir and session file.
 	encoded := claude.EncodeProjectPath(project)
 	projectDir := filepath.Join(dir, "projects", encoded)
-	os.MkdirAll(projectDir, 0755)
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	sessionContent := strings.Join([]string{
 		`{"type":"user","uuid":"u1","sessionId":"` + sessionID + `","timestamp":1711000000000,"message":{"role":"user","content":[{"type":"text","text":"hello world"}]}}`,
 		`{"type":"assistant","uuid":"a1","sessionId":"` + sessionID + `","timestamp":1711000001000,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hi"}],"usage":{"input_tokens":100,"output_tokens":50}}}`,
 	}, "\n")
-	os.WriteFile(filepath.Join(projectDir, sessionID+".jsonl"), []byte(sessionContent), 0644)
+	if err := os.WriteFile(filepath.Join(projectDir, sessionID+".jsonl"), []byte(sessionContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	r := buildLookupReport(dir, sessionID)
 
@@ -311,8 +319,12 @@ func TestBuildLookupReport_MissingDir(t *testing.T) {
 		"display":   "test",
 		"timestamp": 1711000000000,
 	})
-	os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644)
-	os.MkdirAll(filepath.Join(dir, "projects"), 0755)
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "projects"), 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	r := buildLookupReport(dir, sessionID)
 
@@ -337,17 +349,23 @@ func TestSearchE2E(t *testing.T) {
 		"display":   "search test",
 		"timestamp": 1711000000000,
 	})
-	os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644)
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	encoded := claude.EncodeProjectPath(project)
 	projectDir := filepath.Join(dir, "projects", encoded)
-	os.MkdirAll(projectDir, 0755)
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	sessionContent := strings.Join([]string{
 		`{"type":"user","uuid":"u1","sessionId":"` + sessionID + `","timestamp":1711000000000,"message":{"role":"user","content":[{"type":"text","text":"help me fix the database migration"}]}}`,
 		`{"type":"assistant","uuid":"a1","sessionId":"` + sessionID + `","timestamp":1711000001000,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"I will help with the database migration issue."}],"usage":{"input_tokens":50,"output_tokens":30}}}`,
 	}, "\n")
-	os.WriteFile(filepath.Join(projectDir, sessionID+".jsonl"), []byte(sessionContent), 0644)
+	if err := os.WriteFile(filepath.Join(projectDir, sessionID+".jsonl"), []byte(sessionContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Build index the same way the search command does.
 	idx, err := discoverAndEnrich(dir, nil)
@@ -379,14 +397,20 @@ func TestSearchE2E_NoResults(t *testing.T) {
 		"display":   "test",
 		"timestamp": 1711000000000,
 	})
-	os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644)
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), historyLine, 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	encoded := claude.EncodeProjectPath(project)
 	projectDir := filepath.Join(dir, "projects", encoded)
-	os.MkdirAll(projectDir, 0755)
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	sessionContent := `{"type":"user","uuid":"u1","sessionId":"` + sessionID + `","timestamp":1711000000000,"message":{"role":"user","content":[{"type":"text","text":"hello"}]}}`
-	os.WriteFile(filepath.Join(projectDir, sessionID+".jsonl"), []byte(sessionContent), 0644)
+	if err := os.WriteFile(filepath.Join(projectDir, sessionID+".jsonl"), []byte(sessionContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	idx, err := discoverAndEnrich(dir, nil)
 	if err != nil {

@@ -484,7 +484,9 @@ func TestLoadFromPathsSkipsSymlinks(t *testing.T) {
 	// Create a symlink to an outside file.
 	outside := t.TempDir()
 	secret := filepath.Join(outside, "secret.jsonl")
-	os.WriteFile(secret, []byte(content), 0644)
+	if err := os.WriteFile(secret, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 	link := filepath.Join(dir, "evil.jsonl")
 	if err := os.Symlink(secret, link); err != nil {
 		t.Skip("cannot create symlinks")

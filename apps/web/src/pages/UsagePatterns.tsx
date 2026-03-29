@@ -28,6 +28,12 @@ export function UsagePatterns() {
   const [chartHeight, setChartHeight] = useState(
     () => window.innerHeight - INNER_OVERHEAD - CHROME_HEIGHT,
   );
+
+  // Reset dir filter when active project changes.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting derived state on prop change
+    setDirFilter('');
+  }, [activeProjectId]);
   const [chartWidth, setChartWidth] = useState(
     () => Math.min(window.innerWidth - 64, 1280 - 64) - 48,
   );
@@ -48,11 +54,6 @@ export function UsagePatterns() {
     window.addEventListener('resize', recalc);
     return () => window.removeEventListener('resize', recalc);
   }, []);
-
-  // Reset dir filter when active project changes.
-  useEffect(() => {
-    setDirFilter('');
-  }, [activeProjectId]);
 
   const handleCellClick = useCallback(
     (range: CellRange) => {

@@ -132,8 +132,12 @@ func TestBrokerHistoryWatcher(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f.WriteString(`{"sessionId":"sess-2","project":"/users/me/proj","display":"New Session","timestamp":1700002000000}` + "\n")
-	f.Sync()
+	if _, err := f.WriteString(`{"sessionId":"sess-2","project":"/users/me/proj","display":"New Session","timestamp":1700002000000}` + "\n"); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Sync(); err != nil {
+		t.Fatal(err)
+	}
 	f.Close()
 
 	// Wait for the watcher to detect the change.

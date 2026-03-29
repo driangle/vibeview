@@ -1,4 +1,4 @@
-.PHONY: check install install-dev install-dev-full build web dev docs docs-dev docs-preview
+.PHONY: check check-lite install install-dev install-dev-full build web dev docs docs-dev docs-preview lint setup-hooks
 
 # ldflags for injecting git info into dev builds
 DEV_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
@@ -27,11 +27,16 @@ test: ## Run Go tests with coverage
 	@cd apps/cli && go tool cover -func=coverage.out | tail -1
 	@echo "Coverage report: apps/cli/coverage.out (use 'go tool cover -html=coverage.out' to view)"
 
-check: ## Run Go vet, tests with coverage, and build check
-	cd apps/cli && go vet ./...
+check-lite: lint ## Compile + lint across all projects (no tests)
+	cd apps/cli && go build ./cmd/vibeview
+	cd apps/web && npm run typeCheck
+	cd apps/web && npm run build
+
+check: check-lite ## Full validation: check-lite + tests, docs build
 	cd apps/cli && go test ./... -coverprofile=coverage.out -count=1
 	@cd apps/cli && go tool cover -func=coverage.out | tail -1
-	cd apps/cli && go build ./cmd/vibeview
+	cd apps/web && npm test --if-present
+	cd apps/docs && npm run build
 
 install: web ## Build and install the CLI binary
 	rm -rf apps/cli/internal/spa/dist
@@ -53,3 +58,11 @@ docs: ## Build documentation site
 
 docs-preview: ## Preview built documentation site
 	cd apps/docs && npm run preview
+
+lint: ## Run linters for Go and Web
+	cd apps/cli && go vet ./...
+	cd apps/cli && golangci-lint run ./...
+	cd apps/web && npm run lint
+
+setup-hooks: ## Configure git to use .githooks/ for hooks
+	git config core.hooksPath .githooks

@@ -193,7 +193,7 @@ Examples:
 				<-sigCh
 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 				defer cancel()
-				srv.Shutdown(ctx)
+				_ = srv.Shutdown(ctx)
 			}()
 
 			if err := srv.ListenAndServe(port); err != nil && err.Error() != "http: Server closed" {
@@ -709,14 +709,14 @@ func outputAny(v any, asJSON bool) {
 	if asJSON {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(v)
+		_ = enc.Encode(v)
 		return
 	}
 
 	enc := yaml.NewEncoder(os.Stdout)
 	enc.SetIndent(2)
-	enc.Encode(v)
-	enc.Close()
+	_ = enc.Encode(v)
+	_ = enc.Close()
 }
 
 // --- Helpers ---
@@ -766,5 +766,5 @@ func openBrowser(url string) {
 	default:
 		return
 	}
-	cmd.Run()
+	_ = cmd.Run()
 }

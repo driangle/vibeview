@@ -486,7 +486,7 @@ func LoadFromPaths(paths []string) (*Index, error) {
 		}
 		if info.IsDir() {
 			baseDepth := strings.Count(abs, string(filepath.Separator))
-			filepath.WalkDir(abs, func(path string, d os.DirEntry, err error) error {
+			_ = filepath.WalkDir(abs, func(path string, d os.DirEntry, err error) error {
 				if err != nil {
 					return nil
 				}

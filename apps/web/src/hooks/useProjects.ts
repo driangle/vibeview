@@ -1,7 +1,7 @@
 import { useProjectsContext } from '../contexts/useProjectsContext';
 import type { ProjectsContextValue } from '../contexts/useProjectsContext';
 
-export { DuplicateProjectNameError } from '../contexts/ProjectsContext';
+export { DuplicateProjectNameError } from '../contexts/projectErrors';
 
 export type UseProjectsReturn = Pick<
   ProjectsContextValue,

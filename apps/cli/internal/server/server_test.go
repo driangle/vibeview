@@ -73,7 +73,9 @@ func TestHealthEndpoint(t *testing.T) {
 	}
 
 	var body map[string]string
-	json.NewDecoder(w.Body).Decode(&body)
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
 	if body["status"] != "ok" {
 		t.Fatalf("expected status ok, got %q", body["status"])
 	}
@@ -90,7 +92,9 @@ func TestListSessions(t *testing.T) {
 	}
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	sessions := page.Sessions
 	if len(sessions) != 2 {
 		t.Fatalf("expected 2 sessions, got %d", len(sessions))
@@ -117,7 +121,9 @@ func TestListSessionsFilterByDir(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	sessions := page.Sessions
 	if len(sessions) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(sessions))
@@ -150,7 +156,9 @@ func TestListSessionsSearchByQuery(t *testing.T) {
 			srv.mux.ServeHTTP(w, req)
 
 			var page PaginatedSessionsResponse
-			json.NewDecoder(w.Body).Decode(&page)
+			if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+				t.Fatal(err)
+			}
 
 			var gotIDs []string
 			for _, s := range page.Sessions {
@@ -180,7 +188,9 @@ func TestGetSession(t *testing.T) {
 	}
 
 	var detail SessionDetailResponse
-	json.NewDecoder(w.Body).Decode(&detail)
+	if err := json.NewDecoder(w.Body).Decode(&detail); err != nil {
+		t.Fatal(err)
+	}
 
 	if detail.ID != "sess-1" {
 		t.Errorf("expected id sess-1, got %s", detail.ID)
@@ -301,7 +311,9 @@ func TestSessionResponseUsesIDNotSessionID(t *testing.T) {
 
 	// Verify raw JSON uses "id" not "sessionId".
 	var rawPage map[string]any
-	json.NewDecoder(w.Body).Decode(&rawPage)
+	if err := json.NewDecoder(w.Body).Decode(&rawPage); err != nil {
+		t.Fatal(err)
+	}
 	raw := rawPage["sessions"].([]any)
 	for _, item := range raw {
 		s := item.(map[string]any)
@@ -351,7 +363,9 @@ func TestEmptySessionList(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if page.Sessions == nil {
 		t.Error("expected empty array, got null")
 	}
@@ -375,7 +389,9 @@ func TestListSessionsFilterByModel(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session for model filter, got %d", len(page.Sessions))
 	}
@@ -394,7 +410,9 @@ func TestListSessionsFilterByActivityState(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 2 {
 		t.Fatalf("expected 2 idle sessions, got %d", len(page.Sessions))
 	}
@@ -404,7 +422,9 @@ func TestListSessionsFilterByActivityState(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 0 {
 		t.Errorf("expected 0 working sessions, got %d", len(page.Sessions))
 	}
@@ -420,7 +440,9 @@ func TestListSessionsFilterByTimestampRange(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session with from filter, got %d", len(page.Sessions))
 	}
@@ -433,7 +455,9 @@ func TestListSessionsFilterByTimestampRange(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session with to filter, got %d", len(page.Sessions))
 	}
@@ -451,7 +475,9 @@ func TestListSessionsPagination(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session with limit=1, got %d", len(page.Sessions))
 	}
@@ -468,7 +494,9 @@ func TestListSessionsPagination(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session with offset, got %d", len(page.Sessions))
 	}
@@ -481,7 +509,9 @@ func TestListSessionsPagination(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 0 {
 		t.Errorf("expected 0 sessions with large offset, got %d", len(page.Sessions))
 	}
@@ -498,7 +528,9 @@ func TestConfigEndpoint(t *testing.T) {
 	}
 
 	var cfg ConfigResponse
-	json.NewDecoder(w.Body).Decode(&cfg)
+	if err := json.NewDecoder(w.Body).Decode(&cfg); err != nil {
+		t.Fatal(err)
+	}
 	if cfg.ClaudeDir == "" {
 		t.Error("expected non-empty claudeDir")
 	}
@@ -542,7 +574,9 @@ func TestSettingsEndpoints(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var raw map[string]any
-	json.NewDecoder(w.Body).Decode(&raw)
+	if err := json.NewDecoder(w.Body).Decode(&raw); err != nil {
+		t.Fatal(err)
+	}
 	if raw["theme"] != "dark" {
 		t.Errorf("expected theme dark after update, got %v", raw["theme"])
 	}
@@ -582,7 +616,9 @@ func TestSearchEndpoint(t *testing.T) {
 	}
 
 	var resp SearchResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 	if resp.Results == nil {
 		t.Error("expected results array, got nil")
 	}
@@ -627,7 +663,9 @@ func TestSearchEndpointWithProjectFilter(t *testing.T) {
 	}
 
 	var resp SearchResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 	if resp.Total != 1 {
 		t.Fatalf("expected 1 result for proj-1, got %d", resp.Total)
 	}
@@ -641,7 +679,9 @@ func TestSearchEndpointWithProjectFilter(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 	if resp.Total != 0 {
 		t.Fatalf("expected 0 results for 'second session' in proj-1, got %d", resp.Total)
 	}
@@ -659,7 +699,9 @@ func TestActivityEndpoint(t *testing.T) {
 	}
 
 	var resp ActivityResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 
 	if resp.Days == nil {
 		t.Error("expected days array")
@@ -684,7 +726,9 @@ func TestActivityEndpointWithDirFilter(t *testing.T) {
 	}
 
 	var resp ActivityResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 
 	// Should still include all dirs in the dirs list.
 	if len(resp.Dirs) < 2 {
@@ -725,7 +769,9 @@ func TestListSessionsFilterByProject(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(page.Sessions))
 	}
@@ -738,7 +784,9 @@ func TestListSessionsFilterByProject(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.mux.ServeHTTP(w, req)
 
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 2 {
 		t.Fatalf("expected 2 sessions for proj-2, got %d", len(page.Sessions))
 	}
@@ -753,7 +801,9 @@ func TestListSessionsFilterByProjectAndDir(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(page.Sessions))
 	}
@@ -771,7 +821,9 @@ func TestListSessionsFilterByUnknownProject(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var page PaginatedSessionsResponse
-	json.NewDecoder(w.Body).Decode(&page)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
 	if len(page.Sessions) != 2 {
 		t.Fatalf("expected 2 sessions for unknown project, got %d", len(page.Sessions))
 	}
@@ -789,7 +841,9 @@ func TestActivityEndpointWithProjectFilter(t *testing.T) {
 	}
 
 	var resp ActivityResponse
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 
 	// Dirs should be scoped to project-a only.
 	if len(resp.Dirs) != 1 {
@@ -932,7 +986,9 @@ func TestProjectsEndpoints(t *testing.T) {
 	}
 
 	var initial []any
-	json.NewDecoder(w.Body).Decode(&initial)
+	if err := json.NewDecoder(w.Body).Decode(&initial); err != nil {
+		t.Fatal(err)
+	}
 	if len(initial) != 0 {
 		t.Errorf("expected empty list, got %d items", len(initial))
 	}
@@ -954,7 +1010,9 @@ func TestProjectsEndpoints(t *testing.T) {
 	srv.mux.ServeHTTP(w, req)
 
 	var projects []map[string]any
-	json.NewDecoder(w.Body).Decode(&projects)
+	if err := json.NewDecoder(w.Body).Decode(&projects); err != nil {
+		t.Fatal(err)
+	}
 	if len(projects) != 2 {
 		t.Fatalf("expected 2 projects, got %d", len(projects))
 	}

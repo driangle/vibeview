@@ -49,7 +49,9 @@ func TestLoadSave(t *testing.T) {
 
 func TestLoadEmptyArray(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
-	os.WriteFile(path, []byte(`[]`), 0o644)
+	if err := os.WriteFile(path, []byte(`[]`), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	list, err := Load(path)
 	if err != nil {
@@ -62,7 +64,9 @@ func TestLoadEmptyArray(t *testing.T) {
 
 func TestLoadNullJSON(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
-	os.WriteFile(path, []byte(`null`), 0o644)
+	if err := os.WriteFile(path, []byte(`null`), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	list, err := Load(path)
 	if err != nil {

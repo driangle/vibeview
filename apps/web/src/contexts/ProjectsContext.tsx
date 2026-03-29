@@ -2,20 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '../api';
 import type { Project } from '../types';
+import { DuplicateProjectNameError, findDuplicate } from './projectErrors';
 import { ProjectsContext } from './useProjectsContext';
 
 const LEGACY_STORAGE_KEY = 'vibeview:projects';
-
-export class DuplicateProjectNameError extends Error {
-  constructor(name: string) {
-    super(`A project named "${name}" already exists`);
-    this.name = 'DuplicateProjectNameError';
-  }
-}
-
-function findDuplicate(projects: Project[], name: string, excludeId?: string): boolean {
-  return projects.some((p) => p.id !== excludeId && p.name.toLowerCase() === name.toLowerCase());
-}
 
 export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const { data, mutate } = useSWR<Project[]>('/api/projects', fetcher);

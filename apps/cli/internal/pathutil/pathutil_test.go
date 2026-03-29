@@ -39,8 +39,12 @@ func TestValidateSessionID(t *testing.T) {
 func TestSafeResolve(t *testing.T) {
 	base := t.TempDir()
 	inside := filepath.Join(base, "projects", "sess.jsonl")
-	os.MkdirAll(filepath.Join(base, "projects"), 0755)
-	os.WriteFile(inside, []byte("{}"), 0644)
+	if err := os.MkdirAll(filepath.Join(base, "projects"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(inside, []byte("{}"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Path inside base should succeed.
 	resolved, err := SafeResolve(inside, base)
@@ -56,10 +60,14 @@ func TestSafeResolve(t *testing.T) {
 	// Symlink pointing outside base should fail.
 	outside := t.TempDir()
 	secret := filepath.Join(outside, "secret.txt")
-	os.WriteFile(secret, []byte("secret"), 0644)
+	if err := os.WriteFile(secret, []byte("secret"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	link := filepath.Join(base, "projects", "evil.jsonl")
-	os.Symlink(secret, link)
+	if err := os.Symlink(secret, link); err != nil {
+		t.Fatal(err)
+	}
 
 	_, err = SafeResolve(link, base)
 	if err == nil {
@@ -77,10 +85,14 @@ func TestIsSymlink(t *testing.T) {
 	dir := t.TempDir()
 
 	regular := filepath.Join(dir, "file.txt")
-	os.WriteFile(regular, []byte("hi"), 0644)
+	if err := os.WriteFile(regular, []byte("hi"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	link := filepath.Join(dir, "link.txt")
-	os.Symlink(regular, link)
+	if err := os.Symlink(regular, link); err != nil {
+		t.Fatal(err)
+	}
 
 	if ok, _ := IsSymlink(regular); ok {
 		t.Error("IsSymlink(regular file) = true, want false")

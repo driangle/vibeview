@@ -19,7 +19,9 @@ func writeLine(t *testing.T, f *os.File, msg map[string]any) {
 	if _, err := f.Write(append(data, '\n')); err != nil {
 		t.Fatal(err)
 	}
-	f.Sync()
+	if err := f.Sync(); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestTailerEmitsNewMessages(t *testing.T) {
@@ -108,9 +110,11 @@ func TestTailerClose(t *testing.T) {
 	// Messages channel should be closed eventually.
 	select {
 	case _, ok := <-tailer.Messages():
-		if ok {
-			// May receive residual messages; keep draining.
+		if !ok {
+			// Channel closed as expected.
+			return
 		}
+		// May receive residual messages; acceptable after close.
 	case <-time.After(time.Second):
 		// Channel may already be drained.
 	}
