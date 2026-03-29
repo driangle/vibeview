@@ -37,6 +37,7 @@ type SessionMeta struct {
 	Slug          string      `json:"slug"`
 	Usage         UsageTotals `json:"usage"`
 	ActivityState string      `json:"activityState"`
+	DurationMs    int64       `json:"durationMs"` // last message timestamp - first message timestamp
 
 	// FilePath is the absolute path to the JSONL file for standalone sessions.
 	// Empty for sessions discovered from ~/.claude.
@@ -343,7 +344,16 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 	messages, _, _ := claude.ParseSessionFile(f)
 	meta.MessageCount = len(messages)
 
+	var firstTS, lastTS int64
 	for _, msg := range messages {
+		if ts := msg.Timestamp.Int64(); ts > 0 {
+			if firstTS == 0 || ts < firstTS {
+				firstTS = ts
+			}
+			if ts > lastTS {
+				lastTS = ts
+			}
+		}
 		if msg.Type == claude.MessageTypeAssistant && msg.Message != nil {
 			if meta.Model == "" && msg.Message.Model != "" {
 				meta.Model = msg.Message.Model
@@ -362,6 +372,9 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
+	}
+	if firstTS > 0 && lastTS > firstTS {
+		meta.DurationMs = lastTS - firstTS
 	}
 
 	for _, msg := range messages {
@@ -569,7 +582,16 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		meta.Timestamp = ts
 	}
 
+	var firstTS, lastTS int64
 	for _, msg := range messages {
+		if ts := msg.Timestamp.Int64(); ts > 0 {
+			if firstTS == 0 || ts < firstTS {
+				firstTS = ts
+			}
+			if ts > lastTS {
+				lastTS = ts
+			}
+		}
 		if msg.Type == claude.MessageTypeAssistant && msg.Message != nil {
 			if meta.Model == "" && msg.Message.Model != "" {
 				meta.Model = msg.Message.Model
@@ -588,6 +610,9 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
+	}
+	if firstTS > 0 && lastTS > firstTS {
+		meta.DurationMs = lastTS - firstTS
 	}
 
 	// Derive slug from first user message.

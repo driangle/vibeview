@@ -80,6 +80,7 @@ Running vibeview without a subcommand starts the web server.`,
 	root.AddCommand(serveCmd(home, &claudeDir, &logLevel))
 	root.AddCommand(inspectCmd(&claudeDir, &logLevel))
 	root.AddCommand(searchCmd(&claudeDir, &logLevel))
+	root.AddCommand(statsCmd(&claudeDir, &logLevel))
 
 	// Make "serve" the default when no subcommand is given.
 	// Prepend "serve" for: bare invocation, positional file args, or
@@ -89,7 +90,7 @@ Running vibeview without a subcommand starts the web server.`,
 		os.Args = append(os.Args, "serve")
 	} else {
 		knownCmds := map[string]bool{
-			"serve": true, "inspect": true, "search": true,
+			"serve": true, "inspect": true, "search": true, "stats": true,
 			"help": true, "completion": true,
 		}
 		helpFlags := map[string]bool{
