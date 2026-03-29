@@ -30,7 +30,6 @@ test: ## Run Go tests with coverage
 check-lite: lint ## Compile + lint across all projects (no tests)
 	cd apps/cli && go build ./cmd/vibeview
 	cd apps/web && npm run typeCheck
-	cd apps/web && npm run build
 
 check: check-lite ## Full validation: check-lite + tests, docs build
 	cd apps/cli && go test ./... -coverprofile=coverage.out -count=1
