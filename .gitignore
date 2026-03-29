@@ -10,3 +10,4 @@ apps/cli/vibeview
 apps/cli/internal/spa/dist/
 .claude/worktrees/
 coverage.out
+coverage/
