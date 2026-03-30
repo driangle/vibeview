@@ -193,6 +193,46 @@ func TestDeriveActivityState_SkipsSystemMessages(t *testing.T) {
 	}
 }
 
+func TestDeriveActivityState_SkipsSidechainMessages(t *testing.T) {
+	ts := recentTimestamp()
+	msgs := []claude.Message{
+		{Type: claude.MessageTypeUser, Timestamp: ts, Message: &claude.APIMessage{
+			Role: "user", Content: []claude.ContentBlock{{Type: "text", Text: "do something"}},
+		}},
+		{Type: claude.MessageTypeAssistant, Timestamp: ts, Message: &claude.APIMessage{
+			Role: "assistant", Content: []claude.ContentBlock{{Type: "tool_use", ID: "tu1", Name: "Agent"}},
+		}},
+		{Type: claude.MessageTypeUser, Timestamp: ts, Message: &claude.APIMessage{
+			Role: "user", Content: []claude.ContentBlock{{Type: "tool_result", ToolUseID: "tu1"}},
+		}},
+		// Sidechain assistant text message — should be skipped.
+		{Type: claude.MessageTypeAssistant, Timestamp: ts, IsSidechain: true, Message: &claude.APIMessage{
+			Role: "assistant", Content: []claude.ContentBlock{{Type: "text", Text: "subagent done"}},
+		}},
+	}
+	// Should skip the sidechain message and find the user tool_result → working.
+	if got := DeriveActivityState(msgs); got != ActivityWorking {
+		t.Errorf("sidechain assistant text: got %q, want %q", got, ActivityWorking)
+	}
+}
+
+func TestDeriveActivityState_SkipsMetaMessages(t *testing.T) {
+	ts := recentTimestamp()
+	msgs := []claude.Message{
+		{Type: claude.MessageTypeUser, Timestamp: ts, Message: &claude.APIMessage{
+			Role: "user", Content: []claude.ContentBlock{{Type: "text", Text: "do something"}},
+		}},
+		// Meta user message (e.g. skill prompt) — should be skipped.
+		{Type: claude.MessageTypeUser, Timestamp: ts, IsMeta: true, Message: &claude.APIMessage{
+			Role: "user", Content: []claude.ContentBlock{{Type: "text", Text: "skill instructions"}},
+		}},
+	}
+	// Should skip the meta message and find the regular user message → working.
+	if got := DeriveActivityState(msgs); got != ActivityWorking {
+		t.Errorf("meta user message: got %q, want %q", got, ActivityWorking)
+	}
+}
+
 func TestDeriveActivityState_OnlySystemMessages(t *testing.T) {
 	ts := recentTimestamp()
 	msgs := []claude.Message{
@@ -286,5 +326,31 @@ func TestDeriveActivityStateFromMessage_System(t *testing.T) {
 	msg := claude.Message{Type: claude.MessageTypeSystem}
 	if got := DeriveActivityStateFromMessage(msg); got != "" {
 		t.Errorf("system: got %q, want empty string", got)
+	}
+}
+
+func TestDeriveActivityStateFromMessage_Sidechain(t *testing.T) {
+	msg := claude.Message{
+		Type:        claude.MessageTypeAssistant,
+		IsSidechain: true,
+		Message: &claude.APIMessage{
+			Role: "assistant", Content: []claude.ContentBlock{{Type: "text", Text: "subagent text"}},
+		},
+	}
+	if got := DeriveActivityStateFromMessage(msg); got != "" {
+		t.Errorf("sidechain assistant: got %q, want empty string", got)
+	}
+}
+
+func TestDeriveActivityStateFromMessage_Meta(t *testing.T) {
+	msg := claude.Message{
+		Type:   claude.MessageTypeUser,
+		IsMeta: true,
+		Message: &claude.APIMessage{
+			Role: "user", Content: []claude.ContentBlock{{Type: "text", Text: "skill prompt"}},
+		},
+	}
+	if got := DeriveActivityStateFromMessage(msg); got != "" {
+		t.Errorf("meta user: got %q, want empty string", got)
 	}
 }

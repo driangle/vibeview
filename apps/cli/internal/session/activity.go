@@ -35,8 +35,14 @@ func DeriveActivityState(messages []claude.Message) string {
 	}
 
 	// Walk backwards to find the last semantically meaningful message.
+	// Skip sidechain (subagent) and meta messages — they don't reflect the
+	// main conversation's state.
 	for i := len(messages) - 1; i >= 0; i-- {
 		msg := messages[i]
+
+		if msg.IsSidechain || msg.IsMeta {
+			continue
+		}
 
 		switch msg.Type {
 		case claude.MessageTypeAssistant:
@@ -77,7 +83,12 @@ func DeriveActivityState(messages []claude.Message) string {
 
 // DeriveActivityStateFromMessage derives activity state from a single message.
 // This is a lightweight version for streaming updates where we don't have full history.
+// Sidechain (subagent) and meta messages are ignored — they don't reflect main conversation state.
 func DeriveActivityStateFromMessage(msg claude.Message) string {
+	if msg.IsSidechain || msg.IsMeta {
+		return ""
+	}
+
 	switch msg.Type {
 	case claude.MessageTypeAssistant:
 		if msg.Message != nil && hasToolUse(msg.Message.Content) {

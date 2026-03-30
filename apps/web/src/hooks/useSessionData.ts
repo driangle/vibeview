@@ -94,34 +94,10 @@ export function useSessionData(id: string | undefined) {
     return null;
   }, [streamedMessages]);
 
-  // Derive live activity state from streamed messages and server-pushed updates.
-  // Server-pushed state (from idle decay / process checks) takes priority when
-  // present — it is cleared automatically when a new message arrives.
-  const liveActivityState = useMemo<ActivityState | undefined>(() => {
-    if (serverActivityState) return serverActivityState;
-    if (streamedMessages.length === 0) return undefined;
-    // Walk backwards to find the last semantically meaningful message.
-    for (let i = streamedMessages.length - 1; i >= 0; i--) {
-      const msg = streamedMessages[i];
-      if (msg.type === 'result') {
-        return 'idle';
-      }
-      if (msg.type === 'assistant' && msg.message) {
-        const content = msg.message.content;
-        if (Array.isArray(content) && content.some((b) => b.type === 'tool_use')) {
-          return 'waiting_for_approval';
-        }
-        return 'waiting_for_input';
-      }
-      if (msg.type === 'user') {
-        return 'working';
-      }
-      if (msg.type === 'progress') {
-        return 'working';
-      }
-    }
-    return undefined;
-  }, [streamedMessages, serverActivityState]);
+  // Activity state is derived entirely by the backend. The server pushes it
+  // both on each SSE message event and via dedicated activity_state events
+  // (idle decay / process liveness checks).
+  const liveActivityState: ActivityState | undefined = serverActivityState ?? undefined;
 
   // Use API-provided insights when available.
   const insights = session?.insights ?? null;

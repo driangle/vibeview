@@ -14,3 +14,4 @@
 - **Test all new behavior** — every new feature or functionality must have a corresponding test.
 - **One responsibility per file** — split by concept, not size.
 - **Group by feature, not "utils"** — related code together, unrelated code apart.
+- **Backend owns the logic, frontend is a thin display layer** — domain logic (state derivation, filtering, classification) lives in Go. The web client consumes server-provided values and handles rendering only.

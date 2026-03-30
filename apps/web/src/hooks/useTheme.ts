@@ -36,7 +36,8 @@ export function useTheme(): {
 
   useEffect(() => {
     applyTheme(theme);
-  }, [theme]);
+    localStorage.setItem('vibeview:theme', JSON.stringify(setting));
+  }, [theme, setting]);
 
   // Listen for OS preference changes when theme is "system".
   useEffect(() => {

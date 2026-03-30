@@ -193,14 +193,15 @@ func (b *Broker) startTailer(sessionID string) error {
 			}
 
 			// Update activity state based on the latest message.
-			if state := session.DeriveActivityStateFromMessage(msg); state != "" {
-				b.index.SetActivityState(sessionID, state)
+			derivedState := session.DeriveActivityStateFromMessage(msg)
+			if derivedState != "" {
+				b.index.SetActivityState(sessionID, derivedState)
 				b.mu.Lock()
 				b.lastMessageAt[sessionID] = time.Now()
 				b.mu.Unlock()
 			}
 
-			data, err := json.Marshal(toMessageEvent(msg))
+			data, err := json.Marshal(toMessageEvent(msg, derivedState))
 			if err != nil {
 				continue
 			}
@@ -426,29 +427,33 @@ func (b *Broker) pingLoop() {
 
 // messageEvent matches the MessageResponse type from the server package.
 type messageEvent struct {
-	UUID        string             `json:"uuid"`
-	Type        string             `json:"type"`
-	Timestamp   string             `json:"timestamp"`
-	IsMeta      bool               `json:"isMeta,omitempty"`
-	Message     *claude.APIMessage `json:"message,omitempty"`
-	Data        map[string]any     `json:"data,omitempty"`
-	Snapshot    map[string]any     `json:"snapshot,omitempty"`
-	CustomTitle string             `json:"customTitle,omitempty"`
+	UUID          string             `json:"uuid"`
+	Type          string             `json:"type"`
+	Timestamp     string             `json:"timestamp"`
+	IsMeta        bool               `json:"isMeta,omitempty"`
+	IsSidechain   bool               `json:"isSidechain,omitempty"`
+	ActivityState string             `json:"activityState,omitempty"`
+	Message       *claude.APIMessage `json:"message,omitempty"`
+	Data          map[string]any     `json:"data,omitempty"`
+	Snapshot      map[string]any     `json:"snapshot,omitempty"`
+	CustomTitle   string             `json:"customTitle,omitempty"`
 }
 
-func toMessageEvent(msg claude.Message) messageEvent {
+func toMessageEvent(msg claude.Message, activityState string) messageEvent {
 	var ts string
 	if msg.Timestamp.Int64() != 0 {
 		ts = time.UnixMilli(msg.Timestamp.Int64()).UTC().Format(time.RFC3339)
 	}
 	return messageEvent{
-		UUID:        msg.UUID,
-		Type:        string(msg.Type),
-		Timestamp:   ts,
-		IsMeta:      msg.IsMeta,
-		Message:     redact.RedactAPIMessage(msg.Message),
-		Data:        redact.RedactMapValues(msg.Data),
-		Snapshot:    redact.RedactMapValues(msg.Snapshot),
-		CustomTitle: msg.CustomTitle,
+		UUID:          msg.UUID,
+		Type:          string(msg.Type),
+		Timestamp:     ts,
+		IsMeta:        msg.IsMeta,
+		IsSidechain:   msg.IsSidechain,
+		ActivityState: activityState,
+		Message:       redact.RedactAPIMessage(msg.Message),
+		Data:          redact.RedactMapValues(msg.Data),
+		Snapshot:      redact.RedactMapValues(msg.Snapshot),
+		CustomTitle:   msg.CustomTitle,
 	}
 }

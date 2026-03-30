@@ -675,6 +675,7 @@ type MessageResponse struct {
 	Type        string             `json:"type"`
 	Timestamp   string             `json:"timestamp"`
 	IsMeta      bool               `json:"isMeta,omitempty"`
+	IsSidechain bool               `json:"isSidechain,omitempty"`
 	MessageKind string             `json:"messageKind,omitempty"`
 	Message     *claude.APIMessage `json:"message,omitempty"`
 	Content     string             `json:"content,omitempty"`
@@ -705,6 +706,7 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 		Type:        string(msg.Type),
 		Timestamp:   msToISO(msg.Timestamp.Int64()),
 		IsMeta:      msg.IsMeta,
+		IsSidechain: msg.IsSidechain,
 		MessageKind: insights.ClassifyMessageKind(msg),
 		Message:     redact.RedactAPIMessage(msg.Message),
 		Content:     redact.RedactSecrets(msg.Content),

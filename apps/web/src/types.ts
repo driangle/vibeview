@@ -84,6 +84,8 @@ export interface MessageResponse {
     | 'agent-name';
   timestamp: string;
   isMeta?: boolean;
+  isSidechain?: boolean;
+  activityState?: ActivityState;
   messageKind?: string;
   message?: APIMessage;
   content?: string;

@@ -44,9 +44,11 @@ export function useSessionStream(sessionId: string | undefined) {
         }
         if (seenUUIDs.current.has(msg.uuid)) return;
         seenUUIDs.current.add(msg.uuid);
-        // A new message invalidates any server-pushed state — the client
-        // will derive the latest state from the message itself.
-        setServerActivityState(null);
+        // Use the backend-derived activity state from the message event.
+        // This replaces any server-pushed state (idle decay / process checks).
+        if (msg.activityState) {
+          setServerActivityState(msg.activityState);
+        }
         setMessages((prev) => [...prev, msg]);
       });
 
