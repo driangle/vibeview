@@ -69,16 +69,21 @@ func main() {
 plus CLI tools for inspecting and searching session data.
 
 Running vibeview without a subcommand starts the web server.`,
-		Version: fullVersion(),
 	}
 
-	root.SetVersionTemplate(fmt.Sprintf("vibeview version %s\n  Git commit: %s\n  Built:      %s\n", Version, GitCommit, BuildDate))
+	// Add --version without -v shorthand so inspect can use -v for --verbose.
+	var showVersion bool
+	root.Flags().BoolVar(&showVersion, "version", false, "version for vibeview")
+	root.RunE = func(cmd *cobra.Command, args []string) error {
+		if showVersion {
+			fmt.Printf("vibeview version %s\n  Git commit: %s\n  Built:      %s\n", Version, GitCommit, BuildDate)
+			return nil
+		}
+		return cmd.Help()
+	}
 
 	root.PersistentFlags().StringVar(&claudeDir, "claude-dir", defaultClaudeDir, "path to claude data directory")
 	root.PersistentFlags().StringVar(&logLevel, "log-level", "warn", "log level: debug, warn, error")
-
-	// Remove the -v shorthand from --version so inspect can use -v for --verbose.
-	root.Flags().Lookup("version").Shorthand = ""
 
 	root.AddCommand(serveCmd(home, &claudeDir, &logLevel))
 	root.AddCommand(inspectCmd(&claudeDir, &logLevel))
