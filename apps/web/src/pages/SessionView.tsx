@@ -15,6 +15,7 @@ import { ConversationSearch } from '../components/ConversationSearch';
 import { SessionSidebar } from '../components/SessionSidebar';
 import type { UsageTotals } from '../types';
 import { Footer } from '../components/Footer';
+import { TokenBreakdownPopover } from '../components/TokenBreakdownPopover';
 import { formatDate, formatTokenCount, formatCost, formatDuration } from '../utils';
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
@@ -28,14 +29,16 @@ function InlineMetrics({ usage }: { usage: UsageTotals }) {
 
   return (
     <div className="flex gap-6 border-l border-border pl-6 h-fit">
-      <div className="flex flex-col">
-        <span className="font-headline text-[10px] text-muted-fg uppercase tracking-tighter">
-          Tokens
-        </span>
-        <span className="font-headline text-xl font-medium text-fg">
-          {formatTokenCount(totalTokens)}
-        </span>
-      </div>
+      <TokenBreakdownPopover usage={usage}>
+        <div className="flex flex-col">
+          <span className="font-headline text-[10px] text-muted-fg uppercase tracking-tighter">
+            Tokens
+          </span>
+          <span className="font-headline text-xl font-medium text-fg">
+            {formatTokenCount(totalTokens)}
+          </span>
+        </div>
+      </TokenBreakdownPopover>
       {usage.costUSD > 0 && (
         <div className="flex flex-col">
           <span className="font-headline text-[10px] text-muted-fg uppercase tracking-tighter">
@@ -192,8 +195,8 @@ export function SessionView() {
               {session.dir}
             </Link>
             <p className="text-muted-fg text-xs">
-              {formatDate(session.timestamp)} &middot;{' '}
-              {displayMessages.length} message{displayMessages.length !== 1 ? 's' : ''}
+              {formatDate(session.timestamp)} &middot; {displayMessages.length} message
+              {displayMessages.length !== 1 ? 's' : ''}
               {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
             </p>
           </div>
