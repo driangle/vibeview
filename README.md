@@ -2,6 +2,8 @@
 
 A local CLI tool for browsing your Claude Code sessions in a clean, read-only web interface.
 
+[Documentation](https://driangle.github.io/vibeview/)
+
 VibeView watches your `~/.claude` directory, discovers sessions in real time, and presents them as a browsable chat UI with tool calls, file edits, thinking blocks, and cost breakdowns.
 
 ## Install
