@@ -86,8 +86,13 @@ function FileGroup({
             const uuid = fileToUuid.get(filePath);
             return (
               <div key={filePath} className="flex items-center gap-1 group">
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onFileClick(filePath)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') onFileClick(filePath);
+                  }}
                   className="flex-1 min-w-0 px-2.5 py-1.5 bg-card border border-border rounded-md flex items-center gap-2 hover:bg-bg transition-colors text-left cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-xs text-muted-fg">
@@ -98,7 +103,7 @@ function FileGroup({
                     <span className="text-[10px] text-muted-fg font-mono truncate">{filePath}</span>
                   </div>
                   <CopyPathButton filePath={filePath} />
-                </button>
+                </div>
                 {uuid && <LocateButton onClick={() => onNavigateToMessage(uuid)} />}
               </div>
             );
