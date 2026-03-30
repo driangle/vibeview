@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ActivityBadge } from '../components/ActivityBadge';
 import { MessageBubble } from '../components/MessageBubble';
 import { CopyableText } from '../components/CopyableText';
@@ -14,7 +14,6 @@ import { useMessagePagination } from '../hooks/useMessagePagination';
 import { ConversationSearch } from '../components/ConversationSearch';
 import { SessionSidebar } from '../components/SessionSidebar';
 import type { UsageTotals } from '../types';
-import { DirectoryName } from '../components/DirectoryName';
 import { formatDate, formatTokenCount, formatCost, formatDuration } from '../utils';
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
@@ -184,8 +183,15 @@ export function SessionView() {
             <h1 className="text-xl font-headline font-medium tracking-tight text-fg font-mono">
               {title}
             </h1>
+            <Link
+              to={`/?dir=${encodeURIComponent(session.dir)}`}
+              className="block text-muted-fg hover:text-primary text-xs font-mono truncate transition-colors"
+              title={session.dir}
+            >
+              {session.dir}
+            </Link>
             <p className="text-muted-fg text-xs">
-              {formatDate(session.timestamp)} &middot; <DirectoryName dir={session.dir} /> &middot;{' '}
+              {formatDate(session.timestamp)} &middot;{' '}
               {displayMessages.length} message{displayMessages.length !== 1 ? 's' : ''}
               {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
             </p>
