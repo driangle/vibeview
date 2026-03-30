@@ -27,7 +27,7 @@ import (
 
 // Version information (set via build flags).
 var (
-	Version   = "0.1.0"
+	Version   = "dev"
 	GitCommit = "unknown"
 	BuildDate = "unknown"
 	GitDirty  = ""
@@ -77,6 +77,9 @@ Running vibeview without a subcommand starts the web server.`,
 	root.PersistentFlags().StringVar(&claudeDir, "claude-dir", defaultClaudeDir, "path to claude data directory")
 	root.PersistentFlags().StringVar(&logLevel, "log-level", "warn", "log level: debug, warn, error")
 
+	// Remove the -v shorthand from --version so inspect can use -v for --verbose.
+	root.Flags().Lookup("version").Shorthand = ""
+
 	root.AddCommand(serveCmd(home, &claudeDir, &logLevel))
 	root.AddCommand(inspectCmd(&claudeDir, &logLevel))
 	root.AddCommand(searchCmd(&claudeDir, &logLevel))
@@ -94,7 +97,7 @@ Running vibeview without a subcommand starts the web server.`,
 			"help": true, "completion": true,
 		}
 		helpFlags := map[string]bool{
-			"--help": true, "-h": true, "--version": true, "-v": true,
+			"--help": true, "-h": true, "--version": true,
 		}
 		first := os.Args[1]
 		if !knownCmds[first] && !helpFlags[first] && !strings.HasPrefix(first, "-") {

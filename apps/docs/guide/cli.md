@@ -136,6 +136,34 @@ results:
     snippet: "...help with the database migration issue..."
 ```
 
+### `vibeview stats`
+
+Display an aggregate usage summary across all Claude Code sessions.
+
+```bash
+# All sessions
+vibeview stats
+
+# Filter by project directory
+vibeview stats --dirs myproject
+
+# Analyze a specific project folder
+vibeview stats /path/to/project
+
+# Analyze a single session file
+vibeview stats session.jsonl
+
+# Machine-readable output
+vibeview stats --json
+vibeview stats --yaml
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--dirs` | | Comma-separated project directory names to filter |
+| `--json` | `false` | Output as JSON |
+| `--yaml` | `false` | Output as YAML |
+
 ### `vibeview completion`
 
 Generate shell autocompletion scripts for bash, zsh, fish, or powershell.
@@ -158,7 +186,7 @@ These flags are available on all commands:
 |------|---------|-------------|
 | `--claude-dir` | `~/.claude` | Path to claude data directory |
 | `--log-level` | `warn` | Log level: `debug`, `warn`, `error` |
-| `--version` | | Print version and exit |
+| `--version` | | Print version and exit (no `-v` shorthand; `-v` is used by `inspect` for `--verbose`) |
 
 ## Session discovery
 
