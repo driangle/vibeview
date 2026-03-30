@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Footer } from '../components/Footer';
 import { ProjectDialog } from '../components/ProjectDialog';
 import { DuplicateProjectNameError, useProjects } from '../hooks/useProjects';
 import type { Project } from '../types';
@@ -150,6 +151,7 @@ export function ProjectList() {
           onCancel={() => setDeletingProject(null)}
         />
       )}
+      <Footer />
     </div>
   );
 }

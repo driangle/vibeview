@@ -7,6 +7,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
 import { SessionTable } from '../components/SessionTable';
 import { useSettings } from '../contexts/useSettings';
+import { Footer } from '../components/Footer';
 import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSessionFilters } from '../hooks/useSessionFilters';
@@ -373,6 +374,7 @@ export function SessionList() {
           <span>Last updated just now</span>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

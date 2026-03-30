@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '../api';
+import { Footer } from '../components/Footer';
 import { useSettings } from '../contexts/useSettings';
 import type { AppConfig, Settings as SettingsType } from '../types';
 
@@ -360,6 +361,7 @@ export function Settings() {
 
         {config && <StorageInfo config={config} />}
       </div>
+      <Footer />
     </div>
   );
 }

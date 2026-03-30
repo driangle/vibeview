@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import { fetcher } from '../api';
 import { ContributionGraph, ContributionLegend } from '../components/ContributionGraph';
+import { Footer } from '../components/Footer';
 import type { CellRange } from '../components/ContributionGraph';
 import { HourOfDayChart } from '../components/HourOfDayChart';
 import { useActiveProject } from '../hooks/useActiveProject';
@@ -11,8 +12,8 @@ import { projectName } from '../utils';
 
 type ViewMode = 'day' | 'week' | 'month' | 'hour';
 
-/** NavBar h-12 (48px) + border-b (1px) + Footer py-4+text+border-t (~49px). */
-const CHROME_HEIGHT = 98;
+/** NavBar h-12 (48px) + border-b (1px). Footer is now inside scroll area. */
+const CHROME_HEIGHT = 49;
 /** Page p-8 top+bottom (64px) + header block ~70px + mb-6 (24px) + card p-6 top+bottom (48px) + card border (2px). */
 const INNER_OVERHEAD = 208;
 /** Legend row height + mt-4 margin. */
@@ -159,6 +160,7 @@ export function UsagePatterns() {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

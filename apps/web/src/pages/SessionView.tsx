@@ -14,6 +14,7 @@ import { useMessagePagination } from '../hooks/useMessagePagination';
 import { ConversationSearch } from '../components/ConversationSearch';
 import { SessionSidebar } from '../components/SessionSidebar';
 import type { UsageTotals } from '../types';
+import { Footer } from '../components/Footer';
 import { formatDate, formatTokenCount, formatCost, formatDuration } from '../utils';
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
@@ -145,7 +146,7 @@ export function SessionView() {
   const activityState = liveActivityState ?? session.activityState;
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-theme(spacing.16))]">
+    <div className="flex flex-col lg:flex-row h-full">
       {/* Content Canvas */}
       <div
         className="flex-1 flex flex-col border-r border-border overflow-y-auto"
@@ -280,6 +281,7 @@ export function SessionView() {
             )}
           </div>
         </section>
+        <Footer />
       </div>
 
       {/* Right Panel: Context & Metadata */}

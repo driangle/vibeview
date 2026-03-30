@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { NavBar } from './components/NavBar';
-import { Footer } from './components/Footer';
 import { ProjectsProvider } from './contexts/ProjectsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { SessionList } from './pages/SessionList';
@@ -42,7 +41,6 @@ export function App() {
                 </Suspense>
               </ErrorBoundary>
             </main>
-            <Footer />
           </div>
         </ProjectsProvider>
       </SettingsProvider>

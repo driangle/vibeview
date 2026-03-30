@@ -5,6 +5,7 @@ import { fetcher } from '../api';
 import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { DirectoryName } from '../components/DirectoryName';
+import { Footer } from '../components/Footer';
 import type { PaginatedSessions, Session } from '../types';
 import { formatTime } from '../utils';
 
@@ -133,6 +134,7 @@ export function DirectoryList() {
           ))}
         </ul>
       )}
+      <Footer />
     </div>
   );
 }
