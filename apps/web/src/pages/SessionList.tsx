@@ -209,7 +209,7 @@ export function SessionList() {
 
         {/* Stats */}
         {loaded && (
-          <div className="grid gap-4 grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="text-xs text-muted-fg uppercase tracking-wider">Sessions</div>
               <div className="mt-1 text-2xl font-bold text-fg font-sans">{statsTotal}</div>
@@ -230,7 +230,7 @@ export function SessionList() {
         )}
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <svg
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg"
@@ -282,7 +282,7 @@ export function SessionList() {
             <select
               value={dirFilter}
               onChange={(e) => setDirFilter(e.target.value)}
-              className={`w-[200px] truncate font-mono ${dirFilter ? `pr-7 ${selectActive}` : selectDefault}`}
+              className={`w-full sm:w-[200px] truncate font-mono ${dirFilter ? `pr-7 ${selectActive}` : selectDefault}`}
             >
               <option value="">All folders</option>
               {uniqueProjects.map((project) => (
@@ -297,7 +297,7 @@ export function SessionList() {
             <select
               value={modelFilter}
               onChange={(e) => setModelFilter(e.target.value)}
-              className={`w-[180px] truncate ${modelFilter ? `pr-7 ${selectActive}` : selectDefault}`}
+              className={`w-full sm:w-[180px] truncate ${modelFilter ? `pr-7 ${selectActive}` : selectDefault}`}
             >
               <option value="">All models</option>
               {uniqueModels.map((m) => (
@@ -312,7 +312,7 @@ export function SessionList() {
             <select
               value={activityFilter}
               onChange={(e) => setActivityFilter(e.target.value)}
-              className={`w-[180px] truncate ${activityFilter ? `pr-7 ${selectActive}` : selectDefault}`}
+              className={`w-full sm:w-[180px] truncate ${activityFilter ? `pr-7 ${selectActive}` : selectDefault}`}
             >
               <option value="">All states</option>
               <option value="working">Working</option>

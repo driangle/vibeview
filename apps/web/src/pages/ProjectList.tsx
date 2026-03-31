@@ -55,7 +55,7 @@ export function ProjectList() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">

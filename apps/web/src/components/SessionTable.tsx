@@ -47,7 +47,7 @@ export function SessionTable({
               sortColumn={sortColumn}
               sortDirection={sortDirection}
               onToggle={onToggleSort}
-              className="w-[15%]"
+              className="w-[15%] hidden md:table-cell"
               icon="folder"
             />
             <SortHeader
@@ -67,7 +67,7 @@ export function SessionTable({
               onToggle={onToggleSort}
               className="w-[10%]"
             />
-            <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-muted-fg uppercase tracking-wider">
+            <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-muted-fg uppercase tracking-wider hidden lg:table-cell">
               <span className="inline-flex items-center gap-1.5">
                 <svg
                   className="h-3 w-3"
@@ -91,7 +91,7 @@ export function SessionTable({
               sortColumn={sortColumn}
               sortDirection={sortDirection}
               onToggle={onToggleSort}
-              className="w-[13%]"
+              className="w-[13%] hidden lg:table-cell"
             />
             <SortHeader
               label="Cost"

@@ -88,7 +88,7 @@ export function SessionRow({
       </td>
 
       {/* Directory */}
-      <td className="px-4 py-3 text-xs truncate">
+      <td className="px-4 py-3 text-xs truncate hidden md:table-cell">
         <button
           type="button"
           onClick={(e) => {
@@ -115,12 +115,12 @@ export function SessionRow({
       </td>
 
       {/* Model */}
-      <td className="px-4 py-3 text-xs">
+      <td className="px-4 py-3 text-xs hidden lg:table-cell">
         {session.model && <ModelBadge model={session.model} onClick={onModelClick} />}
       </td>
 
       {/* Tokens (in/out) */}
-      <td className="px-4 py-3 text-xs text-muted-fg text-right whitespace-nowrap">
+      <td className="px-4 py-3 text-xs text-muted-fg text-right whitespace-nowrap hidden lg:table-cell">
         <div>
           <span className="text-muted-fg/70">in:</span>{' '}
           <span className="text-fg">{formatTokens(session.usage.inputTokens)}</span>

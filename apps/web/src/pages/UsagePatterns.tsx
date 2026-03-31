@@ -83,7 +83,7 @@ export function UsagePatterns() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-7xl p-8">
+      <div className="mx-auto max-w-7xl p-4 sm:p-8">
         <h1 className="text-2xl font-bold text-fg">Activity</h1>
         <p className="mt-4 text-danger">Failed to load activity data. Is the server running?</p>
       </div>
@@ -92,7 +92,7 @@ export function UsagePatterns() {
 
   if (isLoading || !data) {
     return (
-      <div className="mx-auto max-w-7xl p-8">
+      <div className="mx-auto max-w-7xl p-4 sm:p-8">
         <h1 className="text-2xl font-bold text-fg">Activity</h1>
         <p className="mt-4 text-muted-fg">Loading activity data...</p>
       </div>
@@ -102,7 +102,7 @@ export function UsagePatterns() {
   const graphHeight = Math.max(chartHeight - LEGEND_SPACE, 100);
 
   return (
-    <div className="mx-auto max-w-7xl p-8">
+    <div className="mx-auto max-w-7xl p-4 sm:p-8">
       <div ref={headerRef} className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-fg">Activity</h1>

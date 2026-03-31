@@ -207,52 +207,129 @@ function ProjectSelector() {
   );
 }
 
+function SettingsLink() {
+  return (
+    <NavLink
+      to="/settings"
+      className={({ isActive }) =>
+        `rounded p-1.5 transition-colors ${
+          isActive ? 'text-primary' : 'text-muted-fg hover:bg-secondary hover:text-fg'
+        }`
+      }
+      title="Settings"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="h-4 w-4"
+      >
+        <path
+          fillRule="evenodd"
+          d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </NavLink>
+  );
+}
+
+function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="md:hidden rounded p-2 text-muted-fg hover:bg-secondary hover:text-fg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+      aria-label={open ? 'Close menu' : 'Open menu'}
+    >
+      {open ? (
+        <svg
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      ) : (
+        <svg
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export function NavBar() {
   const { data: config } = useSWR<AppConfig>('/api/config', fetcher);
   const backendStatus = useBackendStatus();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <nav className="border-b border-border bg-card">
-      <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-8">
+      {/* Desktop nav */}
+      <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-4 sm:px-8">
         <span className="flex items-center gap-2 text-sm font-semibold text-fg">
           <img src="/favicon.svg" alt="" className="h-5 w-5" />
           vibeview
         </span>
-        <NavBarLink to="/" end>
-          Sessions
-        </NavBarLink>
-        <NavBarLink to="/directories">Directories</NavBarLink>
-        <NavBarLink to="/projects">Projects</NavBarLink>
-        <NavBarLink to="/activity">Activity</NavBarLink>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-6">
+          <NavBarLink to="/" end>
+            Sessions
+          </NavBarLink>
+          <NavBarLink to="/directories">Directories</NavBarLink>
+          <NavBarLink to="/projects">Projects</NavBarLink>
+          <NavBarLink to="/activity">Activity</NavBarLink>
+        </div>
+        <div className="ml-auto hidden md:flex items-center gap-3">
           <ProjectSelector />
           <ConnectionBadge status={backendStatus} />
           {config && <ConfigLabel config={config} />}
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              `rounded p-1.5 transition-colors ${
-                isActive ? 'text-primary' : 'text-muted-fg hover:bg-secondary hover:text-fg'
-              }`
-            }
-            title="Settings"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-4 w-4"
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </NavLink>
+          <SettingsLink />
           <ThemeToggle />
         </div>
+        <div className="ml-auto md:hidden">
+          <HamburgerButton open={menuOpen} onClick={() => setMenuOpen((v) => !v)} />
+        </div>
       </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden border-t border-border px-4 pb-4 pt-2 space-y-1">
+          <NavBarLink to="/" end>
+            <span className="block min-h-[44px] flex items-center text-sm">Sessions</span>
+          </NavBarLink>
+          <NavBarLink to="/directories">
+            <span className="block min-h-[44px] flex items-center text-sm">Directories</span>
+          </NavBarLink>
+          <NavBarLink to="/projects">
+            <span className="block min-h-[44px] flex items-center text-sm">Projects</span>
+          </NavBarLink>
+          <NavBarLink to="/activity">
+            <span className="block min-h-[44px] flex items-center text-sm">Activity</span>
+          </NavBarLink>
+          <div className="border-t border-border pt-3 mt-2 flex flex-wrap items-center gap-3">
+            <ProjectSelector />
+            <ConnectionBadge status={backendStatus} />
+            {config && <ConfigLabel config={config} />}
+            <SettingsLink />
+            <ThemeToggle />
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ActivityBadge } from '../components/ActivityBadge';
 import { MessageBubble } from '../components/MessageBubble';
@@ -58,6 +58,7 @@ export function SessionView() {
   const navigate = useNavigate();
   const { settings, isLoaded } = useSettings();
   const printing = usePrintMode();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const {
     session,
@@ -120,7 +121,7 @@ export function SessionView() {
 
   if (error && !session) {
     return (
-      <div className="mx-auto max-w-4xl p-8">
+      <div className="mx-auto max-w-4xl p-4 sm:p-8">
         <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
           <p className="text-destructive text-sm">
             Failed to load session
@@ -139,7 +140,7 @@ export function SessionView() {
 
   if (isLoading || !session) {
     return (
-      <div className="mx-auto max-w-4xl p-8">
+      <div className="mx-auto max-w-4xl p-4 sm:p-8">
         <p className="text-muted-fg">Loading session...</p>
       </div>
     );
@@ -157,9 +158,9 @@ export function SessionView() {
         onScroll={handleScroll}
       >
         {/* Session Header */}
-        <section className="sticky top-0 z-10 px-8 py-4 border-b border-border bg-card">
-          <div className="max-w-4xl mx-auto space-y-2">
-            <div className="flex items-center justify-between gap-4">
+        <section className="sticky top-0 z-10 px-4 py-3 sm:px-8 sm:py-4 border-b border-border bg-card">
+          <div className="max-w-4xl mx-auto space-y-1 sm:space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
               <div className="flex items-center gap-2">
                 <CopyableText
                   text={session.id}
@@ -169,7 +170,7 @@ export function SessionView() {
                 </CopyableText>
                 <ActivityBadge state={activityState} />
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 {liveUsage && <InlineMetrics usage={liveUsage} />}
                 <ConversationSearch
                   messages={displayMessages}
@@ -182,20 +183,27 @@ export function SessionView() {
                 >
                   <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
                 </button>
+                <button
+                  onClick={() => setSidebarOpen((v) => !v)}
+                  className="lg:hidden text-muted-fg hover:text-fg transition-colors print:hidden"
+                  title="Toggle sidebar"
+                >
+                  <span className="material-symbols-outlined text-xl">info</span>
+                </button>
               </div>
             </div>
-            <h1 className="text-xl font-headline font-medium tracking-tight text-fg font-mono">
+            <h1 className="text-base sm:text-xl font-headline font-medium tracking-tight text-fg font-mono truncate">
               {title}
             </h1>
-            <Link
-              to={`/?dir=${encodeURIComponent(session.dir)}`}
-              className="block text-muted-fg hover:text-primary text-xs font-mono truncate transition-colors"
-              title={session.dir}
-            >
-              {session.dir}
-            </Link>
-            <p className="text-muted-fg text-xs">
-              {formatDate(session.timestamp)} &middot; {displayMessages.length} message
+            <p className="text-muted-fg text-xs truncate">
+              <Link
+                to={`/?dir=${encodeURIComponent(session.dir)}`}
+                className="hover:text-primary font-mono transition-colors"
+                title={session.dir}
+              >
+                {session.dir}
+              </Link>{' '}
+              &middot; {formatDate(session.timestamp)} &middot; {displayMessages.length} msg
               {displayMessages.length !== 1 ? 's' : ''}
               {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
             </p>
@@ -203,7 +211,7 @@ export function SessionView() {
         </section>
 
         {/* Conversation Flow */}
-        <section className="flex-1 bg-bg p-8">
+        <section className="flex-1 bg-bg p-4 sm:p-8">
           <div className="max-w-4xl mx-auto space-y-4 pb-32 print:pb-0">
             {/* Pagination (top) */}
             {totalPages > 1 && (
@@ -288,16 +296,18 @@ export function SessionView() {
       </div>
 
       {/* Right Panel: Context & Metadata */}
-      <SessionSidebar
-        filePath={session.filePath}
-        project={session.dir}
-        model={session.model}
-        timestamp={session.timestamp}
-        sessionId={session.id}
-        insights={insights}
-        toolResults={toolResults}
-        onNavigateToMessage={navigateToMessage}
-      />
+      <div className={`${sidebarOpen ? '' : 'hidden'} lg:block`}>
+        <SessionSidebar
+          filePath={session.filePath}
+          project={session.dir}
+          model={session.model}
+          timestamp={session.timestamp}
+          sessionId={session.id}
+          insights={insights}
+          toolResults={toolResults}
+          onNavigateToMessage={navigateToMessage}
+        />
+      </div>
     </div>
   );
 }
