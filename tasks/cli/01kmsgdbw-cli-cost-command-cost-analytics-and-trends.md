@@ -2,7 +2,7 @@
 title: "CLI cost command — cost analytics and trends"
 id: "01kmsgdbw"
 status: pending
-priority: high
+priority: medium
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"

@@ -465,9 +465,12 @@ func TestSlugSkipsMetaMessages(t *testing.T) {
 
 func TestDiscoverMissingHistoryFile(t *testing.T) {
 	dir := t.TempDir()
-	_, err := Discover(dir, nil)
-	if err == nil {
-		t.Error("expected error for missing history.jsonl")
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatalf("Discover should tolerate missing history.jsonl: %v", err)
+	}
+	if len(idx.GetSessions()) != 0 {
+		t.Error("expected 0 sessions when both history and projects are missing")
 	}
 }
 
@@ -843,5 +846,193 @@ func TestDiscoverWithDirsFilterNoMatch(t *testing.T) {
 
 	if len(idx.GetSessions()) != 0 {
 		t.Error("expected 0 sessions for non-matching dir filter")
+	}
+}
+
+// setupFilesystemOnlyDir creates a Claude dir with session files on disk but no history.jsonl.
+func setupFilesystemOnlyDir(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-sdk-project")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	sess := `{"type":"user","uuid":"u1","sessionId":"sdk-sess-1","timestamp":5000,"message":{"role":"user","content":[{"type":"text","text":"Hello from SDK"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sdk-sess-1","timestamp":5001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"Hi!"}],"usage":{"input_tokens":50,"output_tokens":25}}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sdk-sess-1.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	sess2 := `{"type":"user","uuid":"u2","sessionId":"sdk-sess-2","timestamp":6000,"message":{"role":"user","content":[{"type":"text","text":"Another session"}]}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sdk-sess-2.jsonl"), []byte(sess2), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	return dir
+}
+
+func TestScanProjectDirs(t *testing.T) {
+	dir := setupFilesystemOnlyDir(t)
+
+	sessions := ScanProjectDirs(dir, nil)
+	if len(sessions) != 2 {
+		t.Fatalf("expected 2 sessions, got %d", len(sessions))
+	}
+
+	ids := map[string]bool{}
+	for _, s := range sessions {
+		ids[s.SessionID] = true
+		if s.Project != "/Users/me/sdk/project" {
+			t.Errorf("unexpected project %q", s.Project)
+		}
+		if s.Timestamp <= 0 {
+			t.Error("expected positive timestamp from file mod time")
+		}
+	}
+	if !ids["sdk-sess-1"] || !ids["sdk-sess-2"] {
+		t.Error("expected both sdk-sess-1 and sdk-sess-2")
+	}
+}
+
+func TestScanProjectDirsWithFilter(t *testing.T) {
+	dir := setupFilesystemOnlyDir(t)
+
+	// With matching filter.
+	sessions := ScanProjectDirs(dir, map[string]struct{}{"-Users-me-sdk-project": {}})
+	if len(sessions) != 2 {
+		t.Fatalf("expected 2 sessions with matching filter, got %d", len(sessions))
+	}
+
+	// With non-matching filter.
+	sessions = ScanProjectDirs(dir, map[string]struct{}{"other-project": {}})
+	if len(sessions) != 0 {
+		t.Errorf("expected 0 sessions with non-matching filter, got %d", len(sessions))
+	}
+}
+
+func TestScanProjectDirsSkipsInvalidIDs(t *testing.T) {
+	dir := t.TempDir()
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Valid session file.
+	if err := os.WriteFile(filepath.Join(projDir, "valid-id.jsonl"), []byte(`{}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// Invalid: path traversal attempt.
+	if err := os.WriteFile(filepath.Join(projDir, "..%2F..%2Fetc%2Fpasswd.jsonl"), []byte(`{}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	sessions := ScanProjectDirs(dir, nil)
+	if len(sessions) != 1 {
+		t.Fatalf("expected 1 valid session, got %d", len(sessions))
+	}
+	if sessions[0].SessionID != "valid-id" {
+		t.Errorf("expected valid-id, got %s", sessions[0].SessionID)
+	}
+}
+
+func TestDiscoverWithoutHistory(t *testing.T) {
+	dir := setupFilesystemOnlyDir(t)
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatalf("Discover without history.jsonl should not error: %v", err)
+	}
+
+	sessions := idx.GetSessions()
+	if len(sessions) != 2 {
+		t.Fatalf("expected 2 filesystem-discovered sessions, got %d", len(sessions))
+	}
+}
+
+func TestDiscoverMergesHistoryAndFilesystem(t *testing.T) {
+	dir := setupTestDir(t) // has history.jsonl with sess-1, sess-2, sess-3
+
+	// Add an SDK session on disk that's NOT in history.jsonl.
+	projDir := filepath.Join(dir, "projects", "-Users-me-sdk-only")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	sess := `{"type":"user","uuid":"u1","sessionId":"sdk-only-1","timestamp":9000,"message":{"role":"user","content":[{"type":"text","text":"SDK session"}]}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sdk-only-1.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessions := idx.GetSessions()
+	// Should have the 3 history sessions + 1 filesystem session.
+	if len(sessions) != 4 {
+		t.Fatalf("expected 4 sessions (3 history + 1 filesystem), got %d", len(sessions))
+	}
+
+	// Verify the SDK session is present.
+	found := false
+	for _, s := range sessions {
+		if s.SessionID == "sdk-only-1" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected sdk-only-1 to be in merged results")
+	}
+}
+
+func TestDiscoverHistoryTakesPrecedence(t *testing.T) {
+	dir := setupTestDir(t) // has sess-1 in history with timestamp 1000
+
+	// sess-1 already exists on disk via setupTestDir. The history entry should
+	// take precedence — Discover should NOT create a duplicate.
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count := 0
+	for _, s := range idx.GetSessions() {
+		if s.SessionID == "sess-1" {
+			count++
+			// History entry has timestamp 1000, not file mod time.
+			if s.Timestamp != 1000 {
+				t.Errorf("expected history timestamp 1000, got %d", s.Timestamp)
+			}
+		}
+	}
+	if count != 1 {
+		t.Errorf("expected exactly 1 sess-1 entry, got %d", count)
+	}
+}
+
+func TestAddSessionMeta(t *testing.T) {
+	idx := &Index{}
+
+	added := idx.AddSessionMeta(SessionMeta{SessionID: "new-sess", Project: "/tmp/proj", Timestamp: 1000})
+	if !added {
+		t.Error("expected AddSessionMeta to return true for new session")
+	}
+
+	if len(idx.GetSessions()) != 1 {
+		t.Fatal("expected 1 session")
+	}
+
+	// Adding the same session again should be a no-op.
+	added = idx.AddSessionMeta(SessionMeta{SessionID: "new-sess", Project: "/tmp/proj", Timestamp: 2000})
+	if added {
+		t.Error("expected AddSessionMeta to return false for duplicate")
+	}
+
+	if len(idx.GetSessions()) != 1 {
+		t.Error("expected still 1 session after duplicate add")
 	}
 }

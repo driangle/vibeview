@@ -2,7 +2,7 @@
 title: "CLI activity command — time-based usage patterns"
 id: "01kmsgd50"
 status: pending
-priority: high
+priority: medium
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"

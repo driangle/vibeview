@@ -207,6 +207,9 @@ func renderLookupStyled(w io.Writer, r *lookupReport, verbose bool) {
 	if r.Project != "" {
 		fmt.Fprintln(w, row("Project", redact.MaskHomePath(r.Project)))
 	}
+	if r.FilePath != "" {
+		fmt.Fprintln(w, row("File", redact.MaskHomePath(r.FilePath)))
+	}
 	if r.Enrichment != nil {
 		if r.Enrichment.Slug != "" {
 			fmt.Fprintln(w, row("Slug", r.Enrichment.Slug))

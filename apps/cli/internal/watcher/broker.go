@@ -75,6 +75,7 @@ func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []s
 		if err := b.startHistoryWatcher(); err != nil {
 			return nil, fmt.Errorf("start history watcher: %w", err)
 		}
+		go b.startProjectsPoller()
 	}
 
 	go b.pingLoop()
@@ -364,9 +365,31 @@ func (b *Broker) enrichNewSession(sessionID string) {
 
 const (
 	idleDecayDuration    = 5 * time.Minute
+	projectsPollInterval = 15 * time.Second
 	maxClientsPerSession = 10
 	maxTotalClients      = 100
 )
+
+// startProjectsPoller periodically scans the projects directory for session files
+// not present in the index. This catches sessions created by the SDK that never
+// write to history.jsonl.
+func (b *Broker) startProjectsPoller() {
+	ticker := time.NewTicker(projectsPollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-b.done:
+			return
+		case <-ticker.C:
+			for _, meta := range session.ScanProjectDirs(b.claudeDir, b.dirSet) {
+				if b.index.AddSessionMeta(meta) {
+					go b.enrichNewSession(meta.SessionID)
+				}
+			}
+		}
+	}
+}
 
 func (b *Broker) pingLoop() {
 	ticker := time.NewTicker(30 * time.Second)

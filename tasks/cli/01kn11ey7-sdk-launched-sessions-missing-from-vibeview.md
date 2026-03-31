@@ -1,7 +1,7 @@
 ---
 title: "SDK-launched sessions missing from vibeview"
 id: "01kn11ey7"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["discovery", "sdk"]
@@ -34,11 +34,11 @@ Sessions launched via the SDK (`"entrypoint":"sdk-cli"`) are never recorded in `
 
 ## Tasks
 
-- [ ] Add a filesystem-based discovery pass that scans `~/.claude/projects/*/` for `.jsonl` files not already present in the history-based index
-- [ ] Merge filesystem-discovered sessions into the `Index` returned by `Discover()`, deriving metadata (project path, timestamp) from the file path and file contents
-- [ ] Update the watcher (`watcher/broker.go`) to also watch for new `.jsonl` files appearing in `~/.claude/projects/` directories, not just new lines in `history.jsonl`
-- [ ] Ensure `vibeview inspect <session-id>` can find sessions via filesystem scan when they're absent from `history.jsonl`
-- [ ] Add tests for filesystem-based discovery (sessions present on disk but missing from history)
+- [x] Add a filesystem-based discovery pass that scans `~/.claude/projects/*/` for `.jsonl` files not already present in the history-based index
+- [x] Merge filesystem-discovered sessions into the `Index` returned by `Discover()`, deriving metadata (project path, timestamp) from the file path and file contents
+- [x] Update the watcher (`watcher/broker.go`) to also watch for new `.jsonl` files appearing in `~/.claude/projects/` directories, not just new lines in `history.jsonl`
+- [x] Ensure `vibeview inspect <session-id>` can find sessions via filesystem scan when they're absent from `history.jsonl`
+- [x] Add tests for filesystem-based discovery (sessions present on disk but missing from history)
 
 ## Acceptance Criteria
 

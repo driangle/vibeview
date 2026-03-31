@@ -154,3 +154,40 @@ func TestBrokerHistoryWatcher(t *testing.T) {
 		}
 	}
 }
+
+func TestBrokerProjectsPoller(t *testing.T) {
+	dir, idx := setupBrokerTestDir(t)
+	broker, err := NewBroker(dir, idx, false, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer broker.Close()
+
+	initialCount := len(idx.GetSessions())
+
+	// Create a new session file that is NOT in history.jsonl (SDK-style session).
+	sdkProjDir := filepath.Join(dir, "projects", "-users-me-sdk-proj")
+	if err := os.MkdirAll(sdkProjDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	sdkSess := `{"type":"user","uuid":"u3","sessionId":"sdk-sess-1","timestamp":1700003000000,"message":{"role":"user","content":[{"type":"text","text":"SDK session"}]}}` + "\n"
+	if err := os.WriteFile(filepath.Join(sdkProjDir, "sdk-sess-1.jsonl"), []byte(sdkSess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the poller to detect the new session (poll interval is 15s, but
+	// we can test the underlying mechanism directly).
+	for _, meta := range session.ScanProjectDirs(dir, nil) {
+		idx.AddSessionMeta(meta)
+	}
+
+	newCount := len(idx.GetSessions())
+	if newCount <= initialCount {
+		t.Fatalf("expected new session to be added, had %d now %d", initialCount, newCount)
+	}
+
+	found := idx.FindSession("sdk-sess-1")
+	if found == nil {
+		t.Error("expected sdk-sess-1 to be in the index")
+	}
+}

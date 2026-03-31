@@ -118,47 +118,60 @@ func (idx *Index) SetActivityState(id, state string) {
 // This is fast — it only reads the small history file, not individual session files.
 // When dirs is non-empty, only sessions whose encoded project path matches one of
 // the specified directory names are included.
+//
+// After reading history.jsonl, Discover performs a filesystem scan of the projects
+// directory to pick up sessions that are missing from history (e.g. SDK-launched
+// sessions). History entries are canonical — filesystem-only sessions are appended
+// without overriding existing metadata.
 func Discover(claudeDir string, dirs []string) (*Index, error) {
-	historyPath := filepath.Join(claudeDir, "history.jsonl")
-	f, err := os.Open(historyPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	entries, parseResult, err := claude.ParseHistoryFile(f)
-	if err != nil {
-		return nil, err
-	}
-	if parseResult.SkippedLines > 0 {
-		logutil.Warnf("history.jsonl: skipped %d malformed lines", parseResult.SkippedLines)
-	}
-
 	// Build a set of valid dirs for filtering.
 	dirSet := buildDirSet(claudeDir, dirs)
 
 	// Deduplicate by session ID, keeping the entry with the latest timestamp.
 	seen := make(map[string]int) // sessionID -> index in sessions slice
 	var sessions []SessionMeta
-	for _, entry := range entries {
-		if !matchesDirFilter(dirSet, entry.Project) {
-			continue
+
+	historyPath := filepath.Join(claudeDir, "history.jsonl")
+	f, err := os.Open(historyPath)
+	if err == nil {
+		defer f.Close()
+		entries, parseResult, err := claude.ParseHistoryFile(f)
+		if err != nil {
+			return nil, err
 		}
-		if err := pathutil.ValidateSessionID(entry.SessionID); err != nil {
-			logutil.Debugf("skipping history entry with invalid session ID: %v", err)
-			continue
+		if parseResult.SkippedLines > 0 {
+			logutil.Warnf("history.jsonl: skipped %d malformed lines", parseResult.SkippedLines)
 		}
-		meta := SessionMeta{
-			SessionID: entry.SessionID,
-			Project:   entry.Project,
-			Timestamp: entry.Timestamp.Int64(),
-		}
-		if idx, exists := seen[entry.SessionID]; exists {
-			if meta.Timestamp >= sessions[idx].Timestamp {
-				sessions[idx] = meta
+		for _, entry := range entries {
+			if !matchesDirFilter(dirSet, entry.Project) {
+				continue
 			}
-		} else {
-			seen[entry.SessionID] = len(sessions)
+			if err := pathutil.ValidateSessionID(entry.SessionID); err != nil {
+				logutil.Debugf("skipping history entry with invalid session ID: %v", err)
+				continue
+			}
+			meta := SessionMeta{
+				SessionID: entry.SessionID,
+				Project:   entry.Project,
+				Timestamp: entry.Timestamp.Int64(),
+			}
+			if idx, exists := seen[entry.SessionID]; exists {
+				if meta.Timestamp >= sessions[idx].Timestamp {
+					sessions[idx] = meta
+				}
+			} else {
+				seen[entry.SessionID] = len(sessions)
+				sessions = append(sessions, meta)
+			}
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, err
+	}
+
+	// Filesystem fallback: scan projects directory for sessions missing from history.
+	for _, meta := range ScanProjectDirs(claudeDir, dirSet) {
+		if _, exists := seen[meta.SessionID]; !exists {
+			seen[meta.SessionID] = len(sessions)
 			sessions = append(sessions, meta)
 		}
 	}
@@ -169,6 +182,55 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 	})
 
 	return &Index{Sessions: sessions}, nil
+}
+
+// ScanProjectDirs scans claudeDir/projects/*/ for .jsonl session files and returns
+// lightweight SessionMeta entries (no file content is read — enrichment handles that).
+// When dirSet is non-nil, only project directories whose encoded name is in the set
+// are scanned. This is used as a fallback to discover sessions not in history.jsonl.
+func ScanProjectDirs(claudeDir string, dirSet map[string]struct{}) []SessionMeta {
+	projectsDir := filepath.Join(claudeDir, "projects")
+	projEntries, err := os.ReadDir(projectsDir)
+	if err != nil {
+		return nil
+	}
+
+	var sessions []SessionMeta
+	for _, projEntry := range projEntries {
+		if !projEntry.IsDir() {
+			continue
+		}
+		dirName := projEntry.Name()
+		if dirSet != nil {
+			if _, ok := dirSet[dirName]; !ok {
+				continue
+			}
+		}
+
+		files, err := os.ReadDir(filepath.Join(projectsDir, dirName))
+		if err != nil {
+			continue
+		}
+		for _, f := range files {
+			if f.IsDir() || !strings.HasSuffix(f.Name(), ".jsonl") {
+				continue
+			}
+			sessionID := strings.TrimSuffix(f.Name(), ".jsonl")
+			if err := pathutil.ValidateSessionID(sessionID); err != nil {
+				continue
+			}
+			var ts int64
+			if info, err := f.Info(); err == nil {
+				ts = info.ModTime().UnixMilli()
+			}
+			sessions = append(sessions, SessionMeta{
+				SessionID: sessionID,
+				Project:   claude.DecodeProjectPath(dirName),
+				Timestamp: ts,
+			})
+		}
+	}
+	return sessions
 }
 
 // buildDirSet resolves user-provided directory names against actual subdirectories
@@ -426,6 +488,26 @@ func (idx *Index) EnrichSession(claudeDir string, sessionID string) bool {
 		return enriched.MessageCount > 0
 	}
 	return false
+}
+
+// AddSessionMeta adds a session to the index if it doesn't already exist.
+// Returns true if the session was added.
+func (idx *Index) AddSessionMeta(meta SessionMeta) bool {
+	if err := pathutil.ValidateSessionID(meta.SessionID); err != nil {
+		logutil.Debugf("rejecting session with invalid ID: %v", err)
+		return false
+	}
+
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+
+	for _, s := range idx.Sessions {
+		if s.SessionID == meta.SessionID {
+			return false
+		}
+	}
+	idx.Sessions = append([]SessionMeta{meta}, idx.Sessions...)
+	return true
 }
 
 // AddSession adds a new session from a history entry if it doesn't already exist.

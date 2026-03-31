@@ -2,7 +2,7 @@
 title: "CLI files command — file hotspot analysis"
 id: "01kmsgda0"
 status: pending
-priority: high
+priority: medium
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"

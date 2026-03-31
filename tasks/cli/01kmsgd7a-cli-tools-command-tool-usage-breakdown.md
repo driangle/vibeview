@@ -2,7 +2,7 @@
 title: "CLI tools command — tool usage breakdown"
 id: "01kmsgd7a"
 status: pending
-priority: high
+priority: medium
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"

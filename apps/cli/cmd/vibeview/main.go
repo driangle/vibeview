@@ -395,6 +395,7 @@ type lookupReport struct {
 	Valid       bool              `json:"valid" yaml:"valid"`
 	HistoryHits int               `json:"history_hits" yaml:"history_hits"`
 	Project     string            `json:"project" yaml:"project"`
+	FilePath    string            `json:"file_path" yaml:"file_path"`
 	Timestamp   string            `json:"timestamp" yaml:"timestamp"`
 	Resolution  *resolutionReport `json:"resolution" yaml:"resolution"`
 	Enrichment  *enrichmentReport `json:"enrichment,omitempty" yaml:"enrichment,omitempty"`
@@ -402,6 +403,7 @@ type lookupReport struct {
 	Usage       *usageReport      `json:"usage,omitempty" yaml:"usage,omitempty"`
 	Insights    *insightsReport   `json:"insights,omitempty" yaml:"insights,omitempty"`
 	Problems    []string          `json:"problems,omitempty" yaml:"problems,omitempty"`
+	Notes       []string          `json:"notes,omitempty" yaml:"notes,omitempty"`
 }
 
 type resolutionReport struct {
@@ -585,16 +587,28 @@ func buildLookupReport(claudeDir, sessionID string) *lookupReport {
 	}
 	r.HistoryHits = len(matched)
 
+	var projectPath string
+	var timestampMs int64
 	if len(matched) == 0 {
-		r.Problems = append(r.Problems, "session not found in history.jsonl")
-		return r
+		// Fallback: scan the projects directory for the session file.
+		found := findSessionOnDisk(claudeDir, sessionID)
+		if found == nil {
+			r.Problems = append(r.Problems, "session not found in history.jsonl or on disk")
+			return r
+		}
+		projectPath = found.Project
+		timestampMs = found.Timestamp
+		r.Notes = append(r.Notes, "session discovered via filesystem scan (not in history.jsonl)")
+	} else {
+		entry := matched[len(matched)-1]
+		projectPath = entry.Project
+		timestampMs = entry.Timestamp.Int64()
 	}
 
-	entry := matched[len(matched)-1]
-	r.Project = entry.Project
-	r.Timestamp = time.UnixMilli(entry.Timestamp.Int64()).Format(time.RFC3339)
+	r.Project = projectPath
+	r.Timestamp = time.UnixMilli(timestampMs).Format(time.RFC3339)
 
-	encoded := claude.EncodeProjectPath(entry.Project)
+	encoded := claude.EncodeProjectPath(projectPath)
 	expectedDir := filepath.Join(claudeDir, "projects", encoded)
 	sessionPath := filepath.Join(expectedDir, sessionID+".jsonl")
 
@@ -611,7 +625,7 @@ func buildLookupReport(claudeDir, sessionID string) *lookupReport {
 
 		projectsDir := filepath.Join(claudeDir, "projects")
 		dirEntries, _ := os.ReadDir(projectsDir)
-		basename := filepath.Base(entry.Project)
+		basename := filepath.Base(projectPath)
 		for _, d := range dirEntries {
 			if !d.IsDir() {
 				continue
@@ -634,11 +648,12 @@ func buildLookupReport(claudeDir, sessionID string) *lookupReport {
 		return r
 	}
 	res.FileExists = true
+	r.FilePath = sessionPath
 
 	idx := &session.Index{Sessions: []session.SessionMeta{{
 		SessionID: sessionID,
-		Project:   entry.Project,
-		Timestamp: entry.Timestamp.Int64(),
+		Project:   projectPath,
+		Timestamp: timestampMs,
 	}}}
 	idx.Enrich(claudeDir)
 	sessions := idx.GetSessions()
@@ -675,6 +690,18 @@ func buildLookupReport(claudeDir, sessionID string) *lookupReport {
 	}
 
 	return r
+}
+
+// findSessionOnDisk scans project directories for a session file by ID.
+// Returns nil if the session is not found on disk.
+func findSessionOnDisk(claudeDir, sessionID string) *session.SessionMeta {
+	results := session.ScanProjectDirs(claudeDir, nil)
+	for i := range results {
+		if results[i].SessionID == sessionID {
+			return &results[i]
+		}
+	}
+	return nil
 }
 
 func buildMessageReport(messages []claude.Message) *messageReport {
