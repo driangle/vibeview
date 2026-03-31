@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -1034,5 +1035,110 @@ func TestAddSessionMeta(t *testing.T) {
 
 	if len(idx.GetSessions()) != 1 {
 		t.Error("expected still 1 session after duplicate add")
+	}
+}
+
+func TestEnrichSessionCorrectsCwdFromMessages(t *testing.T) {
+	tests := []struct {
+		name        string
+		realPath    string
+		encodedDir  string
+		description string
+	}{
+		{
+			name:        "hyphen in path",
+			realPath:    "/Users/me/my-project",
+			encodedDir:  "-Users-me-my-project",
+			description: "path with hyphens should be corrected via cwd",
+		},
+		{
+			name:        "dot in path",
+			realPath:    "/Users/german.greiner/workplace",
+			encodedDir:  "-Users-german-greiner-workplace",
+			description: "path with dots should be corrected via cwd",
+		},
+		{
+			name:        "underscore in path",
+			realPath:    "/Users/me/my_project",
+			encodedDir:  "-Users-me-my-project",
+			description: "path with underscores should be corrected via cwd",
+		},
+		{
+			name:        "space in path",
+			realPath:    "/Users/me/my project",
+			encodedDir:  "-Users-me-my-project",
+			description: "path with spaces should be corrected via cwd",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			projDir := filepath.Join(dir, "projects", tt.encodedDir)
+			if err := os.MkdirAll(projDir, 0755); err != nil {
+				t.Fatal(err)
+			}
+
+			sess := fmt.Sprintf(
+				`{"type":"user","uuid":"u1","sessionId":"cwd-sess","timestamp":1000,"cwd":%q,"message":{"role":"user","content":[{"type":"text","text":"hello"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"cwd-sess","timestamp":1001,"cwd":%q,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hi"}],"usage":{"input_tokens":10,"output_tokens":5}}}
+`, tt.realPath, tt.realPath)
+			if err := os.WriteFile(filepath.Join(projDir, "cwd-sess.jsonl"), []byte(sess), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			idx, err := Discover(dir, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !idx.EnrichSession(dir, "cwd-sess") {
+				t.Fatal("expected EnrichSession to return true")
+			}
+
+			sessions := idx.GetSessions()
+			if len(sessions) != 1 {
+				t.Fatalf("expected 1 session, got %d", len(sessions))
+			}
+			if sessions[0].Project != tt.realPath {
+				t.Errorf("%s: got Project=%q, want %q", tt.description, sessions[0].Project, tt.realPath)
+			}
+		})
+	}
+}
+
+func TestEnrichSessionFallbackToEncodedName(t *testing.T) {
+	dir := t.TempDir()
+	encodedDir := "-Users-me-my-project"
+	projDir := filepath.Join(dir, "projects", encodedDir)
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Session with no cwd field.
+	sess := `{"type":"user","uuid":"u1","sessionId":"no-cwd-sess","timestamp":1000,"message":{"role":"user","content":[{"type":"text","text":"hello"}]}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "no-cwd-sess.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !idx.EnrichSession(dir, "no-cwd-sess") {
+		t.Fatal("expected EnrichSession to return true")
+	}
+
+	sessions := idx.GetSessions()
+	if len(sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(sessions))
+	}
+
+	// The decoded path /Users/me/my/project doesn't exist on disk,
+	// so it should fall back to the encoded directory name.
+	if sessions[0].Project != encodedDir {
+		t.Errorf("expected fallback to encoded dir %q, got %q", encodedDir, sessions[0].Project)
 	}
 }

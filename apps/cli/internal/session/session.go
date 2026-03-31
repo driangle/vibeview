@@ -439,6 +439,30 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 		meta.DurationMs = lastTS - firstTS
 	}
 
+	// Correct project path using cwd from session messages.
+	// DecodeProjectPath is lossy (all non-alphanumeric chars map to "-"),
+	// so filesystem-discovered sessions get garbled paths. The cwd field
+	// in JSONL messages contains the actual project path.
+	if meta.FilePath == "" {
+		cwdFound := false
+		for _, msg := range messages {
+			if msg.Cwd != "" {
+				meta.Project = msg.Cwd
+				cwdFound = true
+				break
+			}
+		}
+		// If no cwd was found and the project looks like a lossy decode
+		// (decode(encode(project)) == project means it has no special chars,
+		// which is what DecodeProjectPath produces), show the raw encoded
+		// directory name rather than the garbled path.
+		if !cwdFound && claude.DecodeProjectPath(claude.EncodeProjectPath(meta.Project)) == meta.Project {
+			if _, statErr := os.Stat(meta.Project); statErr != nil {
+				meta.Project = claude.EncodeProjectPath(meta.Project)
+			}
+		}
+	}
+
 	for _, msg := range messages {
 		if msg.Type == claude.MessageTypeUser && msg.Message != nil && !msg.IsMeta {
 			for _, block := range msg.Message.Content {

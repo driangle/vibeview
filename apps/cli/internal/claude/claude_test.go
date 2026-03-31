@@ -332,6 +332,34 @@ func TestDecodeProjectPath(t *testing.T) {
 	}
 }
 
+func TestDecodeProjectPathIsLossy(t *testing.T) {
+	// DecodeProjectPath cannot reconstruct paths with non-alphanumeric characters
+	// other than "/" because EncodeProjectPath maps them all to "-".
+	tests := []struct {
+		original string
+		name     string
+	}{
+		{"/Users/me/my-project", "hyphen"},
+		{"/Users/german.greiner/workplace", "dot"},
+		{"/Users/me/my_project", "underscore"},
+		{"/Users/me/my project", "space"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			encoded := EncodeProjectPath(tt.original)
+			decoded := DecodeProjectPath(encoded)
+			if decoded == tt.original {
+				t.Errorf("expected DecodeProjectPath to be lossy for %q, but got exact match", tt.original)
+			}
+			// However, encode(decode(x)) == x — the round-trip property holds.
+			reEncoded := EncodeProjectPath(decoded)
+			if reEncoded != encoded {
+				t.Errorf("round-trip broken: EncodeProjectPath(%q) = %q, want %q", decoded, reEncoded, encoded)
+			}
+		})
+	}
+}
+
 // --- Fuzz Tests ---
 
 func FuzzParseMessageLine(f *testing.F) {

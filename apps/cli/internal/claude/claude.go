@@ -354,6 +354,10 @@ func EncodeProjectPath(path string) string {
 }
 
 // DecodeProjectPath converts a Claude directory name back to a filesystem path.
+// WARNING: This function is lossy. EncodeProjectPath maps all non-alphanumeric
+// characters to "-", so this decode (replacing "-" with "/") cannot reconstruct
+// paths that originally contained hyphens, dots, underscores, or spaces.
+// Use cwd from session JSONL messages for the authoritative project path.
 // e.g., "-Users-foo-myproject" → "/Users/foo/myproject"
 func DecodeProjectPath(encoded string) string {
 	return strings.ReplaceAll(encoded, "-", "/")

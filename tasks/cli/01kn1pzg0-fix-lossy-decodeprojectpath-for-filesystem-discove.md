@@ -1,7 +1,7 @@
 ---
 title: "Fix lossy DecodeProjectPath for filesystem-discovered sessions"
 id: "01kn1pzg0"
-status: pending
+status: completed
 priority: medium
 type: bug
 tags: ["discovery", "sdk"]
@@ -37,10 +37,10 @@ The `Project` field shows the actual filesystem path (e.g., `/Users/german.grein
 
 ## Tasks
 
-- [ ] For filesystem-discovered sessions, resolve the actual project path by checking which decoded path candidates exist on disk (e.g., try the decoded path, then check if the encoded dir name matches any known project)
-- [ ] Consider reading the first message in the session JSONL to extract the actual project path from session metadata if available
-- [ ] Update `ScanProjectDirs` to populate `SessionMeta.Project` with the verified path
-- [ ] Add tests covering paths with hyphens, dots, underscores, and spaces
+- [x] For filesystem-discovered sessions, resolve the actual project path by checking which decoded path candidates exist on disk (e.g., try the decoded path, then check if the encoded dir name matches any known project)
+- [x] Consider reading the first message in the session JSONL to extract the actual project path from session metadata if available
+- [x] Update `ScanProjectDirs` to populate `SessionMeta.Project` with the verified path
+- [x] Add tests covering paths with hyphens, dots, underscores, and spaces
 
 ## Acceptance Criteria
 
