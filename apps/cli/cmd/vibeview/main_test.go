@@ -146,6 +146,70 @@ func TestBuildInsightsReport(t *testing.T) {
 	}
 }
 
+// --- extractTitle ---
+
+func TestExtractTitle_CustomTitle(t *testing.T) {
+	messages := []claude.Message{
+		{Type: claude.MessageTypeUser, Message: &claude.APIMessage{
+			Content: []claude.ContentBlock{{Type: "text", Text: "hello world"}},
+		}},
+		{Type: claude.MessageTypeCustomTitle, CustomTitle: "My Session"},
+	}
+	if got := extractTitle(messages); got != "My Session" {
+		t.Errorf("extractTitle() = %q, want %q", got, "My Session")
+	}
+}
+
+func TestExtractTitle_FallbackToSlug(t *testing.T) {
+	messages := []claude.Message{
+		{Type: claude.MessageTypeUser, Message: &claude.APIMessage{
+			Content: []claude.ContentBlock{{Type: "text", Text: "Fix the login page"}},
+		}},
+	}
+	if got := extractTitle(messages); got != "Fix the login page" {
+		t.Errorf("extractTitle() = %q, want %q", got, "Fix the login page")
+	}
+}
+
+func TestExtractTitle_LongSlugTruncated(t *testing.T) {
+	long := strings.Repeat("word ", 20) // 100 chars
+	messages := []claude.Message{
+		{Type: claude.MessageTypeUser, Message: &claude.APIMessage{
+			Content: []claude.ContentBlock{{Type: "text", Text: long}},
+		}},
+	}
+	got := extractTitle(messages)
+	if len(got) > 84 { // 80 + "..."
+		t.Errorf("extractTitle() length = %d, want <= 84", len(got))
+	}
+	if !strings.HasSuffix(got, "...") {
+		t.Errorf("extractTitle() = %q, want suffix '...'", got)
+	}
+}
+
+func TestExtractTitle_Empty(t *testing.T) {
+	messages := []claude.Message{
+		{Type: claude.MessageTypeAssistant},
+	}
+	if got := extractTitle(messages); got != "" {
+		t.Errorf("extractTitle() = %q, want empty", got)
+	}
+}
+
+func TestExtractTitle_SkipsMetaMessages(t *testing.T) {
+	messages := []claude.Message{
+		{Type: claude.MessageTypeUser, IsMeta: true, Message: &claude.APIMessage{
+			Content: []claude.ContentBlock{{Type: "text", Text: "meta message"}},
+		}},
+		{Type: claude.MessageTypeUser, Message: &claude.APIMessage{
+			Content: []claude.ContentBlock{{Type: "text", Text: "real message"}},
+		}},
+	}
+	if got := extractTitle(messages); got != "real message" {
+		t.Errorf("extractTitle() = %q, want %q", got, "real message")
+	}
+}
+
 // --- Inspect file e2e ---
 
 func TestBuildFileReport(t *testing.T) {

@@ -1,7 +1,7 @@
 ---
 title: "Include session title in inspect output"
 id: "01kmsg2wj"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: ["inspect", "output"]
@@ -16,12 +16,12 @@ Display the session title (custom title or auto-generated slug) in the output of
 
 ## Tasks
 
-- [ ] Add `Title` (or `Slug`) field to `fileReport` struct, populated from `SessionMeta.CustomTitle` (preferred) or `SessionMeta.Slug`
-- [ ] Render the title in `renderFileStyled()` output (e.g. after the file path line)
-- [ ] Include the title as a column in the `directoryReport` sessions table
-- [ ] Update `renderDirectoryStyled()` to display the title column
-- [ ] Ensure JSON and YAML output formats include the title field for both modes
-- [ ] Add/update tests for file and directory inspect output covering title display
+- [x] Add `Title` (or `Slug`) field to `fileReport` struct, populated from `SessionMeta.CustomTitle` (preferred) or `SessionMeta.Slug`
+- [x] Render the title in `renderFileStyled()` output (e.g. after the file path line)
+- [x] Include the title as a column in the `directoryReport` sessions table
+- [x] Update `renderDirectoryStyled()` to display the title column
+- [x] Ensure JSON and YAML output formats include the title field for both modes
+- [x] Add/update tests for file and directory inspect output covering title display
 
 ## Acceptance Criteria
 

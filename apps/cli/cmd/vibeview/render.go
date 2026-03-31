@@ -253,6 +253,9 @@ func renderLookupStyled(w io.Writer, r *lookupReport, verbose bool) {
 
 func renderFileStyled(w io.Writer, r *fileReport, verbose bool) {
 	fmt.Fprintln(w, sectionTitle("File"))
+	if r.Title != "" {
+		fmt.Fprintln(w, row("Title", r.Title))
+	}
 	fmt.Fprintln(w, row("Path", redact.MaskHomePath(r.Path)))
 	fmt.Fprintln(w, row("Size", formatFileSize(r.Size)))
 	fmt.Fprintln(w, row("Modified", formatTimestamp(r.Modified)))
@@ -290,13 +293,17 @@ func renderDirectoryStyled(w io.Writer, r *directoryReport) {
 	}
 
 	fmt.Fprintln(w, sectionTitle("Sessions"))
-	headers := []string{"File", "Msgs", "Duration", "Cost"}
-	widths := []int{24, 6, 10, 8}
+	headers := []string{"File", "Title", "Msgs", "Duration", "Cost"}
+	widths := []int{24, 24, 6, 10, 8}
 	var rows []tableRow
 	for _, s := range r.Sessions {
 		name := filepath.Base(s.Path)
 		if len(name) > 24 {
 			name = name[:21] + "..."
+		}
+		title := s.Title
+		if len(title) > 24 {
+			title = title[:21] + "..."
 		}
 		msgs := "0"
 		if s.Messages != nil {
@@ -310,7 +317,7 @@ func renderDirectoryStyled(w io.Writer, r *directoryReport) {
 		if s.Usage != nil && s.Usage.Cost > 0 {
 			cost = formatCost(s.Usage.Cost)
 		}
-		rows = append(rows, tableRow{cols: []string{name, msgs, dur, cost}})
+		rows = append(rows, tableRow{cols: []string{name, title, msgs, dur, cost}})
 	}
 	renderTable(w, headers, rows, widths)
 	fmt.Fprintln(w)

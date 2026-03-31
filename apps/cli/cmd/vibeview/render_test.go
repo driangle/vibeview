@@ -274,6 +274,7 @@ func TestRenderFileStyled(t *testing.T) {
 	var buf bytes.Buffer
 	r := &fileReport{
 		Path:     "/Users/test/session.jsonl",
+		Title:    "Fix authentication bug",
 		Size:     2048,
 		Modified: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
 		Messages: &messageReport{
@@ -297,10 +298,32 @@ func TestRenderFileStyled(t *testing.T) {
 	out := buf.String()
 
 	assertContains(t, out, "File")
+	assertContains(t, out, "Fix authentication bug")
 	assertContains(t, out, "2.0 KB")
 	assertContains(t, out, "5m0s")
 	assertContains(t, out, "5,000")
 	assertContains(t, out, "$0.05")
+}
+
+func TestRenderFileStyled_NoTitle(t *testing.T) {
+	orig := colorEnabled
+	colorEnabled = false
+	defer func() { colorEnabled = orig }()
+
+	var buf bytes.Buffer
+	r := &fileReport{
+		Path:     "/Users/test/session.jsonl",
+		Size:     1024,
+		Modified: time.Now().Format(time.RFC3339),
+		Messages: &messageReport{Total: 5},
+	}
+
+	renderFileStyled(&buf, r, false)
+	out := buf.String()
+
+	if strings.Contains(out, "Title") {
+		t.Error("output should not contain Title row when title is empty")
+	}
 }
 
 func TestRenderDirectoryStyled(t *testing.T) {
@@ -313,7 +336,8 @@ func TestRenderDirectoryStyled(t *testing.T) {
 		Path: "/Users/test/sessions",
 		Sessions: []fileReport{
 			{
-				Path: "/Users/test/sessions/a.jsonl",
+				Path:  "/Users/test/sessions/a.jsonl",
+				Title: "Fix login bug",
 				Messages: &messageReport{
 					Total:    10,
 					Duration: "5m0s",
@@ -321,7 +345,8 @@ func TestRenderDirectoryStyled(t *testing.T) {
 				Usage: &usageReport{Cost: 0.50},
 			},
 			{
-				Path: "/Users/test/sessions/b.jsonl",
+				Path:  "/Users/test/sessions/b.jsonl",
+				Title: "Add dark mode",
 				Messages: &messageReport{
 					Total:    20,
 					Duration: "10m0s",
@@ -338,6 +363,8 @@ func TestRenderDirectoryStyled(t *testing.T) {
 	assertContains(t, out, "2")
 	assertContains(t, out, "a.jsonl")
 	assertContains(t, out, "b.jsonl")
+	assertContains(t, out, "Fix login bug")
+	assertContains(t, out, "Add dark mode")
 	assertContains(t, out, "$0.50")
 	assertContains(t, out, "$1.00")
 }

@@ -358,6 +358,7 @@ type directoryReport struct {
 
 type fileReport struct {
 	Path     string          `json:"path" yaml:"path"`
+	Title    string          `json:"title" yaml:"title"`
 	Size     int64           `json:"size_bytes" yaml:"size_bytes"`
 	Modified string          `json:"modified" yaml:"modified"`
 	Parse    *parseReport    `json:"parse,omitempty" yaml:"parse,omitempty"`
@@ -475,10 +476,43 @@ func buildFileReport(path string) fileReport {
 		}
 	}
 
+	r.Title = extractTitle(messages)
 	r.Messages = buildMessageReport(messages)
 	r.Usage = buildUsageReport(messages)
 	r.Insights = buildInsightsReport(messages)
 	return r
+}
+
+// extractTitle returns the session title: custom title if set, otherwise the
+// first user text message (slug). Returns empty string if neither is available.
+func extractTitle(messages []claude.Message) string {
+	var customTitle string
+	for _, msg := range messages {
+		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
+			customTitle = msg.CustomTitle
+		}
+	}
+	if customTitle != "" {
+		return customTitle
+	}
+	for _, msg := range messages {
+		if msg.Type == claude.MessageTypeUser && msg.Message != nil && !msg.IsMeta {
+			for _, block := range msg.Message.Content {
+				if block.Type == "text" && block.Text != "" {
+					text := block.Text
+					if len(text) > 80 {
+						if i := strings.LastIndex(text[:80], " "); i > 0 {
+							text = text[:i] + "..."
+						} else {
+							text = text[:80] + "..."
+						}
+					}
+					return text
+				}
+			}
+		}
+	}
+	return ""
 }
 
 func buildDirectoryReport(dir string) *directoryReport {
