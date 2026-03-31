@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { fetcher } from '../api';
+import { fetcher, withToken } from '../api';
 import { Footer } from '../components/Footer';
 import { useSettings } from '../contexts/useSettings';
 import type { AppConfig, Settings as SettingsType } from '../types';
@@ -172,7 +172,7 @@ export function Settings() {
     setStatus(null);
     setFieldErrors({});
     try {
-      const res = await fetch('/api/settings', {
+      const res = await fetch(withToken('/api/settings'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

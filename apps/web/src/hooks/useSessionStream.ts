@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { withToken } from '../api';
 import type { ActivityState, MessageResponse } from '../types';
 
 type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
@@ -26,7 +27,7 @@ export function useSessionStream(sessionId: string | undefined) {
       if (disposed) return;
 
       setStatus('connecting');
-      const es = new EventSource(`/api/sessions/${sessionId}/stream`);
+      const es = new EventSource(withToken(`/api/sessions/${sessionId}/stream`));
       eventSource = es;
 
       es.onopen = () => {

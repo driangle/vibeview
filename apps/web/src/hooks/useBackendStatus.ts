@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { withToken } from '../api';
 
 export type BackendStatus = 'connected' | 'disconnected';
 
@@ -14,7 +15,7 @@ export function useBackendStatus(): BackendStatus {
 }
 
 async function simpleFetch(url: string) {
-  const res = await fetch(url);
+  const res = await fetch(withToken(url));
   if (!res.ok) throw new Error(`${res.status}`);
   return res.json();
 }

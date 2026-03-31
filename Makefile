@@ -10,8 +10,8 @@ DEV_LDFLAGS := -X 'main.GitCommit=$(DEV_COMMIT)' \
 
 dev: ## Run CLI + Vite dev server with hot reload
 	@trap 'kill 0' EXIT; \
-	cd apps/cli && go run ./cmd/vibeview --open=false & \
-	cd apps/web && npm run dev -- --open & \
+	cd apps/cli && go run ./cmd/vibeview --open=false $(if $(LAN),--lan) & \
+	cd apps/web && npm run dev -- --open $(if $(LAN),--host 0.0.0.0) & \
 	wait
 
 web: ## Build the React SPA

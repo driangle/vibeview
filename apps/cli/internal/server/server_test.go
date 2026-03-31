@@ -219,7 +219,7 @@ func TestGetSessionNotFound(t *testing.T) {
 
 func TestCORSAllowsLocalhostOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
@@ -233,7 +233,7 @@ func TestCORSAllowsLocalhostOrigin(t *testing.T) {
 
 func TestCORSRejectsExternalOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "https://evil.com")
@@ -247,7 +247,7 @@ func TestCORSRejectsExternalOrigin(t *testing.T) {
 
 func TestCORSRejectsWildcard(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	w := httptest.NewRecorder()
@@ -260,7 +260,7 @@ func TestCORSRejectsWildcard(t *testing.T) {
 
 func TestCORSAllows127001Origin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://127.0.0.1:3000")
@@ -274,7 +274,7 @@ func TestCORSAllows127001Origin(t *testing.T) {
 
 func TestCORSPreflight(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("OPTIONS", "/api/sessions", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
@@ -288,7 +288,7 @@ func TestCORSPreflight(t *testing.T) {
 
 func TestCORSNoOriginHeader(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	// Same-origin requests have no Origin header; should still serve content.
 	req := httptest.NewRequest("GET", "/api/health", nil)
@@ -862,7 +862,7 @@ func TestActivityEndpointWithProjectFilter(t *testing.T) {
 
 func TestCORSAllowsIPv6Origin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://[::1]:3000")
@@ -876,7 +876,7 @@ func TestCORSAllowsIPv6Origin(t *testing.T) {
 
 func TestCORSAllowsHTTPS(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "https://localhost:3000")
@@ -890,7 +890,7 @@ func TestCORSAllowsHTTPS(t *testing.T) {
 
 func TestCORSRejectsWrongPort(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, srv.mux)
+	handler := corsHandler(3000, false, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://localhost:9999")
@@ -1057,5 +1057,177 @@ func TestProjectsEndpointTooLargeBody(t *testing.T) {
 
 	if w.Code != http.StatusRequestEntityTooLarge {
 		t.Errorf("expected 413, got %d", w.Code)
+	}
+}
+
+// --- Token auth middleware tests ---
+
+func TestTokenAuthSkipsNonAPIRoutes(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	// Static assets should not require auth.
+	req := httptest.NewRequest("GET", "/assets/index-BhKbx81Y.js", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 for static asset without token, got %d", w.Code)
+	}
+
+	// Root path should not require auth.
+	req = httptest.NewRequest("GET", "/", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 for root path without token, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthViaQueryParam(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	req := httptest.NewRequest("GET", "/api/health?token=secret-token", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 with valid query token, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthViaBearerHeader(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Authorization", "Bearer secret-token")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200 with valid bearer token, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthRejectsMissingToken(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 without token, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthRejectsWrongToken(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	req := httptest.NewRequest("GET", "/api/health?token=wrong-token", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 with wrong token, got %d", w.Code)
+	}
+}
+
+// --- LAN CORS tests ---
+
+func TestCORSAllowsLANOriginInLANMode(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(4880, true, srv.mux)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Origin", "http://192.168.1.5:4880")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "http://192.168.1.5:4880" {
+		t.Errorf("expected LAN origin allowed, got %q", got)
+	}
+}
+
+func TestCORSRejectsLANOriginWithoutLANMode(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(4880, false, srv.mux)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Origin", "http://192.168.1.5:4880")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected LAN origin rejected without LAN mode, got %q", got)
+	}
+}
+
+func TestCORSRejectsPublicIPInLANMode(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(4880, true, srv.mux)
+
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Origin", "http://8.8.8.8:4880")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected public IP rejected in LAN mode, got %q", got)
+	}
+}
+
+func TestIsPrivateIP(t *testing.T) {
+	tests := []struct {
+		ip   string
+		want bool
+	}{
+		{"192.168.1.1", true},
+		{"192.168.0.100", true},
+		{"10.0.0.1", true},
+		{"10.255.255.255", true},
+		{"172.16.0.1", true},
+		{"172.31.255.255", true},
+		{"172.32.0.1", false},
+		{"8.8.8.8", false},
+		{"127.0.0.1", false},
+		{"not-an-ip", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.ip, func(t *testing.T) {
+			if got := isPrivateIP(tt.ip); got != tt.want {
+				t.Errorf("isPrivateIP(%q) = %v, want %v", tt.ip, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCORSAllowsAuthorizationHeader(t *testing.T) {
+	srv := newTestServer(t)
+	handler := corsHandler(4880, true, srv.mux)
+
+	req := httptest.NewRequest("OPTIONS", "/api/sessions", nil)
+	req.Header.Set("Origin", "http://192.168.1.5:4880")
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	allowHeaders := w.Header().Get("Access-Control-Allow-Headers")
+	if !strings.Contains(allowHeaders, "Authorization") {
+		t.Errorf("expected Authorization in allowed headers, got %q", allowHeaders)
 	}
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
-import { fetcher } from '../api';
+import { fetcher, withToken } from '../api';
 import type { Project } from '../types';
 import { DuplicateProjectNameError, findDuplicate } from './projectErrors';
 import { ProjectsContext } from './useProjectsContext';
@@ -47,7 +47,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     async (list: Project[]) => {
       setOptimistic(list);
       try {
-        const res = await fetch('/api/projects', {
+        const res = await fetch(withToken('/api/projects'), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(list),

@@ -1,7 +1,7 @@
 ---
 title: "LAN mode with token-based access"
 id: "01kn063mb"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["security", "networking"]
@@ -16,13 +16,13 @@ Allow accessing the vibeview web UI from other devices on the local network (e.g
 
 ## Tasks
 
-- [ ] Add a `--lan` flag to the CLI that switches the bind address from `127.0.0.1` to `0.0.0.0`
-- [ ] Generate a cryptographically random access token when `--lan` is enabled
-- [ ] Add middleware to validate the token on all HTTP requests (query param `?token=<value>` or `Authorization` header)
-- [ ] Print the full access URL with token to the terminal on startup (e.g. `http://192.168.0.8:4880?token=abc123`) and render a QR code in the terminal for easy mobile access
-- [ ] Pass `--host 0.0.0.0` to the Vite dev server when in LAN mode (dev workflow)
-- [ ] Update CORS handling to allow requests from LAN IP origins when `--lan` is enabled
-- [ ] Print a warning that sessions are exposed on the local network
+- [x] Add a `--lan` flag to the CLI that switches the bind address from `127.0.0.1` to `0.0.0.0`
+- [x] Generate a cryptographically random access token when `--lan` is enabled
+- [x] Add middleware to validate the token on all HTTP requests (query param `?token=<value>` or `Authorization` header)
+- [x] Print the full access URL with token to the terminal on startup (e.g. `http://192.168.0.8:4880?token=abc123`) and render a QR code in the terminal for easy mobile access
+- [x] Pass `--host 0.0.0.0` to the Vite dev server when in LAN mode (dev workflow)
+- [x] Update CORS handling to allow requests from LAN IP origins when `--lan` is enabled
+- [x] Print a warning that sessions are exposed on the local network
 
 ## Acceptance Criteria
 

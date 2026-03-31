@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -21,6 +24,7 @@ import (
 	"github.com/driangle/vibeview/internal/search"
 	"github.com/driangle/vibeview/internal/server"
 	"github.com/driangle/vibeview/internal/session"
+	qrcode "github.com/skip2/go-qrcode"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -101,12 +105,13 @@ Running vibeview without a subcommand starts the web server.`,
 			"serve": true, "inspect": true, "search": true, "stats": true,
 			"help": true, "completion": true,
 		}
-		helpFlags := map[string]bool{
+		rootFlags := map[string]bool{
 			"--help": true, "-h": true, "--version": true,
+			"--claude-dir": true, "--log-level": true,
 		}
 		first := os.Args[1]
-		if !knownCmds[first] && !helpFlags[first] && !strings.HasPrefix(first, "-") {
-			// Positional arg (file path) — treat as serve.
+		if !knownCmds[first] && !rootFlags[first] {
+			// Not a known subcommand or root flag — treat as serve.
 			os.Args = append([]string{os.Args[0], "serve"}, os.Args[1:]...)
 		}
 	}
@@ -121,6 +126,7 @@ Running vibeview without a subcommand starts the web server.`,
 func serveCmd(home string, claudeDir *string, logLevel *string) *cobra.Command {
 	var port int
 	var open bool
+	var lan bool
 	var dirsFlag string
 
 	cmd := &cobra.Command{
@@ -160,6 +166,11 @@ Examples:
 				ProjectsPath: projectsPath,
 			}
 
+			if lan {
+				cfg.Host = "0.0.0.0"
+				cfg.Token = generateToken()
+			}
+
 			if len(args) > 0 {
 				idx, err := session.LoadFromPaths(args)
 				if err != nil {
@@ -189,7 +200,18 @@ Examples:
 			}
 
 			url := fmt.Sprintf("http://localhost:%d", port)
-			fmt.Printf("listening on %s\n", url)
+
+			if lan {
+				lanIP := localLANIP()
+				lanURL := fmt.Sprintf("http://%s:%d?token=%s", lanIP, port, cfg.Token)
+				fmt.Println()
+				fmt.Printf("\033[33mWARNING: LAN mode enabled — sessions are exposed on the local network\033[0m\n")
+				fmt.Printf("listening on 0.0.0.0:%d\n", port)
+				fmt.Printf("access URL: %s\n", lanURL)
+				printQRCode(lanURL)
+			} else {
+				fmt.Printf("listening on %s\n", url)
+			}
 
 			if open {
 				go openBrowser(url)
@@ -214,6 +236,7 @@ Examples:
 
 	cmd.Flags().IntVar(&port, "port", 4880, "port to listen on")
 	cmd.Flags().BoolVar(&open, "open", false, "open browser on startup")
+	cmd.Flags().BoolVar(&lan, "lan", false, "enable LAN mode (bind to 0.0.0.0 with token auth)")
 	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project directory names to filter")
 
 	return cmd
@@ -795,6 +818,38 @@ func doSearch(idx *session.Index, claudeDir, query string, limit int) searchRepo
 		})
 	}
 	return report
+}
+
+func generateToken() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to generate token: %v\n", err)
+		os.Exit(1)
+	}
+	return hex.EncodeToString(b)
+}
+
+func localLANIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "0.0.0.0"
+	}
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() != nil {
+				return ipNet.IP.String()
+			}
+		}
+	}
+	return "0.0.0.0"
+}
+
+func printQRCode(url string) {
+	qr, err := qrcode.New(url, qrcode.Medium)
+	if err != nil {
+		return
+	}
+	fmt.Println(qr.ToSmallString(false))
 }
 
 func openBrowser(url string) {

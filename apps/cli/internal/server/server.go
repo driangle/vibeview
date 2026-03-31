@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -35,6 +36,8 @@ type Config struct {
 	Dirs         []string       // Filter to these project directory names (under ~/.claude/projects/).
 	SettingsPath string         // Path to the settings JSON file.
 	ProjectsPath string         // Path to the projects JSON file.
+	Host         string         // Bind address (default "127.0.0.1", "0.0.0.0" for LAN mode).
+	Token        string         // Access token for LAN mode (empty disables auth).
 }
 
 // Server serves the VibeView HTTP API.
@@ -45,6 +48,8 @@ type Server struct {
 	dirs         []string
 	settingsPath string
 	projectsPath string
+	host         string
+	token        string
 	index        *session.Index
 	broker       *watcher.Broker
 	mux          *http.ServeMux
@@ -77,6 +82,11 @@ func New(cfg Config) (*Server, error) {
 		return nil, fmt.Errorf("start broker: %w", err)
 	}
 
+	host := cfg.Host
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
 	s := &Server{
 		claudeDir:    cfg.ClaudeDir,
 		standalone:   cfg.Standalone,
@@ -84,6 +94,8 @@ func New(cfg Config) (*Server, error) {
 		dirs:         cfg.Dirs,
 		settingsPath: cfg.SettingsPath,
 		projectsPath: cfg.ProjectsPath,
+		host:         host,
+		token:        cfg.Token,
 		index:        idx,
 		broker:       broker,
 		mux:          http.NewServeMux(),
@@ -118,11 +130,16 @@ func (s *Server) routes() {
 }
 
 // ListenAndServe starts the HTTP server on the given address.
-// addr can be a port (":8080") or host:port ("127.0.0.1:8080").
 func (s *Server) ListenAndServe(port int) error {
-	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	addr := fmt.Sprintf("%s:%d", s.host, port)
+	lanMode := s.host == "0.0.0.0"
 
-	s.httpServer = &http.Server{Addr: addr, Handler: corsHandler(port, s.mux)}
+	var handler http.Handler = corsHandler(port, lanMode, s.mux)
+	if s.token != "" {
+		handler = tokenAuthMiddleware(s.token, handler)
+	}
+
+	s.httpServer = &http.Server{Addr: addr, Handler: handler}
 	return s.httpServer.ListenAndServe()
 }
 
@@ -145,15 +162,59 @@ func localhostOrigins(port int) map[string]struct{} {
 	}
 }
 
-// corsHandler wraps a handler with CORS headers restricted to localhost origins.
-func corsHandler(port int, next http.Handler) http.Handler {
+// isPrivateIP checks whether the given IP string is in an RFC 1918 private range.
+func isPrivateIP(ip string) bool {
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return false
+	}
+	privateRanges := []net.IPNet{
+		{IP: net.IP{10, 0, 0, 0}, Mask: net.CIDRMask(8, 32)},
+		{IP: net.IP{172, 16, 0, 0}, Mask: net.CIDRMask(12, 32)},
+		{IP: net.IP{192, 168, 0, 0}, Mask: net.CIDRMask(16, 32)},
+	}
+	for _, r := range privateRanges {
+		if r.Contains(parsed) {
+			return true
+		}
+	}
+	return false
+}
+
+// isAllowedOrigin checks whether an origin is allowed based on mode.
+// In LAN mode, private-IP origins are also accepted.
+func isAllowedOrigin(origin string, port int, lanMode bool) bool {
 	allowed := localhostOrigins(port)
+	if _, ok := allowed[origin]; ok {
+		return true
+	}
+	if !lanMode {
+		return false
+	}
+	// Parse the origin to check if its host is a private IP.
+	// Origins look like "http://192.168.1.5:4880".
+	host := origin
+	for _, prefix := range []string{"https://", "http://"} {
+		if strings.HasPrefix(host, prefix) {
+			host = strings.TrimPrefix(host, prefix)
+			break
+		}
+	}
+	// Strip port.
+	if idx := strings.LastIndex(host, ":"); idx != -1 {
+		host = host[:idx]
+	}
+	return isPrivateIP(host)
+}
+
+// corsHandler wraps a handler with CORS headers restricted to allowed origins.
+func corsHandler(port int, lanMode bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if _, ok := allowed[origin]; ok {
+		if origin != "" && isAllowedOrigin(origin, port, lanMode) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			w.Header().Set("Vary", "Origin")
 		}
 		if r.Method == http.MethodOptions {
@@ -161,6 +222,29 @@ func corsHandler(port int, next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+// tokenAuthMiddleware validates access tokens on API requests.
+// Accepts the token via ?token= query parameter or Authorization: Bearer header.
+// Non-API routes (static assets, SPA) are served without auth so the page can load.
+func tokenAuthMiddleware(token string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/api/") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if t := r.URL.Query().Get("token"); t == token {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+			if strings.TrimPrefix(auth, "Bearer ") == token {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 	})
 }
 
