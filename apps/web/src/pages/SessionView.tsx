@@ -253,7 +253,9 @@ export function SessionView() {
                 </Link>{' '}
                 &middot; {formatDate(session.timestamp)} &middot; {displayMessages.length} msg
                 {displayMessages.length !== 1 ? 's' : ''}
-                {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
+                {formatDuration(displayMessages) && (
+                  <> &middot; {formatDuration(displayMessages)}</>
+                )}
               </p>
             </div>
           </section>
@@ -377,8 +379,8 @@ export function SessionView() {
         <Footer />
       </div>
 
-      {/* Right Panel: Context & Metadata */}
-      <div className={`${sidebarOpen ? '' : 'hidden'} lg:block`}>
+      {/* Right Panel: Context & Metadata — desktop always visible */}
+      <div className="hidden lg:block">
         <SessionSidebar
           filePath={focusedAgentId ? undefined : session.filePath}
           project={session.dir}
@@ -391,6 +393,46 @@ export function SessionView() {
           onFocusAgent={focusedAgentId ? undefined : handleFocusAgent}
           focusedAgentId={focusedAgentId}
         />
+      </div>
+
+      {/* Mobile sidebar — slide-up panel with lip toggle */}
+      <div
+        className={`lg:hidden fixed inset-x-0 bottom-0 z-30 flex flex-col transition-transform duration-300 ease-in-out print:hidden ${
+          sidebarOpen ? 'translate-y-0' : 'translate-y-[calc(100%-40px)]'
+        }`}
+        style={{ maxHeight: '80dvh' }}
+      >
+        <button
+          onClick={() => setSidebarOpen((v) => !v)}
+          className={`mx-auto flex items-center gap-1.5 rounded-t-lg border-t border-x border-border shadow-sm px-5 py-2 text-xs font-medium transition-colors ${
+            sidebarOpen
+              ? 'bg-surface-dim text-fg'
+              : 'bg-surface-dim/70 backdrop-blur-sm text-muted-fg'
+          }`}
+        >
+          <span
+            className={`material-symbols-outlined text-sm transition-transform duration-300 ${
+              sidebarOpen ? 'rotate-180' : ''
+            }`}
+          >
+            expand_less
+          </span>
+          Details
+        </button>
+        <div className="flex-1 overflow-y-auto">
+          <SessionSidebar
+            filePath={focusedAgentId ? undefined : session.filePath}
+            project={session.dir}
+            model={session.model}
+            timestamp={session.timestamp}
+            sessionId={session.id}
+            insights={focusedAgentId && subagentData?.insights ? subagentData.insights : insights}
+            toolResults={activeToolResults}
+            onNavigateToMessage={navigateToMessage}
+            onFocusAgent={focusedAgentId ? undefined : handleFocusAgent}
+            focusedAgentId={focusedAgentId}
+          />
+        </div>
       </div>
     </div>
   );
