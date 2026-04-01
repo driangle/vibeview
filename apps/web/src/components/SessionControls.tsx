@@ -31,9 +31,13 @@ export function Pagination({
 
   return (
     <div className="py-3 print:hidden" data-pagination>
-      <div className="grid grid-cols-3 items-center">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:grid sm:grid-cols-3">
         <div className="flex gap-2">
-          <button onClick={() => onPageChange(0)} disabled={page === 0} className={buttonClass}>
+          <button
+            onClick={() => onPageChange(0)}
+            disabled={page === 0}
+            className={`${buttonClass} hidden sm:inline-flex`}
+          >
             First
           </button>
           <button
@@ -41,25 +45,23 @@ export function Pagination({
             disabled={page === 0}
             className={buttonClass}
           >
-            Previous
+            Prev
           </button>
         </div>
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              Page {page + 1} of {totalPages}
-            </span>
-            {onJumpToLatest && page < totalPages - 1 && (
-              <button
-                onClick={onJumpToLatest}
-                className="rounded px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
-              >
-                Jump to latest &darr;
-              </button>
-            )}
-          </div>
+        <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {page + 1} / {totalPages}
+          </span>
+          {onJumpToLatest && page < totalPages - 1 && (
+            <button
+              onClick={onJumpToLatest}
+              className="rounded px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+            >
+              Latest &darr;
+            </button>
+          )}
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 sm:justify-end">
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages - 1}
@@ -70,7 +72,7 @@ export function Pagination({
           <button
             onClick={() => onPageChange(totalPages - 1)}
             disabled={page >= totalPages - 1}
-            className={buttonClass}
+            className={`${buttonClass} hidden sm:inline-flex`}
           >
             Last
           </button>

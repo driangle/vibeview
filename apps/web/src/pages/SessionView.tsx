@@ -199,7 +199,7 @@ export function SessionView() {
     <div className="flex flex-col lg:flex-row h-full">
       {/* Content Canvas */}
       <div
-        className="flex-1 flex flex-col border-r border-border overflow-y-auto"
+        className="flex-1 flex flex-col border-r border-border overflow-y-auto overflow-x-hidden"
         ref={containerRef}
         onScroll={handleScroll}
       >
