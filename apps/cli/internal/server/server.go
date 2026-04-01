@@ -521,6 +521,8 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	extracted := insights.Extract(messages)
+	sessionDir := strings.TrimSuffix(path, ".jsonl")
+	insights.ResolveSubagentIDs(extracted.Subagents, sessionDir)
 	resp := SessionDetailResponse{
 		SessionResponse: toSessionResponse(*meta),
 		FilePath:        redact.MaskHomePath(path),
@@ -549,6 +551,15 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 
 	// Subagent files live at {session-dir}/subagents/agent-{agentId}.jsonl
 	sessionDir := strings.TrimSuffix(sessionPath, ".jsonl")
+
+	// If the agent ID is a synthetic tool_use_ prefix, resolve to the real file ID
+	// by matching the tool_use ID against the session's Agent tool_use blocks.
+	if strings.HasPrefix(agentID, "tool_use_") {
+		if resolved := resolveToolUseAgentID(sessionDir, agentID); resolved != "" {
+			agentID = resolved
+		}
+	}
+
 	agentPath := filepath.Join(sessionDir, "subagents", "agent-"+agentID+".jsonl")
 
 	f, err := os.Open(agentPath)
@@ -593,6 +604,64 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 		SkippedLines: parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// resolveToolUseAgentID resolves a synthetic "tool_use_<toolUseId>" agent ID
+// to the real agent file ID by matching the tool_use description against meta files.
+func resolveToolUseAgentID(sessionDir, syntheticID string) string {
+	toolUseID := strings.TrimPrefix(syntheticID, "tool_use_")
+
+	// Read the parent session to find the Agent tool_use description.
+	parentPath := sessionDir + ".jsonl"
+	pf, err := os.Open(parentPath)
+	if err != nil {
+		return ""
+	}
+	defer pf.Close()
+	messages, _, err := claude.ParseSessionFile(pf)
+	if err != nil {
+		return ""
+	}
+
+	var description string
+	for _, msg := range messages {
+		for _, block := range insights.GetContentBlocks(msg) {
+			if block.Type == "tool_use" && block.Name == "Agent" && block.ID == toolUseID {
+				description, _ = block.Input["description"].(string)
+				break
+			}
+		}
+		if description != "" {
+			break
+		}
+	}
+	if description == "" {
+		return ""
+	}
+
+	// Match against meta files.
+	subagentsDir := filepath.Join(sessionDir, "subagents")
+	files, err := os.ReadDir(subagentsDir)
+	if err != nil {
+		return ""
+	}
+	for _, f := range files {
+		name := f.Name()
+		if !strings.HasPrefix(name, "agent-") || !strings.HasSuffix(name, ".meta.json") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(subagentsDir, name))
+		if err != nil {
+			continue
+		}
+		var meta struct {
+			Description string `json:"description"`
+		}
+		if json.Unmarshal(data, &meta) == nil && meta.Description == description {
+			return strings.TrimSuffix(strings.TrimPrefix(name, "agent-"), ".meta.json")
+		}
+	}
+	return ""
 }
 
 func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {

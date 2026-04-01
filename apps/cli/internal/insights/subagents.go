@@ -1,8 +1,12 @@
 package insights
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/driangle/vibeview/internal/claude"
 )
@@ -150,4 +154,45 @@ func extractAgentIDFromResult(block claude.ContentBlock) string {
 		}
 	}
 	return ""
+}
+
+// ResolveSubagentIDs matches tool_use-based subagent entries (which have synthetic
+// "tool_use_<id>" agent IDs) to real agent file IDs by scanning the subagent directory
+// and matching on description. This allows the frontend to request the correct agent file.
+func ResolveSubagentIDs(entries []SubagentEntry, sessionDir string) {
+	subagentsDir := filepath.Join(sessionDir, "subagents")
+	files, err := os.ReadDir(subagentsDir)
+	if err != nil {
+		return
+	}
+
+	// Build map from description -> real agent ID using meta files.
+	descToID := make(map[string]string)
+	for _, f := range files {
+		name := f.Name()
+		if !strings.HasPrefix(name, "agent-") || !strings.HasSuffix(name, ".meta.json") {
+			continue
+		}
+		agentID := strings.TrimSuffix(strings.TrimPrefix(name, "agent-"), ".meta.json")
+
+		data, err := os.ReadFile(filepath.Join(subagentsDir, name))
+		if err != nil {
+			continue
+		}
+		var meta struct {
+			Description string `json:"description"`
+		}
+		if json.Unmarshal(data, &meta) == nil && meta.Description != "" {
+			descToID[meta.Description] = agentID
+		}
+	}
+
+	for i := range entries {
+		if !strings.HasPrefix(entries[i].AgentID, "tool_use_") {
+			continue
+		}
+		if realID, ok := descToID[entries[i].Description]; ok {
+			entries[i].AgentID = realID
+		}
+	}
 }

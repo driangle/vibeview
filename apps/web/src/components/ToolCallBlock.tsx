@@ -117,8 +117,9 @@ export function ToolCallBlock({ block, result, onFocusAgent }: ToolCallBlockProp
       {/* Action buttons */}
       {(() => {
         const isAgent = toolName === 'Agent';
-        const resultAgentId = isAgent && result
-          ? agentIdPattern.exec(formatResult(result.content))?.[1]
+        const resultAgentId = isAgent
+          ? ((result ? agentIdPattern.exec(formatResult(result.content))?.[1] : undefined) ??
+            (block.id ? `tool_use_${block.id}` : undefined))
           : undefined;
         const showExpand = !expanded;
         const showViewConvo = isAgent && resultAgentId && onFocusAgent;
