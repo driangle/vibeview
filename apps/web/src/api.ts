@@ -6,9 +6,14 @@ export class ApiError extends Error {
   }
 }
 
-// Capture the access token from the initial page URL (LAN mode).
-// Stored once at module load so client-side navigation doesn't lose it.
-const accessToken: string | null = new URLSearchParams(window.location.search).get('token');
+// Capture the access token from the URL (LAN mode) and persist to
+// sessionStorage so it survives page refreshes and client-side navigation.
+const TOKEN_KEY = 'vibeview_token';
+const urlToken = new URLSearchParams(window.location.search).get('token');
+if (urlToken) {
+  sessionStorage.setItem(TOKEN_KEY, urlToken);
+}
+const accessToken: string | null = urlToken ?? sessionStorage.getItem(TOKEN_KEY);
 
 // Append the access token to an API URL if one is present.
 export function withToken(url: string): string {
