@@ -135,6 +135,15 @@ export interface SessionDetail extends Session {
   skippedLines?: number;
 }
 
+export interface SubagentDetail {
+  agentId: string;
+  agentType?: string;
+  description?: string;
+  messages: MessageResponse[];
+  insights?: SessionInsights;
+  skippedLines?: number;
+}
+
 export interface SearchResult {
   session: Session;
   snippet: string;

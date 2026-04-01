@@ -22,6 +22,7 @@ interface MessageBubbleProps {
   agentGroups: Map<string, MessageResponse[]>;
   agentGroupFirstIds: Set<string>;
   isLastMessage?: boolean;
+  onFocusAgent?: (agentId: string) => void;
 }
 
 function formatTimestamp(ts: string): string {
@@ -156,10 +157,12 @@ function AssistantMessage({
   message,
   toolResults,
   isLastMessage,
+  onFocusAgent,
 }: {
   message: MessageResponse;
   toolResults: Map<string, ContentBlock>;
   isLastMessage?: boolean;
+  onFocusAgent?: (agentId: string) => void;
 }) {
   const [showRaw, setShowRaw] = useState(false);
   const rawContent = message.message?.content;
@@ -188,7 +191,7 @@ function AssistantMessage({
         if (group.type === 'tool') {
           return group.blocks.map(({ block, index }) => {
             const result = block.id ? toolResults.get(block.id) : undefined;
-            return <ToolCallBlock key={index} block={block} result={result} />;
+            return <ToolCallBlock key={index} block={block} result={result} onFocusAgent={onFocusAgent} />;
           });
         }
 
@@ -254,6 +257,7 @@ export function MessageBubble({
   agentGroups,
   agentGroupFirstIds,
   isLastMessage,
+  onFocusAgent,
 }: MessageBubbleProps) {
   if (message.type === 'custom-title' || message.type === 'agent-name') {
     const label = message.type === 'custom-title' ? 'Title set' : 'Agent';
@@ -289,7 +293,7 @@ export function MessageBubble({
 
   if (message.type === 'assistant' && message.message) {
     return (
-      <AssistantMessage message={message} toolResults={toolResults} isLastMessage={isLastMessage} />
+      <AssistantMessage message={message} toolResults={toolResults} isLastMessage={isLastMessage} onFocusAgent={onFocusAgent} />
     );
   }
 
@@ -298,7 +302,7 @@ export function MessageBubble({
     const agentId = String(message.data?.agentId ?? '');
     const group = agentGroups.get(agentId);
     if (!group || group.length === 0) return null;
-    return <AgentProgressWidget messages={group} />;
+    return <AgentProgressWidget messages={group} onFocusAgent={onFocusAgent} agentId={agentId} />;
   }
 
   if (message.type === 'system' || message.type === 'progress') {

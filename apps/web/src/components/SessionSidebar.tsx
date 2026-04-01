@@ -26,6 +26,8 @@ interface SessionSidebarProps {
   insights: SessionInsights | null;
   toolResults: Map<string, ContentBlock>;
   onNavigateToMessage: (uuid: string) => void;
+  onFocusAgent?: (agentId: string) => void;
+  focusedAgentId?: string | null;
 }
 
 export function SessionSidebar({
@@ -37,7 +39,10 @@ export function SessionSidebar({
   insights,
   toolResults,
   onNavigateToMessage,
+  onFocusAgent,
+  focusedAgentId,
 }: SessionSidebarProps) {
+  const isSubagentView = Boolean(focusedAgentId);
   const [searchParams] = useSearchParams();
   const activeProjectId = searchParams.get('project') || '';
   const [viewerFile, setViewerFile] = useState<{
@@ -62,6 +67,16 @@ export function SessionSidebar({
   return (
     <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-4 sm:p-6 overflow-y-auto print:hidden">
       <div className="space-y-8">
+        {/* Subagent indicator */}
+        {isSubagentView && (
+          <div className="flex items-center gap-2 rounded-md border border-info/25 bg-info/5 px-3 py-2">
+            <span className="material-symbols-outlined text-info text-sm">smart_toy</span>
+            <span className="text-[11px] font-headline font-bold uppercase tracking-widest text-info">
+              Agent session
+            </span>
+          </div>
+        )}
+
         {/* Raw Session File */}
         {filePath && (
           <SidebarSection id="raw-session-file" icon="attach_file" title="Raw Session File">
@@ -112,7 +127,7 @@ export function SessionSidebar({
         {insights && <ToolUsageSummary tools={insights.tools} />}
 
         {/* Skills */}
-        {insights && (
+        {insights && !isSubagentView && (
           <SkillsSummary skills={insights.skills} onNavigateToMessage={onNavigateToMessage} />
         )}
 
@@ -127,7 +142,7 @@ export function SessionSidebar({
         )}
 
         {/* Worktrees */}
-        {insights && (
+        {insights && !isSubagentView && (
           <WorktreesSummary
             worktrees={insights.worktrees}
             onNavigateToMessage={onNavigateToMessage}
@@ -139,6 +154,7 @@ export function SessionSidebar({
           <SubagentsSummary
             subagents={insights.subagents}
             onNavigateToMessage={onNavigateToMessage}
+            onFocusAgent={onFocusAgent}
           />
         )}
 
@@ -148,38 +164,40 @@ export function SessionSidebar({
         )}
 
         {/* Metadata */}
-        <SidebarSection id="metadata" icon="info" title="Metadata">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] font-headline text-muted-fg uppercase">Project</span>
-              <Link
-                to={`/?dir=${encodeURIComponent(project)}${activeProjectId ? `&project=${encodeURIComponent(activeProjectId)}` : ''}`}
-                className="text-xs font-medium text-fg hover:text-primary transition-colors"
-              >
-                <DirectoryName dir={project} />
-              </Link>
-            </div>
-            {model && (
+        {!isSubagentView && (
+          <SidebarSection id="metadata" icon="info" title="Metadata">
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[11px] font-headline text-muted-fg uppercase">Model</span>
-                <span className="text-xs font-medium px-1.5 py-0.5 bg-muted rounded font-mono">
-                  {model}
-                </span>
+                <span className="text-[11px] font-headline text-muted-fg uppercase">Project</span>
+                <Link
+                  to={`/?dir=${encodeURIComponent(project)}${activeProjectId ? `&project=${encodeURIComponent(activeProjectId)}` : ''}`}
+                  className="text-xs font-medium text-fg hover:text-primary transition-colors"
+                >
+                  <DirectoryName dir={project} />
+                </Link>
               </div>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] font-headline text-muted-fg uppercase">Started</span>
-              <span className="text-xs font-medium text-fg">{formatDate(timestamp)}</span>
+              {model && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[11px] font-headline text-muted-fg uppercase">Model</span>
+                  <span className="text-xs font-medium px-1.5 py-0.5 bg-muted rounded font-mono">
+                    {model}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-headline text-muted-fg uppercase">Started</span>
+                <span className="text-xs font-medium text-fg">{formatDate(timestamp)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-headline text-muted-fg uppercase">Session</span>
+                <CopyableText
+                  text={sessionId}
+                  className="text-xs font-medium text-fg font-mono max-w-[140px] truncate"
+                />
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] font-headline text-muted-fg uppercase">Session</span>
-              <CopyableText
-                text={sessionId}
-                className="text-xs font-medium text-fg font-mono max-w-[140px] truncate"
-              />
-            </div>
-          </div>
-        </SidebarSection>
+          </SidebarSection>
+        )}
       </div>
 
       {viewerFile && (

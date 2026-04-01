@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -120,6 +121,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/projects", s.handleGetProjects)
 	s.mux.HandleFunc("PUT /api/projects", s.handleUpdateProjects)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
+	s.mux.HandleFunc("GET /api/sessions/{id}/subagents/{agentId}", s.handleGetSubagent)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
 	s.mux.HandleFunc("GET /api/activity", s.handleActivity)
@@ -529,6 +531,70 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	agentID := r.PathValue("agentId")
+
+	meta := s.index.FindSession(id)
+	if meta == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+		return
+	}
+
+	sessionPath, err := session.ResolveFilePath(s.claudeDir, *meta)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		return
+	}
+
+	// Subagent files live at {session-dir}/subagents/agent-{agentId}.jsonl
+	sessionDir := strings.TrimSuffix(sessionPath, ".jsonl")
+	agentPath := filepath.Join(sessionDir, "subagents", "agent-"+agentID+".jsonl")
+
+	f, err := os.Open(agentPath)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "subagent session not found"})
+		return
+	}
+	defer f.Close()
+
+	messages, parseResult, err := claude.ParseSessionFile(f)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse subagent session"})
+		return
+	}
+
+	msgResponses := make([]MessageResponse, 0, len(messages))
+	for _, msg := range messages {
+		msgResponses = append(msgResponses, toMessageResponse(msg))
+	}
+
+	// Read optional meta file for agent type and description.
+	var agentType, description string
+	metaPath := filepath.Join(sessionDir, "subagents", "agent-"+agentID+".meta.json")
+	if metaBytes, err := os.ReadFile(metaPath); err == nil {
+		var metaData struct {
+			AgentType   string `json:"agentType"`
+			Description string `json:"description"`
+		}
+		if json.Unmarshal(metaBytes, &metaData) == nil {
+			agentType = metaData.AgentType
+			description = metaData.Description
+		}
+	}
+
+	extracted := insights.Extract(messages)
+	resp := SubagentDetailResponse{
+		AgentID:      agentID,
+		AgentType:    agentType,
+		Description:  description,
+		Messages:     msgResponses,
+		Insights:     &extracted,
+		SkippedLines: parseResult.SkippedLines,
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
@@ -742,6 +808,16 @@ type SearchResultResponse struct {
 type SearchResponse struct {
 	Results []SearchResultResponse `json:"results"`
 	Total   int                    `json:"total"`
+}
+
+// SubagentDetailResponse is the API representation of a subagent's conversation.
+type SubagentDetailResponse struct {
+	AgentID      string                    `json:"agentId"`
+	AgentType    string                    `json:"agentType,omitempty"`
+	Description  string                    `json:"description,omitempty"`
+	Messages     []MessageResponse         `json:"messages"`
+	Insights     *insights.SessionInsights `json:"insights,omitempty"`
+	SkippedLines int                       `json:"skippedLines,omitempty"`
 }
 
 // SessionDetailResponse is the API representation of a single session with messages.

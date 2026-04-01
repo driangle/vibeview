@@ -3,9 +3,12 @@ import type { ContentBlock, ContentBlockInput } from '../types';
 import { EditDiffBlock } from './EditDiffBlock';
 import { RawJsonModal } from './RawJsonModal';
 
+const agentIdPattern = /agentId:\s*([a-f0-9]+)/;
+
 interface ToolCallBlockProps {
   block: ContentBlock;
   result?: ContentBlock;
+  onFocusAgent?: (agentId: string) => void;
 }
 
 function formatInput(input: ContentBlockInput): string {
@@ -26,7 +29,7 @@ function formatResult(content: unknown): string {
   return JSON.stringify(content, null, 2);
 }
 
-export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
+export function ToolCallBlock({ block, result, onFocusAgent }: ToolCallBlockProps) {
   const [expanded, setExpanded] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
 
@@ -111,15 +114,39 @@ export function ToolCallBlock({ block, result }: ToolCallBlockProps) {
         </div>
       )}
 
-      {/* Expand toggle hint */}
-      {!expanded && (
-        <button
-          onClick={() => setExpanded(true)}
-          className="w-full px-4 py-1.5 text-[10px] font-headline text-muted-fg hover:text-fg hover:bg-muted/50 transition-colors text-center uppercase tracking-wider"
-        >
-          Show details
-        </button>
-      )}
+      {/* Action buttons */}
+      {(() => {
+        const isAgent = toolName === 'Agent';
+        const resultAgentId = isAgent && result
+          ? agentIdPattern.exec(formatResult(result.content))?.[1]
+          : undefined;
+        const showExpand = !expanded;
+        const showViewConvo = isAgent && resultAgentId && onFocusAgent;
+        if (!showExpand && !showViewConvo) return null;
+        return (
+          <div className="flex border-t border-border">
+            {showExpand && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="flex-1 px-4 py-1.5 text-[10px] font-headline text-muted-fg hover:text-fg hover:bg-muted/50 transition-colors text-center uppercase tracking-wider"
+              >
+                Show details
+              </button>
+            )}
+            {showViewConvo && (
+              <button
+                onClick={() => onFocusAgent(resultAgentId)}
+                className={`flex-1 px-4 py-1.5 text-[10px] font-headline text-info hover:text-fg hover:bg-info/10 transition-colors text-center uppercase tracking-wider flex items-center justify-center gap-1 ${showExpand ? 'border-l border-border' : ''}`}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
+                  open_in_full
+                </span>
+                View conversation
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {showRawJson && (
         <RawJsonModal

@@ -6,6 +6,8 @@ import { MessageContent } from './MessageContent';
 
 interface AgentProgressWidgetProps {
   messages: MessageResponse[];
+  agentId: string;
+  onFocusAgent?: (agentId: string) => void;
 }
 
 function buildSubagentToolResults(messages: MessageResponse[]): Map<string, ContentBlock> {
@@ -63,7 +65,7 @@ function SubagentTurn({
   );
 }
 
-export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
+export function AgentProgressWidget({ messages, agentId, onFocusAgent }: AgentProgressWidgetProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (messages.length === 0) return null;
@@ -131,15 +133,28 @@ export function AgentProgressWidget({ messages }: AgentProgressWidgetProps) {
         </div>
       )}
 
-      {/* Expand toggle */}
-      {!expanded && (
-        <button
-          onClick={() => setExpanded(true)}
-          className="w-full px-4 py-1.5 text-[10px] font-headline text-info hover:text-fg hover:bg-info/10 transition-colors text-center uppercase tracking-wider border-t border-info/25"
-        >
-          Show details
-        </button>
-      )}
+      {/* Action buttons */}
+      <div className="flex border-t border-info/25">
+        {!expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="flex-1 px-4 py-1.5 text-[10px] font-headline text-info hover:text-fg hover:bg-info/10 transition-colors text-center uppercase tracking-wider"
+          >
+            Show details
+          </button>
+        )}
+        {onFocusAgent && (
+          <button
+            onClick={() => onFocusAgent(agentId)}
+            className={`flex-1 px-4 py-1.5 text-[10px] font-headline text-info hover:text-fg hover:bg-info/10 transition-colors text-center uppercase tracking-wider flex items-center justify-center gap-1 ${!expanded ? 'border-l border-info/25' : ''}`}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
+              open_in_full
+            </span>
+            View conversation
+          </button>
+        )}
+      </div>
     </div>
   );
 }

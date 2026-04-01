@@ -250,9 +250,11 @@ type SubagentEntry = SessionInsights['subagents'][number];
 function AgentCard({
   agent,
   onNavigateToMessage,
+  onFocusAgent,
 }: {
   agent: SubagentEntry;
   onNavigateToMessage: (uuid: string) => void;
+  onFocusAgent?: (agentId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const prompt = agent.prompt || 'Agent';
@@ -273,7 +275,21 @@ function AgentCard({
               : agent.description || 'background agent'}
           </span>
         </button>
-        <div className="pt-2 pr-1">
+        <div className="pt-2 pr-1 flex items-center gap-0.5">
+          {onFocusAgent && !agent.agentId.startsWith('tool_use_') && (
+            <button
+              onClick={() => onFocusAgent(agent.agentId)}
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-muted-fg hover:text-info transition-all shrink-0"
+              title="View full conversation"
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 14, fontVariationSettings: "'opsz' 14" }}
+              >
+                open_in_full
+              </span>
+            </button>
+          )}
           <LocateButton onClick={() => onNavigateToMessage(agent.firstMessageUuid)} />
         </div>
       </div>
@@ -300,9 +316,11 @@ function AgentCard({
 export function SubagentsSummary({
   subagents,
   onNavigateToMessage,
+  onFocusAgent,
 }: {
   subagents: SessionInsights['subagents'];
   onNavigateToMessage: (uuid: string) => void;
+  onFocusAgent?: (agentId: string) => void;
 }) {
   if (subagents.length === 0) return null;
 
@@ -328,7 +346,12 @@ export function SubagentsSummary({
       </div>
       <div className="space-y-1.5">
         {subagents.map((agent) => (
-          <AgentCard key={agent.agentId} agent={agent} onNavigateToMessage={onNavigateToMessage} />
+          <AgentCard
+            key={agent.agentId}
+            agent={agent}
+            onNavigateToMessage={onNavigateToMessage}
+            onFocusAgent={onFocusAgent}
+          />
         ))}
       </div>
     </SidebarSection>

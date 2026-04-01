@@ -95,15 +95,12 @@ func extractFromToolUse(messages []claude.Message, toolResults map[string]claude
 			description, _ := input["description"].(string)
 
 			var resultText string
+			agentID := ""
 			if result, ok := toolResults[block.ID]; ok {
 				resultText = ResolveResultText(result)
-			}
-
-			agentID := ""
-			if resultText != "" {
-				if m := agentIDPattern.FindStringSubmatch(resultText); m != nil {
-					agentID = m[1]
-				}
+				// Search all text blocks in the result for the agentId pattern,
+				// since agentId may appear in a different block than the first.
+				agentID = extractAgentIDFromResult(result)
 			}
 			if agentID == "" {
 				agentID = "tool_use_" + block.ID
@@ -122,4 +119,35 @@ func extractFromToolUse(messages []claude.Message, toolResults map[string]claude
 	}
 
 	return subagents
+}
+
+// extractAgentIDFromResult searches all text blocks in a tool result for an agentId pattern.
+func extractAgentIDFromResult(block claude.ContentBlock) string {
+	if block.Content == nil {
+		return ""
+	}
+	// Single string content
+	if s, ok := block.Content.(string); ok {
+		if m := agentIDPattern.FindStringSubmatch(s); m != nil {
+			return m[1]
+		}
+		return ""
+	}
+	// Array of content blocks — check each text block
+	if arr, ok := block.Content.([]any); ok {
+		for _, item := range arr {
+			m, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+			if m["type"] == "text" {
+				if text, ok := m["text"].(string); ok {
+					if match := agentIDPattern.FindStringSubmatch(text); match != nil {
+						return match[1]
+					}
+				}
+			}
+		}
+	}
+	return ""
 }
