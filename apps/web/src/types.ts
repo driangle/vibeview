@@ -119,6 +119,7 @@ export interface SessionInsights {
   subagents: {
     source: string;
     agentId: string;
+    agentType?: string;
     prompt: string;
     description: string;
     firstMessageUuid: string;

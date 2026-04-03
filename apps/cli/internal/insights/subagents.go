@@ -97,6 +97,7 @@ func extractFromToolUse(messages []claude.Message, toolResults map[string]claude
 			input := block.Input
 			prompt, _ := input["prompt"].(string)
 			description, _ := input["description"].(string)
+			agentType, _ := input["subagent_type"].(string)
 
 			var resultText string
 			agentID := ""
@@ -113,6 +114,7 @@ func extractFromToolUse(messages []claude.Message, toolResults map[string]claude
 			subagents = append(subagents, SubagentEntry{
 				Source:           "tool_use",
 				AgentID:          agentID,
+				AgentType:        agentType,
 				Prompt:           prompt,
 				Description:      description,
 				FirstMessageUUID: msg.UUID,
@@ -166,8 +168,13 @@ func ResolveSubagentIDs(entries []SubagentEntry, sessionDir string) {
 		return
 	}
 
-	// Build map from description -> real agent ID using meta files.
-	descToID := make(map[string]string)
+	// Build map from description -> meta using meta files.
+	type agentMeta struct {
+		ID        string
+		AgentType string
+	}
+	descToMeta := make(map[string]agentMeta)
+	idToType := make(map[string]string)
 	for _, f := range files {
 		name := f.Name()
 		if !strings.HasPrefix(name, "agent-") || !strings.HasSuffix(name, ".meta.json") {
@@ -181,18 +188,33 @@ func ResolveSubagentIDs(entries []SubagentEntry, sessionDir string) {
 		}
 		var meta struct {
 			Description string `json:"description"`
+			AgentType   string `json:"agentType"`
 		}
-		if json.Unmarshal(data, &meta) == nil && meta.Description != "" {
-			descToID[meta.Description] = agentID
+		if json.Unmarshal(data, &meta) == nil {
+			if meta.Description != "" {
+				descToMeta[meta.Description] = agentMeta{ID: agentID, AgentType: meta.AgentType}
+			}
+			if meta.AgentType != "" {
+				idToType[agentID] = meta.AgentType
+			}
 		}
 	}
 
 	for i := range entries {
-		if !strings.HasPrefix(entries[i].AgentID, "tool_use_") {
-			continue
+		// Resolve synthetic tool_use_ IDs to real agent IDs.
+		if strings.HasPrefix(entries[i].AgentID, "tool_use_") {
+			if m, ok := descToMeta[entries[i].Description]; ok {
+				entries[i].AgentID = m.ID
+				if entries[i].AgentType == "" {
+					entries[i].AgentType = m.AgentType
+				}
+			}
 		}
-		if realID, ok := descToID[entries[i].Description]; ok {
-			entries[i].AgentID = realID
+		// Backfill agentType from meta for entries that don't have it (e.g. agent_progress).
+		if entries[i].AgentType == "" {
+			if t, ok := idToType[entries[i].AgentID]; ok {
+				entries[i].AgentType = t
+			}
 		}
 	}
 }

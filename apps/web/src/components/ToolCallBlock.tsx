@@ -42,6 +42,8 @@ export function ToolCallBlock({ block, result, onFocusAgent }: ToolCallBlockProp
   const summary = formatInput(input);
   const isError = result?.is_error;
   const statusText = result ? (isError ? 'Error' : 'Success') : 'Pending';
+  const subagentType =
+    toolName === 'Agent' ? (input.subagent_type as string | undefined) : undefined;
 
   return (
     <div className="ml-12 border border-border bg-surface-dim rounded overflow-hidden shadow-sm">
@@ -53,6 +55,11 @@ export function ToolCallBlock({ block, result, onFocusAgent }: ToolCallBlockProp
         <span className="font-headline text-[10px] text-muted-fg flex items-center gap-2">
           <span className="material-symbols-outlined text-xs">terminal</span>
           {toolName.toUpperCase()}
+          {subagentType && (
+            <span className="rounded bg-info/15 px-1.5 py-0.5 text-[10px] font-headline uppercase tracking-wide text-info">
+              {subagentType}
+            </span>
+          )}
         </span>
         <span
           className={`text-[10px] font-headline uppercase ${

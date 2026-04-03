@@ -63,6 +63,7 @@ type SkillEntry struct {
 type SubagentEntry struct {
 	Source           string `json:"source"`
 	AgentID          string `json:"agentId"`
+	AgentType        string `json:"agentType,omitempty"`
 	Prompt           string `json:"prompt"`
 	Description      string `json:"description"`
 	FirstMessageUUID string `json:"firstMessageUuid"`

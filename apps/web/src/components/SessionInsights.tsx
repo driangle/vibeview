@@ -268,12 +268,19 @@ function AgentCard({
           onClick={() => setExpanded(!expanded)}
           className="flex-1 min-w-0 px-2.5 py-2 text-left hover:bg-bg transition-colors"
         >
+          <div className="flex items-center gap-1.5 mb-0.5">
+            {agent.agentType && (
+              <span className="shrink-0 rounded bg-info/15 px-1.5 py-0.5 text-[10px] font-headline uppercase tracking-wide text-info">
+                {agent.agentType}
+              </span>
+            )}
+            <span className="text-[10px] text-muted-fg truncate">
+              {agent.source === 'agent_progress'
+                ? `${turnCount} turn${turnCount !== 1 ? 's' : ''}`
+                : agent.description || 'background agent'}
+            </span>
+          </div>
           <p className="text-[11px] text-fg line-clamp-2">{preview}</p>
-          <span className="text-[10px] text-muted-fg">
-            {agent.source === 'agent_progress'
-              ? `${turnCount} turn${turnCount !== 1 ? 's' : ''}`
-              : agent.description || 'background agent'}
-          </span>
         </button>
         <div className="pt-2 pr-1 flex items-center gap-0.5">
           {onFocusAgent && !agent.agentId.startsWith('tool_use_') && (

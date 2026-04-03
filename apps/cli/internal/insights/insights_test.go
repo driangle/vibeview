@@ -397,6 +397,26 @@ func TestExtractSubagents_FromToolUse(t *testing.T) {
 	}
 }
 
+func TestExtractSubagents_AgentTypeFromToolUse(t *testing.T) {
+	messages := []claude.Message{
+		assistantMsg("m1", 1000,
+			toolUse("tu-1", "Agent", map[string]any{"prompt": "explore code", "description": "Code explorer", "subagent_type": "Explore"}),
+		),
+	}
+	toolResults := map[string]claude.ContentBlock{
+		"tu-1": {Type: "tool_result", ToolUseID: "tu-1", Content: "Done.\nagentId: def456"},
+	}
+
+	subs := ExtractSubagents(messages, toolResults)
+
+	if len(subs) != 1 {
+		t.Fatalf("expected 1 subagent, got %d", len(subs))
+	}
+	if subs[0].AgentType != "Explore" {
+		t.Errorf("expected agentType 'Explore', got %q", subs[0].AgentType)
+	}
+}
+
 func TestExtractSubagents_FallbackID(t *testing.T) {
 	messages := []claude.Message{
 		assistantMsg("m1", 1000,
