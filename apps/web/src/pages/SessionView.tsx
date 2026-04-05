@@ -387,11 +387,12 @@ export function SessionView() {
           model={session.model}
           timestamp={session.timestamp}
           sessionId={session.id}
-          insights={focusedAgentId && subagentData?.insights ? subagentData.insights : insights}
+          insights={focusedAgentId ? (subagentData?.insights ?? null) : insights}
           toolResults={activeToolResults}
           onNavigateToMessage={navigateToMessage}
           onFocusAgent={focusedAgentId ? undefined : handleFocusAgent}
           focusedAgentId={focusedAgentId}
+          subagentLoading={subagentLoading}
         />
       </div>
 
@@ -426,11 +427,12 @@ export function SessionView() {
             model={session.model}
             timestamp={session.timestamp}
             sessionId={session.id}
-            insights={focusedAgentId && subagentData?.insights ? subagentData.insights : insights}
+            insights={focusedAgentId ? (subagentData?.insights ?? null) : insights}
             toolResults={activeToolResults}
             onNavigateToMessage={navigateToMessage}
             onFocusAgent={focusedAgentId ? undefined : handleFocusAgent}
             focusedAgentId={focusedAgentId}
+            subagentLoading={subagentLoading}
           />
         </div>
       </div>

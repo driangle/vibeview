@@ -28,6 +28,7 @@ interface SessionSidebarProps {
   onNavigateToMessage: (uuid: string) => void;
   onFocusAgent?: (agentId: string) => void;
   focusedAgentId?: string | null;
+  subagentLoading?: boolean;
 }
 
 export function SessionSidebar({
@@ -41,6 +42,7 @@ export function SessionSidebar({
   onNavigateToMessage,
   onFocusAgent,
   focusedAgentId,
+  subagentLoading,
 }: SessionSidebarProps) {
   const isSubagentView = Boolean(focusedAgentId);
   const [searchParams] = useSearchParams();
@@ -75,6 +77,11 @@ export function SessionSidebar({
               Agent session
             </span>
           </div>
+        )}
+
+        {/* Subagent loading state */}
+        {isSubagentView && subagentLoading && (
+          <p className="text-muted-fg text-xs">Loading agent data...</p>
         )}
 
         {/* Raw Session File */}
