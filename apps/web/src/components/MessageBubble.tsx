@@ -6,6 +6,7 @@ import { AgentProgressWidget } from './AgentProgressWidget';
 import { processMessageContent } from '../lib/parsers';
 import { MessageContent } from './MessageContent';
 import { HookMessage, SystemMessage } from './EventMessages';
+import { ChannelMessage } from './ChannelMessage';
 import { RawJsonModal } from './RawJsonModal';
 
 function isHookMessage(msg: MessageResponse): boolean {
@@ -191,7 +192,14 @@ function AssistantMessage({
         if (group.type === 'tool') {
           return group.blocks.map(({ block, index }) => {
             const result = block.id ? toolResults.get(block.id) : undefined;
-            return <ToolCallBlock key={index} block={block} result={result} onFocusAgent={onFocusAgent} />;
+            return (
+              <ToolCallBlock
+                key={index}
+                block={block}
+                result={result}
+                onFocusAgent={onFocusAgent}
+              />
+            );
           });
         }
 
@@ -288,12 +296,22 @@ export function MessageBubble({
       return <SkillLoadedMessage message={message} />;
     }
 
+    // External channel messages (classified by the API)
+    if (message.messageKind === 'channel-message') {
+      return <ChannelMessage message={message} />;
+    }
+
     return <UserMessage message={message} />;
   }
 
   if (message.type === 'assistant' && message.message) {
     return (
-      <AssistantMessage message={message} toolResults={toolResults} isLastMessage={isLastMessage} onFocusAgent={onFocusAgent} />
+      <AssistantMessage
+        message={message}
+        toolResults={toolResults}
+        isLastMessage={isLastMessage}
+        onFocusAgent={onFocusAgent}
+      />
     );
   }
 

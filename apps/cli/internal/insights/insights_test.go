@@ -618,6 +618,64 @@ func TestClassifyMessageKind(t *testing.T) {
 			t.Errorf("expected empty for assistant, got %q", got)
 		}
 	})
+
+	t.Run("channel message", func(t *testing.T) {
+		msg := userMsg("m1", 1000,
+			textBlock(`<channel source="agentrunner-channel" reply_to="thread-1" source_id="test-1" source_name="tester">
+hello world
+</channel>`),
+		)
+		if got := ClassifyMessageKind(msg); got != "channel-message" {
+			t.Errorf("expected 'channel-message', got %q", got)
+		}
+	})
+
+	t.Run("channel message on assistant ignored", func(t *testing.T) {
+		msg := assistantMsg("m1", 1000,
+			textBlock(`<channel source="x" reply_to="y" source_id="z" source_name="w">hi</channel>`),
+		)
+		if got := ClassifyMessageKind(msg); got != "" {
+			t.Errorf("expected empty for assistant, got %q", got)
+		}
+	})
+}
+
+// --- TestExtractChannelInfo ---
+
+func TestExtractChannelInfo(t *testing.T) {
+	t.Run("extracts attributes and content", func(t *testing.T) {
+		msg := userMsg("m1", 1000,
+			textBlock(`<channel source="agentrunner-channel" reply_to="thread-1" source_id="test-1" source_name="tester">
+hello world
+</channel>`),
+		)
+		got := ExtractChannelInfo(msg)
+		if got == nil {
+			t.Fatal("expected channel info, got nil")
+		}
+		if got.Source != "agentrunner-channel" {
+			t.Errorf("source: expected 'agentrunner-channel', got %q", got.Source)
+		}
+		if got.ReplyTo != "thread-1" {
+			t.Errorf("replyTo: expected 'thread-1', got %q", got.ReplyTo)
+		}
+		if got.SourceID != "test-1" {
+			t.Errorf("sourceID: expected 'test-1', got %q", got.SourceID)
+		}
+		if got.SourceName != "tester" {
+			t.Errorf("sourceName: expected 'tester', got %q", got.SourceName)
+		}
+		if got.Content != "hello world" {
+			t.Errorf("content: expected 'hello world', got %q", got.Content)
+		}
+	})
+
+	t.Run("returns nil for non-channel", func(t *testing.T) {
+		msg := userMsg("m1", 1000, textBlock("regular message"))
+		if got := ExtractChannelInfo(msg); got != nil {
+			t.Errorf("expected nil, got %+v", got)
+		}
+	})
 }
 
 // --- TestExtractSkillExpansionName ---

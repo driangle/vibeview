@@ -71,6 +71,14 @@ export interface APIMessage {
   usage?: Usage;
 }
 
+export interface ChannelInfo {
+  source?: string;
+  sourceId?: string;
+  sourceName?: string;
+  replyTo?: string;
+  content: string;
+}
+
 export interface MessageResponse {
   uuid: string;
   type:
@@ -87,6 +95,7 @@ export interface MessageResponse {
   isSidechain?: boolean;
   activityState?: ActivityState;
   messageKind?: string;
+  channelInfo?: ChannelInfo;
   message?: APIMessage;
   content?: string;
   data?: MessageData;

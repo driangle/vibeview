@@ -900,17 +900,18 @@ type SessionDetailResponse struct {
 
 // MessageResponse is the API representation of a single message.
 type MessageResponse struct {
-	UUID        string             `json:"uuid"`
-	Type        string             `json:"type"`
-	Timestamp   string             `json:"timestamp"`
-	IsMeta      bool               `json:"isMeta,omitempty"`
-	IsSidechain bool               `json:"isSidechain,omitempty"`
-	MessageKind string             `json:"messageKind,omitempty"`
-	Message     *claude.APIMessage `json:"message,omitempty"`
-	Content     string             `json:"content,omitempty"`
-	Data        map[string]any     `json:"data,omitempty"`
-	Snapshot    map[string]any     `json:"snapshot,omitempty"`
-	CustomTitle string             `json:"customTitle,omitempty"`
+	UUID        string                `json:"uuid"`
+	Type        string                `json:"type"`
+	Timestamp   string                `json:"timestamp"`
+	IsMeta      bool                  `json:"isMeta,omitempty"`
+	IsSidechain bool                  `json:"isSidechain,omitempty"`
+	MessageKind string                `json:"messageKind,omitempty"`
+	ChannelInfo *insights.ChannelInfo `json:"channelInfo,omitempty"`
+	Message     *claude.APIMessage    `json:"message,omitempty"`
+	Content     string                `json:"content,omitempty"`
+	Data        map[string]any        `json:"data,omitempty"`
+	Snapshot    map[string]any        `json:"snapshot,omitempty"`
+	CustomTitle string                `json:"customTitle,omitempty"`
 }
 
 // --- Helpers ---
@@ -930,19 +931,24 @@ func toSessionResponse(m session.SessionMeta) SessionResponse {
 }
 
 func toMessageResponse(msg claude.Message) MessageResponse {
-	return MessageResponse{
+	kind := insights.ClassifyMessageKind(msg)
+	resp := MessageResponse{
 		UUID:        msg.UUID,
 		Type:        string(msg.Type),
 		Timestamp:   msToISO(msg.Timestamp.Int64()),
 		IsMeta:      msg.IsMeta,
 		IsSidechain: msg.IsSidechain,
-		MessageKind: insights.ClassifyMessageKind(msg),
+		MessageKind: kind,
 		Message:     redact.RedactAPIMessage(msg.Message),
 		Content:     redact.RedactSecrets(msg.Content),
 		Data:        redact.RedactMapValues(msg.Data),
 		Snapshot:    redact.RedactMapValues(msg.Snapshot),
 		CustomTitle: msg.CustomTitle,
 	}
+	if kind == "channel-message" {
+		resp.ChannelInfo = insights.ExtractChannelInfo(msg)
+	}
+	return resp
 }
 
 func msToISO(ms int64) string {
