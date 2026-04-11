@@ -196,7 +196,7 @@ export function SessionView() {
   const activityState = liveActivityState ?? session.activityState;
 
   return (
-    <div className="flex flex-col lg:flex-row h-full">
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden">
       {/* Content Canvas */}
       <div
         className="flex-1 flex flex-col border-r border-border overflow-y-auto overflow-x-hidden"

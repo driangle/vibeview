@@ -56,8 +56,15 @@ export function useMessagePagination({
       highlightTimeout.current = setTimeout(() => setHighlightUuid(null), 2000);
 
       requestAnimationFrame(() => {
-        const el = containerRef.current?.querySelector(`[data-message-uuid="${uuid}"]`);
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const container = containerRef.current;
+        const el = container?.querySelector(`[data-message-uuid="${uuid}"]`);
+        if (container && el) {
+          const elRect = el.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          const offset =
+            elRect.top - containerRect.top - container.clientHeight / 2 + elRect.height / 2;
+          container.scrollBy({ top: offset, behavior: 'smooth' });
+        }
       });
     },
     [messages, messagesPerPage],
@@ -92,14 +99,32 @@ export function useMessagePagination({
     }
   }, [followMode]);
 
+  const scrollContainerToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const el = containerRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    }
+  }, []);
+
+  // Pending scroll-to-bottom: deferred until after the next render so
+  // scrollHeight reflects the new page's content.
+  const pendingScrollToEnd = useRef(false);
+
+  useEffect(() => {
+    if (pendingScrollToEnd.current) {
+      pendingScrollToEnd.current = false;
+      scrollContainerToBottom();
+    }
+  });
+
   useEffect(() => {
     if (followMode && streamedMessageCount > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollContainerToBottom();
     }
-  }, [streamedMessageCount, followMode]);
+  }, [streamedMessageCount, followMode, scrollContainerToBottom]);
 
   const scrollToEnd = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    pendingScrollToEnd.current = true;
   }, []);
 
   return {
