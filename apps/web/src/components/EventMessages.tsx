@@ -20,7 +20,7 @@ function EventMessage({
   rawData?: unknown;
 }) {
   const [showJson, setShowJson] = useState(false);
-  const modalData = rawData ?? message.data;
+  const modalData = rawData ?? message;
 
   return (
     <>
@@ -44,7 +44,6 @@ export function QueueOperationMessage({ message }: { message: MessageResponse })
   const label = isEnqueue ? 'Enqueued' : 'Dequeued';
   const content = message.content || '';
   const preview = content ? content.slice(0, 120).replace(/\n/g, ' ') : '';
-  const rawData = { ...message.data, ...(content ? { content } : {}) };
 
   return (
     <EventMessage
@@ -62,7 +61,6 @@ export function QueueOperationMessage({ message }: { message: MessageResponse })
         isEnqueue ? 'text-blue-400 dark:text-blue-500' : 'text-amber-400 dark:text-amber-500'
       }
       detailText={preview}
-      rawData={rawData}
     />
   );
 }
