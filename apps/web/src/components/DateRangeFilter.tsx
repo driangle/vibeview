@@ -268,7 +268,6 @@ export function DateRangeFilter({ from, to, onChange }: Props) {
       const toDate = toDateStr(to);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local pick state with external props on open
       setPickStart(fromDate || null);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPickEnd(toDate || null);
       if (to) {
         const d = new Date(Number(to));

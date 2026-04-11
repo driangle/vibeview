@@ -74,7 +74,6 @@ export function SessionTimeline({ contentWidth, contentHeight, children }: Sessi
     setTransform(
       computeFitTransform(containerSize.width, containerSize.height, contentWidth, contentHeight),
     );
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasInitialized(true);
   }, [containerSize, contentWidth, contentHeight, hasInitialized]);
 
