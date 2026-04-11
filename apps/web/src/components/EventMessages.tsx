@@ -9,6 +9,7 @@ function EventMessage({
   labelColor,
   detailColor,
   detailText,
+  rawData,
 }: {
   message: MessageResponse;
   label: string;
@@ -16,8 +17,10 @@ function EventMessage({
   labelColor: string;
   detailColor: string;
   detailText: string;
+  rawData?: unknown;
 }) {
   const [showJson, setShowJson] = useState(false);
+  const modalData = rawData ?? message.data;
 
   return (
     <>
@@ -30,10 +33,53 @@ function EventMessage({
           {detailText && <span className={`ml-1.5 ${detailColor}`}>{detailText}</span>}
         </button>
       </div>
-      {showJson && message.data && (
-        <RawJsonModal data={message.data} onClose={() => setShowJson(false)} />
-      )}
+      {showJson && <RawJsonModal data={modalData ?? {}} onClose={() => setShowJson(false)} />}
     </>
+  );
+}
+
+export function QueueOperationMessage({ message }: { message: MessageResponse }) {
+  const operation = String(message.data?.operation ?? 'unknown');
+  const isEnqueue = operation === 'enqueue';
+  const label = isEnqueue ? 'Enqueued' : 'Dequeued';
+  const content = message.content || '';
+  const preview = content ? content.slice(0, 120).replace(/\n/g, ' ') : '';
+  const rawData = { ...message.data, ...(content ? { content } : {}) };
+
+  return (
+    <EventMessage
+      message={message}
+      label={label}
+      borderColor={
+        isEnqueue
+          ? 'border-blue-300 dark:border-blue-600'
+          : 'border-amber-300 dark:border-amber-600'
+      }
+      labelColor={
+        isEnqueue ? 'text-blue-500 dark:text-blue-400' : 'text-amber-500 dark:text-amber-400'
+      }
+      detailColor={
+        isEnqueue ? 'text-blue-400 dark:text-blue-500' : 'text-amber-400 dark:text-amber-500'
+      }
+      detailText={preview}
+      rawData={rawData}
+    />
+  );
+}
+
+export function LastPromptMessage({ message }: { message: MessageResponse }) {
+  const prompt = message.data?.lastPrompt ? String(message.data.lastPrompt) : '';
+  const preview = prompt ? prompt.slice(0, 120).replace(/\n/g, ' ') : '';
+
+  return (
+    <EventMessage
+      message={message}
+      label="Last prompt"
+      borderColor="border-violet-300 dark:border-violet-600"
+      labelColor="text-violet-500 dark:text-violet-400"
+      detailColor="text-violet-400 dark:text-violet-500"
+      detailText={preview}
+    />
   );
 }
 

@@ -89,7 +89,9 @@ export interface MessageResponse {
     | 'system'
     | 'file-history-snapshot'
     | 'custom-title'
-    | 'agent-name';
+    | 'agent-name'
+    | 'queue-operation'
+    | 'last-prompt';
   timestamp: string;
   isMeta?: boolean;
   isSidechain?: boolean;

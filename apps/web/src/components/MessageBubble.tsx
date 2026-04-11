@@ -5,7 +5,12 @@ import { ToolCallBlock } from './ToolCallBlock';
 import { AgentProgressWidget } from './AgentProgressWidget';
 import { processMessageContent } from '../lib/parsers';
 import { MessageContent } from './MessageContent';
-import { HookMessage, SystemMessage } from './EventMessages';
+import {
+  HookMessage,
+  LastPromptMessage,
+  QueueOperationMessage,
+  SystemMessage,
+} from './EventMessages';
 import { ChannelMessage } from './ChannelMessage';
 import { RawJsonModal } from './RawJsonModal';
 
@@ -321,6 +326,14 @@ export function MessageBubble({
     const group = agentGroups.get(agentId);
     if (!group || group.length === 0) return null;
     return <AgentProgressWidget messages={group} onFocusAgent={onFocusAgent} agentId={agentId} />;
+  }
+
+  if (message.type === 'queue-operation') {
+    return <QueueOperationMessage message={message} />;
+  }
+
+  if (message.type === 'last-prompt') {
+    return <LastPromptMessage message={message} />;
   }
 
   if (message.type === 'system' || message.type === 'progress') {

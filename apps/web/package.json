@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "typeCheck": "tsc -b",
     "lint": "eslint .",
+    "check-lite": "npm run typeCheck && npm run lint",
+    "check": "npm run check-lite && npm test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",

@@ -70,6 +70,8 @@ const (
 	MessageTypeFileHistorySnapshot MessageType = "file-history-snapshot"
 	MessageTypeCustomTitle         MessageType = "custom-title"
 	MessageTypeResult              MessageType = "result"
+	MessageTypeQueueOperation      MessageType = "queue-operation"
+	MessageTypeLastPrompt          MessageType = "last-prompt"
 )
 
 // Message represents a single line from a session JSONL file.

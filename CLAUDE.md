@@ -1,5 +1,6 @@
 ## Workflow
 
+- Run `make check-lite` frequently to catch compilation and lint errors early.
 - After finishing a task, run `make check` to verify lint, tests, and build all pass.
 
 ## Coding Principles
@@ -15,3 +16,4 @@
 - **One responsibility per file** — split by concept, not size.
 - **Group by feature, not "utils"** — related code together, unrelated code apart.
 - **Backend owns the logic, frontend is a thin display layer** — domain logic (state derivation, filtering, classification) lives in Go. The web client consumes server-provided values and handles rendering only.
+- **Minimal UX for system-like events** — low-level session events (hooks, queue operations, last-prompt, etc.) use the shared inline `EventMessage` component: compact left-border style with a text preview, click to view raw JSON. Don't introduce custom card/expand UX for these.
