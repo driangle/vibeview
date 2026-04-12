@@ -1,7 +1,7 @@
 ---
 id: "01knxy288"
 title: "Split ContributionGraph component (546 lines)"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
@@ -16,10 +16,10 @@ Split `ContributionGraph.tsx` (546 lines) into smaller, focused modules to satis
 
 ## Tasks
 
-- [ ] Analyze `ContributionGraph.tsx` and identify logical sub-components and utilities to extract
-- [ ] Extract sub-components (e.g., tooltip, legend, cell rendering) into separate files
-- [ ] Extract utility/helper functions (data processing, date calculations) if applicable
-- [ ] Verify the main file is under 200 lines
+- [x] Analyze `ContributionGraph.tsx` and identify logical sub-components and utilities to extract
+- [x] Extract sub-components (e.g., tooltip, legend, cell rendering) into separate files
+- [x] Extract utility/helper functions (data processing, date calculations) if applicable
+- [x] Verify the main file is under 200 lines
 
 ## Acceptance Criteria
 
