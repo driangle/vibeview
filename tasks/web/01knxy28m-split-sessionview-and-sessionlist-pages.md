@@ -1,7 +1,7 @@
 ---
 id: "01knxy28m"
 title: "Split SessionView and SessionList pages"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
@@ -16,9 +16,9 @@ Split `SessionView.tsx` (441 lines) and `SessionList.tsx` (380 lines) into small
 
 ## Tasks
 
-- [ ] Analyze `SessionView.tsx` and extract sub-components or hooks
-- [ ] Analyze `SessionList.tsx` and extract sub-components or hooks
-- [ ] Verify both files are under 200 lines
+- [x] Analyze `SessionView.tsx` and extract sub-components or hooks
+- [x] Analyze `SessionList.tsx` and extract sub-components or hooks
+- [x] Verify both files are under 200 lines
 
 ## Acceptance Criteria
 

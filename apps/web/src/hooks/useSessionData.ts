@@ -10,7 +10,7 @@ import type {
 } from '../types';
 import { useSessionStream } from './useSessionStream';
 
-function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
+export function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
   for (const msg of messages) {
     if (msg.type !== 'user' || !msg.message) continue;
