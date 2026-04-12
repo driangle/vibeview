@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher, withToken } from '../api';
 import type { Settings } from '../types';
@@ -9,7 +9,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [optimistic, setOptimistic] = useState<Partial<Settings> | null>(null);
 
   // Merge API data with optimistic updates.
-  const settings: Settings = { ...defaults, ...data, ...optimistic };
+  const settings: Settings = useMemo(
+    () => ({ ...defaults, ...data, ...optimistic }),
+    [data, optimistic],
+  );
 
   // Clear optimistic state once SWR revalidates.
   useEffect(() => {

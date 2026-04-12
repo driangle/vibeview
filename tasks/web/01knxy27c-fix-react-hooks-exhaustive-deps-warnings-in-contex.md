@@ -1,7 +1,7 @@
 ---
 id: "01knxy27c"
 title: "Fix react-hooks/exhaustive-deps warnings in contexts and pages"
-status: pending
+status: completed
 priority: high
 dependencies: []
 tags: ["lint", "react-hooks"]
@@ -16,9 +16,9 @@ Fix 6 `react-hooks/exhaustive-deps` warnings by wrapping unstable initialization
 
 ## Tasks
 
-- [ ] `ProjectsContext.tsx:15` — wrap `projects` logical expression in `useMemo` (fixes 3 warnings for useCallback hooks at lines 75, 85, 92)
-- [ ] `SettingsContext.tsx:12` — wrap `settings` object initialization in `useMemo` (fixes 1 warning for useCallback at line 37)
-- [ ] `SessionList.tsx:178` — wrap `displaySessions` conditional in `useMemo` (fixes 2 warnings for useMemo hooks at lines 186, 190)
+- [x] `ProjectsContext.tsx:15` — wrap `projects` logical expression in `useMemo` (fixes 3 warnings for useCallback hooks at lines 75, 85, 92)
+- [x] `SettingsContext.tsx:12` — wrap `settings` object initialization in `useMemo` (fixes 1 warning for useCallback at line 37)
+- [x] `SessionList.tsx:178` — wrap `displaySessions` conditional in `useMemo` (fixes 2 warnings for useMemo hooks at lines 186, 190)
 
 ## Acceptance Criteria
 

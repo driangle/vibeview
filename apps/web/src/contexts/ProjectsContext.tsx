@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher, withToken } from '../api';
 import type { Project } from '../types';
@@ -12,7 +12,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const [optimistic, setOptimistic] = useState<Project[] | null>(null);
   const migrated = useRef(false);
 
-  const projects: Project[] = optimistic ?? data ?? [];
+  const projects: Project[] = useMemo(() => optimistic ?? data ?? [], [optimistic, data]);
 
   // One-time migration from localStorage to backend.
   useEffect(() => {

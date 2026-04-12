@@ -175,9 +175,10 @@ export function SessionList() {
   const loaded = !!sessions;
 
   const isContentSearch = !!debouncedSearch && !!searchData;
-  const displaySessions = isContentSearch
-    ? searchData.results.map((r) => r.session)
-    : (sessions ?? []);
+  const displaySessions = useMemo(
+    () => (isContentSearch ? searchData.results.map((r) => r.session) : (sessions ?? [])),
+    [isContentSearch, searchData, sessions],
+  );
 
   const statsTotal = isContentSearch ? searchData.total : total;
 
