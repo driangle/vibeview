@@ -1,11 +1,12 @@
 ---
 id: "01knxy29m"
 title: "Split SessionInsights, NavBar, and MessageBubble components"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
 created: 2026-04-11
+completed_at: 2026-04-12
 ---
 
 # Split SessionInsights, NavBar, and MessageBubble components
@@ -16,9 +17,9 @@ Split three oversized components: `SessionInsights.tsx` (399 lines), `NavBar.tsx
 
 ## Tasks
 
-- [ ] Split `SessionInsights.tsx` — extract insight sub-components or sections
-- [ ] Split `NavBar.tsx` — extract nav items, menus, or sub-components
-- [ ] Split `MessageBubble.tsx` — extract content renderers or sub-components
+- [x] Split `SessionInsights.tsx` — extract insight sub-components or sections
+- [x] Split `NavBar.tsx` — extract nav items, menus, or sub-components
+- [x] Split `MessageBubble.tsx` — extract content renderers or sub-components
 
 ## Acceptance Criteria
 

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { FileOperation } from './FileViewer';
-import { SidebarSection, LocateButton } from './SessionInsights';
+import { SidebarSection, LocateButton } from './SidebarSection';
 import type { ContentBlock, SessionInsights } from '../types';
 import { resolveFileOperations } from '../lib/extractors';
 
