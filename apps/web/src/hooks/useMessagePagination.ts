@@ -92,12 +92,12 @@ export function useMessagePagination({
     const el = containerRef.current;
     if (!el) return;
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-    if (atBottom && !followMode) {
+    if (atBottom && !followMode && page >= totalPages - 1) {
       setFollowMode(true);
     } else if (!atBottom && followMode) {
       setFollowMode(false);
     }
-  }, [followMode]);
+  }, [followMode, page, totalPages]);
 
   const scrollContainerToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const el = containerRef.current;
