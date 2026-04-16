@@ -72,6 +72,8 @@ const (
 	MessageTypeResult              MessageType = "result"
 	MessageTypeQueueOperation      MessageType = "queue-operation"
 	MessageTypeLastPrompt          MessageType = "last-prompt"
+	MessageTypePermissionMode      MessageType = "permission-mode"
+	MessageTypeAttachment          MessageType = "attachment"
 )
 
 // Message represents a single line from a session JSONL file.
@@ -103,6 +105,12 @@ type Message struct {
 	// Present on custom-title messages (from /rename command).
 	CustomTitle string `json:"customTitle,omitempty"`
 
+	// Present on permission-mode messages.
+	PermissionMode string `json:"permissionMode,omitempty"`
+
+	// Present on attachment messages (deferred tools, MCP instructions, skills, etc.).
+	Attachment map[string]any `json:"attachment,omitempty"`
+
 	// Present on user tool-result messages.
 	ToolUseResult *ToolUseResult `json:"-"`
 
@@ -117,7 +125,8 @@ var knownMessageKeys = map[string]bool{
 	"timestamp": true, "cwd": true, "gitBranch": true, "isSidechain": true,
 	"isMeta": true, "version": true, "message": true, "content": true,
 	"data": true, "toolUseID": true, "snapshot": true, "customTitle": true,
-	"toolUseResult": true, "total_cost_usd": true,
+	"toolUseResult": true, "total_cost_usd": true, "permissionMode": true,
+	"attachment": true,
 }
 
 // UnmarshalJSON handles toolUseResult being either a ToolUseResult object or a plain string,

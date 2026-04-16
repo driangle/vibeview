@@ -140,6 +140,44 @@ func TestParseMessageLine_FileHistorySnapshot(t *testing.T) {
 	}
 }
 
+func TestParseMessageLine_PermissionMode(t *testing.T) {
+	line := `{"type":"permission-mode","permissionMode":"auto","sessionId":"s1"}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypePermissionMode {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypePermissionMode)
+	}
+	if msg.PermissionMode != "auto" {
+		t.Errorf("PermissionMode = %q, want %q", msg.PermissionMode, "auto")
+	}
+}
+
+func TestParseMessageLine_Attachment(t *testing.T) {
+	line := `{"type":"attachment","uuid":"a1","sessionId":"s1","timestamp":"2026-04-16T10:09:19.406Z","attachment":{"type":"deferred_tools_delta","addedNames":["Read","Write"],"removedNames":[]}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypeAttachment {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypeAttachment)
+	}
+	if msg.Attachment == nil {
+		t.Fatal("Attachment is nil")
+	}
+	if msg.Attachment["type"] != "deferred_tools_delta" {
+		t.Errorf("Attachment[type] = %v, want %q", msg.Attachment["type"], "deferred_tools_delta")
+	}
+	addedNames, ok := msg.Attachment["addedNames"].([]any)
+	if !ok {
+		t.Fatal("addedNames is not a slice")
+	}
+	if len(addedNames) != 2 {
+		t.Errorf("addedNames length = %d, want 2", len(addedNames))
+	}
+}
+
 func TestContentBlock_ToolUse(t *testing.T) {
 	line := `{"type":"assistant","uuid":"a2","sessionId":"s1","timestamp":1700000005,"message":{"role":"assistant","content":[{"type":"tool_use","id":"tu1","name":"Read","input":{"path":"/tmp/foo"}}]}}`
 	msg, err := ParseMessageLine([]byte(line))

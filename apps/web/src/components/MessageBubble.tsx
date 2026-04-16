@@ -1,8 +1,10 @@
 import type { MessageResponse, ContentBlock } from '../types';
 import { AgentProgressWidget } from './AgentProgressWidget';
 import {
+  AttachmentMessage,
   HookMessage,
   LastPromptMessage,
+  PermissionModeMessage,
   QueueOperationMessage,
   SystemMessage,
 } from './EventMessages';
@@ -87,6 +89,14 @@ export function MessageBubble({
     const group = agentGroups.get(agentId);
     if (!group || group.length === 0) return null;
     return <AgentProgressWidget messages={group} onFocusAgent={onFocusAgent} agentId={agentId} />;
+  }
+
+  if (message.type === 'permission-mode') {
+    return <PermissionModeMessage message={message} />;
+  }
+
+  if (message.type === 'attachment') {
+    return <AttachmentMessage message={message} />;
   }
 
   if (message.type === 'queue-operation') {

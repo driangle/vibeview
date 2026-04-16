@@ -81,6 +81,42 @@ export function LastPromptMessage({ message }: { message: MessageResponse }) {
   );
 }
 
+export function PermissionModeMessage({ message }: { message: MessageResponse }) {
+  const mode = message.permissionMode ?? 'unknown';
+
+  return (
+    <EventMessage
+      message={message}
+      label="Permission mode"
+      borderColor="border-emerald-300 dark:border-emerald-600"
+      labelColor="text-emerald-500 dark:text-emerald-400"
+      detailColor="text-emerald-400 dark:text-emerald-500"
+      detailText={mode}
+    />
+  );
+}
+
+export function AttachmentMessage({ message }: { message: MessageResponse }) {
+  const attachmentType = String(message.attachment?.type ?? 'unknown');
+  const label = formatAttachmentType(attachmentType);
+
+  return (
+    <EventMessage
+      message={message}
+      label="Attachment"
+      borderColor="border-cyan-300 dark:border-cyan-600"
+      labelColor="text-cyan-500 dark:text-cyan-400"
+      detailColor="text-cyan-400 dark:text-cyan-500"
+      detailText={label}
+      rawData={message.attachment}
+    />
+  );
+}
+
+function formatAttachmentType(type_: string): string {
+  return type_.replace(/_/g, ' ');
+}
+
 export function HookMessage({ message }: { message: MessageResponse }) {
   const hookName = String(message.data?.hookName ?? 'unknown');
   const command = message.data?.command ? String(message.data.command) : '';

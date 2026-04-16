@@ -91,7 +91,9 @@ export interface MessageResponse {
     | 'custom-title'
     | 'agent-name'
     | 'queue-operation'
-    | 'last-prompt';
+    | 'last-prompt'
+    | 'permission-mode'
+    | 'attachment';
   timestamp: string;
   isMeta?: boolean;
   isSidechain?: boolean;
@@ -103,6 +105,8 @@ export interface MessageResponse {
   data?: MessageData;
   snapshot?: MessageData;
   customTitle?: string;
+  permissionMode?: string;
+  attachment?: MessageData;
 }
 
 export interface PaginatedSessions {

@@ -233,6 +233,21 @@ func TestDeriveActivityState_SkipsMetaMessages(t *testing.T) {
 	}
 }
 
+func TestDeriveActivityState_SkipsPermissionModeAndAttachment(t *testing.T) {
+	ts := recentTimestamp()
+	msgs := []claude.Message{
+		{Type: claude.MessageTypeUser, Timestamp: ts, Message: &claude.APIMessage{
+			Role: "user", Content: []claude.ContentBlock{{Type: "text", Text: "hi"}},
+		}},
+		{Type: claude.MessageTypePermissionMode, Timestamp: ts},
+		{Type: claude.MessageTypeAttachment, Timestamp: ts},
+	}
+	// Should skip permission-mode and attachment, find the user message.
+	if got := DeriveActivityState(msgs); got != ActivityWorking {
+		t.Errorf("skips permission-mode/attachment: got %q, want %q", got, ActivityWorking)
+	}
+}
+
 func TestDeriveActivityState_OnlySystemMessages(t *testing.T) {
 	ts := recentTimestamp()
 	msgs := []claude.Message{
@@ -326,6 +341,20 @@ func TestDeriveActivityStateFromMessage_System(t *testing.T) {
 	msg := claude.Message{Type: claude.MessageTypeSystem}
 	if got := DeriveActivityStateFromMessage(msg); got != "" {
 		t.Errorf("system: got %q, want empty string", got)
+	}
+}
+
+func TestDeriveActivityStateFromMessage_PermissionMode(t *testing.T) {
+	msg := claude.Message{Type: claude.MessageTypePermissionMode}
+	if got := DeriveActivityStateFromMessage(msg); got != "" {
+		t.Errorf("permission-mode: got %q, want empty string", got)
+	}
+}
+
+func TestDeriveActivityStateFromMessage_Attachment(t *testing.T) {
+	msg := claude.Message{Type: claude.MessageTypeAttachment}
+	if got := DeriveActivityStateFromMessage(msg); got != "" {
+		t.Errorf("attachment: got %q, want empty string", got)
 	}
 }
 
