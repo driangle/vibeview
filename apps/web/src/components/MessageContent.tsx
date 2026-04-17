@@ -25,7 +25,7 @@ const sanitizeSchema: RehypeSanitizeOptions = {
 };
 
 const proseBase =
-  'prose prose-sm max-w-none leading-relaxed prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.8em] prose-code:font-mono';
+  'prose prose-sm max-w-none leading-relaxed break-words prose-pre:bg-transparent prose-pre:p-0 prose-code:before:content-none prose-code:after:content-none prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.8em] prose-code:font-mono';
 
 function TextSegment({ content, variant }: { content: string; variant?: 'user' | 'assistant' }) {
   const colorClasses =
@@ -110,7 +110,7 @@ function CommandSegment({
         />
       </svg>
       <span className="font-semibold text-gray-800 dark:text-gray-200">{name}</span>
-      {args && <span className="text-gray-500 dark:text-gray-400">{args}</span>}
+      {args && <span className="min-w-0 overflow-x-auto text-gray-500 dark:text-gray-400">{args}</span>}
     </button>
   );
 }

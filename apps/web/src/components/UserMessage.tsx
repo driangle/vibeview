@@ -83,7 +83,7 @@ export function UserMessage({ message }: { message: MessageResponse }) {
     <div className="flex justify-end">
       <div className="max-w-[85%]">
         {textSegments.length > 0 && (
-          <div className="bg-primary text-primary-fg p-5 rounded-xl shadow-sm">
+          <div className="bg-primary text-primary-fg p-5 rounded-xl shadow-sm overflow-hidden">
             <div className="text-[15px] leading-relaxed">
               <MessageContent segments={textSegments} rawMessage={message} variant="user" />
             </div>

@@ -40,7 +40,7 @@ export function ChannelMessage({ message }: { message: MessageResponse }) {
               </span>
             )}
           </div>
-          <pre className="whitespace-pre-wrap px-4 py-3 text-[14px] leading-relaxed text-cyan-900 dark:text-cyan-100 font-sans">
+          <pre className="whitespace-pre-wrap break-words px-4 py-3 text-[14px] leading-relaxed text-cyan-900 dark:text-cyan-100 font-sans">
             {info.content}
           </pre>
           {info.sourceId && (

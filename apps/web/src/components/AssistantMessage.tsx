@@ -80,7 +80,7 @@ export function AssistantMessage({
                     smart_toy
                   </span>
                 </div>
-                <div className="flex-1 rounded-xl bg-card shadow-sm ring-1 ring-border p-5 text-fg space-y-3">
+                <div className="flex-1 min-w-0 rounded-xl bg-card shadow-sm ring-1 ring-border p-5 text-fg space-y-3 overflow-hidden">
                   {textBlocks.map(({ block, index }) => {
                     if (block.type === 'text' && typeof block.text === 'string' && block.text) {
                       const segments = processMessageContent(block.text);

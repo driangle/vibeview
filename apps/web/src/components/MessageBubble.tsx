@@ -44,8 +44,8 @@ export function MessageBubble({
         ? String(message.data?.title ?? '')
         : String(message.data?.name ?? '');
     return (
-      <div className="flex items-center">
-        <span className="border-l-2 border-gray-200 dark:border-gray-700 py-0.5 pl-2 pr-2 text-xs text-gray-400 dark:text-gray-500">
+      <div className="flex items-center overflow-hidden">
+        <span className="border-l-2 border-gray-200 dark:border-gray-700 py-0.5 pl-2 pr-2 text-xs text-gray-400 dark:text-gray-500 max-w-full truncate">
           <span className="font-medium">{label}</span>
           {detail && <span className="ml-1.5 text-gray-400 dark:text-gray-500">{detail}</span>}
         </span>
