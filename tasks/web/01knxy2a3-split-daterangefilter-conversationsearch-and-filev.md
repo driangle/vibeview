@@ -1,11 +1,12 @@
 ---
 id: "01knxy2a3"
 title: "Split DateRangeFilter, ConversationSearch, and FileViewer components"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
 created: 2026-04-11
+completed_at: 2026-04-18
 ---
 
 # Split DateRangeFilter, ConversationSearch, and FileViewer components
@@ -16,9 +17,9 @@ Split three oversized components: `DateRangeFilter.tsx` (422 lines), `Conversati
 
 ## Tasks
 
-- [ ] Split `DateRangeFilter.tsx` — extract calendar/picker sub-components or date utilities
-- [ ] Split `ConversationSearch.tsx` — extract search results, filters, or sub-components
-- [ ] Split `FileViewer.tsx` — extract viewer sub-components or utilities
+- [x] Split `DateRangeFilter.tsx` — extract calendar/picker sub-components or date utilities
+- [x] Split `ConversationSearch.tsx` — extract search results, filters, or sub-components
+- [x] Split `FileViewer.tsx` — extract viewer sub-components or utilities
 
 ## Acceptance Criteria
 
