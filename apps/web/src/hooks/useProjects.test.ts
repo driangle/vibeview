@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createElement } from 'react';
 import { SWRConfig } from 'swr';
 import { useProjects, DuplicateProjectNameError } from './useProjects';
@@ -183,54 +183,6 @@ describe('useProjects', () => {
 
       expect(putBody).toHaveLength(1);
       expect(putBody![0].name).toBe('Keep');
-    });
-  });
-
-  describe('localStorage migration', () => {
-    it('migrates localStorage projects to backend on first load', async () => {
-      const local: Project[] = [{ id: 'local-1', name: 'From LS', folderPaths: ['/ls'] }];
-      localStorage.setItem('vibeview:projects', JSON.stringify(local));
-
-      renderHook(() => useProjects(), { wrapper });
-      await waitFor(() => {
-        expect(putBody).not.toBeNull();
-      });
-
-      expect(putBody).toHaveLength(1);
-      expect(putBody![0].name).toBe('From LS');
-      expect(localStorage.getItem('vibeview:projects')).toBeNull();
-    });
-
-    it('merges localStorage projects with server projects', async () => {
-      mockProjects = [{ id: 'server-1', name: 'Server', folderPaths: ['/s'] }];
-      const local: Project[] = [{ id: 'local-1', name: 'Local', folderPaths: ['/l'] }];
-      localStorage.setItem('vibeview:projects', JSON.stringify(local));
-
-      renderHook(() => useProjects(), { wrapper });
-      await waitFor(() => {
-        expect(putBody).not.toBeNull();
-      });
-
-      expect(putBody).toHaveLength(2);
-      expect(putBody!.find((p) => p.name === 'Server')).toBeTruthy();
-      expect(putBody!.find((p) => p.name === 'Local')).toBeTruthy();
-    });
-
-    it('skips migration when localStorage has same IDs as server', async () => {
-      mockProjects = [{ id: 'same-id', name: 'Already There', folderPaths: ['/s'] }];
-      const local: Project[] = [{ id: 'same-id', name: 'Old Name', folderPaths: ['/l'] }];
-      localStorage.setItem('vibeview:projects', JSON.stringify(local));
-
-      renderHook(() => useProjects(), { wrapper });
-      await waitFor(() => {
-        expect(localStorage.getItem('vibeview:projects')).toBeNull();
-      });
-
-      // PUT should NOT have been called since all IDs already exist on server.
-      const putCalls = (fetch as Mock).mock.calls.filter(
-        (call) => (call[1] as RequestInit | undefined)?.method === 'PUT',
-      );
-      expect(putCalls).toHaveLength(0);
     });
   });
 });

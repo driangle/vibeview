@@ -1,11 +1,12 @@
 ---
 id: "01knxy2bt"
 title: "Split useProjects.test.ts test file"
-status: pending
+status: completed
 priority: low
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
 created: 2026-04-11
+completed_at: 2026-04-18
 ---
 
 # Split useProjects.test.ts test file
@@ -16,8 +17,8 @@ Split `useProjects.test.ts` (236 lines) to stay under the 200-line max-lines lim
 
 ## Tasks
 
-- [ ] Analyze test groupings in `useProjects.test.ts`
-- [ ] Split into separate test files by logical concern
+- [x] Analyze test groupings in `useProjects.test.ts`
+- [x] Split into separate test files by logical concern
 
 ## Acceptance Criteria
 
