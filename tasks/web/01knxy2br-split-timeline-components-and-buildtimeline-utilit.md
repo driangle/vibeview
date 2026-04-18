@@ -1,11 +1,12 @@
 ---
 id: "01knxy2br"
 title: "Split timeline components and buildTimeline utility"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
 created: 2026-04-11
+completed_at: 2026-04-18
 ---
 
 # Split timeline components and buildTimeline utility
@@ -16,10 +17,10 @@ Split four timeline-related files that are slightly over the 200-line limit: `Se
 
 ## Tasks
 
-- [ ] Split `buildTimeline.ts` — extract helper functions or type definitions
-- [ ] Split `TimelineToolLane.tsx` — extract sub-components if feasible
-- [ ] Split `TimelineNode.tsx` — extract sub-components if feasible
-- [ ] Split `SessionTimeline.tsx` — extract sub-components or hooks if feasible
+- [x] Split `buildTimeline.ts` — extract helper functions or type definitions
+- [x] Split `TimelineToolLane.tsx` — extract sub-components if feasible
+- [x] Split `TimelineNode.tsx` — extract sub-components if feasible
+- [x] Split `SessionTimeline.tsx` — extract sub-components or hooks if feasible
 
 ## Acceptance Criteria
 
