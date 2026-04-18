@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/driangle/vibeview/internal/claude"
@@ -669,6 +670,54 @@ func TestFindSession(t *testing.T) {
 
 	if idx.FindSession("nonexistent") != nil {
 		t.Error("expected nil for nonexistent session")
+	}
+}
+
+// --- FindSessionByPrefix tests ---
+
+func TestFindSessionByPrefix(t *testing.T) {
+	idx := &Index{
+		Sessions: []SessionMeta{
+			{SessionID: "abc-111"},
+			{SessionID: "abc-222"},
+			{SessionID: "def-333"},
+		},
+	}
+
+	// Unique prefix.
+	meta, err := idx.FindSessionByPrefix("def")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if meta.SessionID != "def-333" {
+		t.Errorf("SessionID = %q, want def-333", meta.SessionID)
+	}
+
+	// Ambiguous prefix.
+	_, err = idx.FindSessionByPrefix("abc")
+	if err == nil {
+		t.Fatal("expected error for ambiguous prefix")
+	}
+	if !strings.Contains(err.Error(), "ambiguous") {
+		t.Errorf("error = %q, want 'ambiguous'", err.Error())
+	}
+
+	// No match.
+	_, err = idx.FindSessionByPrefix("zzz")
+	if err == nil {
+		t.Fatal("expected error for no match")
+	}
+	if !strings.Contains(err.Error(), "no session") {
+		t.Errorf("error = %q, want 'no session'", err.Error())
+	}
+
+	// Exact match (full ID as prefix).
+	meta, err = idx.FindSessionByPrefix("abc-111")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if meta.SessionID != "abc-111" {
+		t.Errorf("SessionID = %q, want abc-111", meta.SessionID)
 	}
 }
 

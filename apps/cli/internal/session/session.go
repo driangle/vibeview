@@ -90,6 +90,29 @@ func (idx *Index) FindSession(id string) *SessionMeta {
 	return nil
 }
 
+// FindSessionByPrefix returns the session whose ID starts with prefix.
+// Returns an error if the prefix is ambiguous (matches multiple sessions)
+// or if no session matches.
+func (idx *Index) FindSessionByPrefix(prefix string) (*SessionMeta, error) {
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+
+	var matches []SessionMeta
+	for _, s := range idx.Sessions {
+		if strings.HasPrefix(s.SessionID, prefix) {
+			matches = append(matches, s)
+		}
+	}
+	switch len(matches) {
+	case 0:
+		return nil, fmt.Errorf("no session matching prefix %q", prefix)
+	case 1:
+		return &matches[0], nil
+	default:
+		return nil, fmt.Errorf("ambiguous prefix %q matches %d sessions", prefix, len(matches))
+	}
+}
+
 // SetCustomTitle updates the custom title for a session in the index.
 func (idx *Index) SetCustomTitle(id, title string) {
 	idx.mu.Lock()

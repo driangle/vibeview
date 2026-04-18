@@ -1,13 +1,14 @@
 ---
 id: "01kn221ch"
 title: "CLI session conversation export as human-readable text"
-status: pending
+status: completed
 priority: medium
 effort: medium
 type: feature
 dependencies: []
 tags: [cli, commands]
 created: 2026-03-31
+completed_at: 2026-04-18
 ---
 
 # CLI session conversation export as human-readable text
@@ -18,17 +19,17 @@ Implement a `vibeview show <session-id>` command that renders a session's full c
 
 ## Tasks
 
-- [ ] Add `show` subcommand accepting a session ID (full or prefix match)
-- [ ] Render user and assistant text messages with role labels and visual separation (dividers or blank lines)
-- [ ] Display tool calls as compact one-line summaries: `[Tool] Read src/main.ts ✓` or `[Tool] Bash "npm test" ✗`
-- [ ] Omit raw JSON, token counts, usage metadata, and other noise from default output
-- [ ] Show subagent invocations as a single summary line with prompt snippet and turn count
-- [ ] Skip thinking blocks by default (add `--thinking` flag to include them)
-- [ ] Add `--verbose` flag to expand tool calls with full input/output detail
-- [ ] Add `--json` flag to output the raw message array as JSON
-- [ ] Add `--no-color` flag to strip ANSI codes for piping/redirection
-- [ ] Support paging via `$PAGER` (e.g., `less -R`) when output exceeds terminal height
-- [ ] Write tests for message rendering and flag behavior
+- [x] Add `show` subcommand accepting a session ID (full or prefix match)
+- [x] Render user and assistant text messages with role labels and visual separation (dividers or blank lines)
+- [x] Display tool calls as compact one-line summaries: `[Tool] Read src/main.ts ✓` or `[Tool] Bash "npm test" ✗`
+- [x] Omit raw JSON, token counts, usage metadata, and other noise from default output
+- [x] Show subagent invocations as a single summary line with prompt snippet and turn count
+- [x] Skip thinking blocks by default (add `--thinking` flag to include them)
+- [x] Add `--verbose` flag to expand tool calls with full input/output detail
+- [x] Add `--json` flag to output the raw message array as JSON
+- [x] Add `--no-color` flag to strip ANSI codes for piping/redirection
+- [x] Support paging via `$PAGER` (e.g., `less -R`) when output exceeds terminal height
+- [x] Write tests for message rendering and flag behavior
 
 ## Acceptance Criteria
 
