@@ -72,6 +72,16 @@ vibeview search --limit 5 "auth middleware"
 
 Live sessions update in real time via SSE.
 
+## Claude Code Plugin
+
+VibeView includes a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that adds a `/vibeview` skill to Claude Code. This lets you search, inspect, and analyze your sessions directly from a conversation.
+
+```sh
+claude plugin add driangle/vibeview
+```
+
+Once installed, you can ask Claude Code things like "how much have I spent this week?" or "find the session where I worked on auth" and it will use the vibeview CLI to answer.
+
 ## Configuration
 
 Settings are persisted at `~/.config/vibeview/settings.json` and can also be changed from the web UI settings page.

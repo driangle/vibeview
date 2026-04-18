@@ -30,6 +30,10 @@ export default defineConfig({
         items: [
           { text: "CLI", link: "/guide/cli" },
           { text: "Web Interface", link: "/guide/web-interface" },
+          {
+            text: "Claude Code Plugin",
+            link: "/guide/claude-code-plugin",
+          },
         ],
       },
     ],
