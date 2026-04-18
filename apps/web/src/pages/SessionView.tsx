@@ -186,7 +186,7 @@ export function SessionView() {
         />
         <Footer />
       </div>
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-full overflow-y-auto">
         <SessionSidebar {...sidebarProps} />
       </div>
       <MobileSidebar
