@@ -1,11 +1,12 @@
 ---
 id: "01knxy2ak"
 title: "Split Settings page and SessionSidebar component"
-status: pending
+status: completed
 priority: medium
 dependencies: []
 tags: ["lint", "max-lines", "refactor"]
 created: 2026-04-11
+completed_at: 2026-04-18
 ---
 
 # Split Settings page and SessionSidebar component
@@ -16,8 +17,8 @@ Split `Settings.tsx` (367 lines) and `SessionSidebar.tsx` (219 lines) into small
 
 ## Tasks
 
-- [ ] Split `Settings.tsx` — extract settings sections or form groups into sub-components
-- [ ] Split `SessionSidebar.tsx` — extract sidebar sections or sub-components
+- [x] Split `Settings.tsx` — extract settings sections or form groups into sub-components
+- [x] Split `SessionSidebar.tsx` — extract sidebar sections or sub-components
 
 ## Acceptance Criteria
 
