@@ -1,0 +1,24 @@
+{
+  "name": "vibeview-marketplace",
+  "owner": {
+    "name": "German Greiner"
+  },
+  "metadata": {
+    "description": "VibeView plugin for Claude Code",
+    "version": "0.0.1",
+    "pluginRoot": "./claude-code-plugin"
+  },
+  "plugins": [
+    {
+      "name": "vibeview",
+      "source": "./claude-code-plugin",
+      "description": "Browse, search, and analyze your Claude Code sessions with the vibeview CLI",
+      "version": "0.0.1",
+      "author": {
+        "name": "German Greiner"
+      },
+      "category": "productivity",
+      "tags": ["sessions", "usage", "analytics", "claude-code"]
+    }
+  ]
+}

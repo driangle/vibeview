@@ -1,0 +1,11 @@
+{
+  "name": "vibeview",
+  "version": "0.0.1",
+  "description": "Browse, search, and analyze your Claude Code sessions with the vibeview CLI",
+  "author": {
+    "name": "German Greiner"
+  },
+  "repository": "https://github.com/gg/vibeview",
+  "license": "MIT",
+  "keywords": ["vibeview", "sessions", "usage", "analytics", "claude-code"]
+}
