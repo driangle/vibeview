@@ -137,6 +137,44 @@ func truncateStr(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
+// sortNeedsEnrichment reports whether the sort field requires data that is
+// only available after enriching sessions (reading JSONL files).
+// Timestamp and dir are available from discovery alone.
+func sortNeedsEnrichment(field string) bool {
+	switch field {
+	case "timestamp", "dir":
+		return false
+	default:
+		return true
+	}
+}
+
+func paginateSessions(sessions []session.SessionMeta, offset, limit int) []session.SessionMeta {
+	if offset > len(sessions) {
+		offset = len(sessions)
+	}
+	sessions = sessions[offset:]
+	if limit > 0 && limit < len(sessions) {
+		sessions = sessions[:limit]
+	}
+	return sessions
+}
+
+// enrichSessions enriches specific sessions by their IDs.
+func enrichSessions(idx *session.Index, claudeDir string, sessions []session.SessionMeta) []session.SessionMeta {
+	for _, s := range sessions {
+		idx.EnrichSession(claudeDir, s.SessionID)
+	}
+	// Re-fetch from index to get enriched data.
+	enriched := make([]session.SessionMeta, 0, len(sessions))
+	for _, s := range sessions {
+		if found := idx.FindSession(s.SessionID); found != nil {
+			enriched = append(enriched, *found)
+		}
+	}
+	return enriched
+}
+
 // --- Command ---
 
 func sessionsCmd(claudeDir *string, logLevel *string) *cobra.Command {
@@ -169,7 +207,16 @@ Examples:
 			dir := resolveClaudeDir(cmd, *claudeDir)
 			fmt.Fprintf(os.Stderr, "Discovering sessions in: %s\n", dir)
 
-			idx, err := discoverAndEnrich(dir, nil)
+			needsFullEnrich := sortNeedsEnrichment(sortField)
+
+			var idx *session.Index
+			var err error
+
+			if needsFullEnrich {
+				idx, err = discoverAndEnrich(dir, nil)
+			} else {
+				idx, err = session.Discover(dir, nil)
+			}
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "error discovering sessions: %v\n", err)
 				os.Exit(1)
@@ -185,19 +232,16 @@ Examples:
 			sortSessions(sessions, sortField)
 
 			total := len(sessions)
+			page := paginateSessions(sessions, offset, limit)
 
-			// Apply pagination.
-			if offset > len(sessions) {
-				offset = len(sessions)
-			}
-			sessions = sessions[offset:]
-			if limit > 0 && limit < len(sessions) {
-				sessions = sessions[:limit]
+			// In the fast path, enrich only the page we're displaying.
+			if !needsFullEnrich {
+				page = enrichSessions(idx, dir, page)
 			}
 
 			if jsonOutput {
-				entries := make([]sessionEntry, len(sessions))
-				for i, s := range sessions {
+				entries := make([]sessionEntry, len(page))
+				for i, s := range page {
 					entries[i] = toSessionEntry(s)
 				}
 				out := sessionsJSON{
@@ -212,12 +256,12 @@ Examples:
 				return
 			}
 
-			if len(sessions) == 0 {
+			if len(page) == 0 {
 				fmt.Fprintln(os.Stderr, "No sessions found.")
 				return
 			}
 
-			renderSessionsTable(sessions, total, offset)
+			renderSessionsTable(page, total, offset)
 		},
 	}
 

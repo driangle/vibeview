@@ -191,22 +191,12 @@ func TestTruncateStr(t *testing.T) {
 	}
 }
 
-func TestPagination(t *testing.T) {
+func TestPaginateSessions(t *testing.T) {
 	sessions := testSessions()
-
-	// Offset 1, limit 1 should give the middle session.
-	offset := 1
-	limit := 1
-
 	sortSessions(sessions, "timestamp")
 
-	if offset > len(sessions) {
-		offset = len(sessions)
-	}
-	paginated := sessions[offset:]
-	if limit > 0 && limit < len(paginated) {
-		paginated = paginated[:limit]
-	}
+	// Offset 1, limit 1 should give the middle session.
+	paginated := paginateSessions(sessions, 1, 1)
 
 	if len(paginated) != 1 {
 		t.Fatalf("expected 1 session, got %d", len(paginated))
@@ -217,16 +207,30 @@ func TestPagination(t *testing.T) {
 	}
 }
 
-func TestPagination_OffsetBeyondLength(t *testing.T) {
+func TestPaginateSessions_OffsetBeyondLength(t *testing.T) {
 	sessions := testSessions()
-	offset := 100
-
-	if offset > len(sessions) {
-		offset = len(sessions)
-	}
-	paginated := sessions[offset:]
+	paginated := paginateSessions(sessions, 100, 25)
 
 	if len(paginated) != 0 {
 		t.Errorf("expected empty result for offset beyond length, got %d", len(paginated))
+	}
+}
+
+func TestSortNeedsEnrichment(t *testing.T) {
+	tests := []struct {
+		field string
+		want  bool
+	}{
+		{"timestamp", false},
+		{"dir", false},
+		{"cost", true},
+		{"messages", true},
+		{"model", true},
+	}
+	for _, tt := range tests {
+		got := sortNeedsEnrichment(tt.field)
+		if got != tt.want {
+			t.Errorf("sortNeedsEnrichment(%q) = %v, want %v", tt.field, got, tt.want)
+		}
 	}
 }
