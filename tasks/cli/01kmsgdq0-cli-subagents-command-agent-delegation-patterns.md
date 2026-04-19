@@ -2,7 +2,7 @@
 title: "CLI subagents command — agent delegation patterns"
 id: "01kmsgdq0"
 status: pending
-priority: medium
+priority: low
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"

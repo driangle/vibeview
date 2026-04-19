@@ -2,7 +2,7 @@
 title: "CLI models command — model usage comparison"
 id: "01kmsgdj2"
 status: pending
-priority: medium
+priority: low
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"

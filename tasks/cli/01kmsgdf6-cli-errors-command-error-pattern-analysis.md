@@ -2,7 +2,7 @@
 title: "CLI errors command — error pattern analysis"
 id: "01kmsgdf6"
 status: pending
-priority: medium
+priority: low
 type: feature
 tags: ["cli", "aggregate"]
 created: "2026-03-28"
