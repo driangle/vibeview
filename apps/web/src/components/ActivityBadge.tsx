@@ -19,17 +19,23 @@ const config: Record<string, { dot: string; label: string; tooltip: string; anim
     label: 'Waiting for input',
     tooltip: 'Claude responded with text and is waiting for the user to reply',
   },
+  idle: {
+    dot: 'bg-muted-fg/50',
+    label: 'Idle',
+    tooltip: 'Session is not actively running',
+  },
 };
 
 interface ActivityBadgeProps {
   state?: ActivityState;
+  showIdle?: boolean;
 }
 
-export function ActivityBadge({ state }: ActivityBadgeProps) {
+export function ActivityBadge({ state, showIdle = false }: ActivityBadgeProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  if (!state || state === 'idle') return null;
+  if (!state || (state === 'idle' && !showIdle)) return null;
 
   const cfg = config[state];
   if (!cfg) return null;

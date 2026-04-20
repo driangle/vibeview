@@ -42,24 +42,70 @@ Filter to specific projects:
 vibeview --dirs myproject,another
 ```
 
-### Inspect
+### Commands
 
-Analyze a session from the terminal:
+#### `serve` (default)
+
+Start the web interface. This is the default when no subcommand is given.
+
+```sh
+vibeview serve --port 8080 --open
+vibeview serve --lan              # bind to 0.0.0.0 with token auth
+vibeview serve /path/to/session.jsonl
+```
+
+#### `inspect`
+
+Analyze a session from the terminal. Accepts a session file, directory, or session ID.
 
 ```sh
 vibeview inspect <session-file | session-id>
 vibeview inspect --json <session-file>
+vibeview inspect --verbose <session-id>
 ```
 
 Shows message counts, token usage, cost estimate, tools used, and files touched.
 
-### Search
+#### `search`
 
-Search across all sessions:
+Full-text search across all sessions.
 
 ```sh
 vibeview search "database migration"
 vibeview search --limit 5 "auth middleware"
+vibeview search --json --dirs myproject "query"
+```
+
+#### `stats`
+
+Show aggregate usage summary across sessions.
+
+```sh
+vibeview stats                    # all sessions
+vibeview stats /path/to/project   # filter to a project folder
+vibeview stats session.jsonl      # single session
+vibeview stats --json
+```
+
+#### `show`
+
+Display a session conversation as readable text.
+
+```sh
+vibeview show <session-id>
+vibeview show --thinking <session-id>   # include thinking blocks
+vibeview show --verbose <session-id>    # expand tool call details
+vibeview show --json <session-id>       # raw message JSON
+```
+
+#### `sessions`
+
+List sessions in a formatted table.
+
+```sh
+vibeview sessions
+vibeview sessions --limit 10 --sort cost
+vibeview sessions --dir myproject --json
 ```
 
 ## Web UI
@@ -86,12 +132,10 @@ Once installed, you can ask Claude Code things like "how much have I spent this 
 
 Settings are persisted at `~/.config/vibeview/settings.json` and can also be changed from the web UI settings page.
 
-## Flags
+## Global Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--port` | `4880` | Port to listen on |
-| `--open` | `false` | Open browser on startup |
 | `--claude-dir` | `~/.claude` | Path to Claude data directory |
-| `--dirs` | | Filter to specific project directories |
 | `--log-level` | `warn` | Log level: debug, warn, error |
+| `--version` | | Show version information |

@@ -93,7 +93,7 @@ export function SessionViewHeader({
               >
                 ID: {sessionId.slice(0, 8).toUpperCase()}
               </CopyableText>
-              <ActivityBadge state={activityState} />
+              <ActivityBadge state={activityState} showIdle />
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               {liveUsage && <InlineMetrics usage={liveUsage} />}

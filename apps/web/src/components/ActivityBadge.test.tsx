@@ -3,9 +3,14 @@ import { describe, it, expect } from 'vitest';
 import { ActivityBadge } from './ActivityBadge';
 
 describe('ActivityBadge', () => {
-  it('renders nothing for idle state', () => {
+  it('renders nothing for idle state by default', () => {
     const { container } = render(<ActivityBadge state="idle" />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it('renders "Idle" label when showIdle is true', () => {
+    render(<ActivityBadge state="idle" showIdle />);
+    expect(screen.getByText('Idle')).toBeInTheDocument();
   });
 
   it('renders nothing when state is undefined', () => {

@@ -421,6 +421,19 @@ func (b *Broker) pingLoop() {
 						idledSessions = append(idledSessions, sessionID)
 					}
 				}
+				// Also check sessions that were active at startup but never
+				// received new messages through the tailer. Without this,
+				// a session whose process dies after server start stays
+				// "working" in the index indefinitely.
+				for _, sessionID := range b.index.ActiveSessionIDs() {
+					if _, tracked := b.lastMessageAt[sessionID]; tracked {
+						continue // already handled above
+					}
+					if !b.pidChecker.IsProcessAlive(sessionID) {
+						b.index.SetActivityState(sessionID, session.ActivityIdle)
+						idledSessions = append(idledSessions, sessionID)
+					}
+				}
 			}
 			// Notify connected clients when their session becomes idle.
 			for _, sessionID := range idledSessions {

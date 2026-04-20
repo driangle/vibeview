@@ -125,6 +125,19 @@ func (idx *Index) SetCustomTitle(id, title string) {
 	}
 }
 
+// ActiveSessionIDs returns the IDs of sessions whose activity state is not idle.
+func (idx *Index) ActiveSessionIDs() []string {
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+	var ids []string
+	for _, s := range idx.Sessions {
+		if s.SessionID != "" && s.ActivityState != "" && s.ActivityState != ActivityIdle {
+			ids = append(ids, s.SessionID)
+		}
+	}
+	return ids
+}
+
 // SetActivityState updates the activity state for a session in the index.
 func (idx *Index) SetActivityState(id, state string) {
 	idx.mu.Lock()
