@@ -11,3 +11,5 @@ apps/cli/internal/spa/dist/
 .claude/worktrees/
 coverage.out
 coverage/
+.doer.yaml
+.doer/
