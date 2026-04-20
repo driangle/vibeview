@@ -473,6 +473,7 @@ type messageEvent struct {
 	Data          map[string]any     `json:"data,omitempty"`
 	Snapshot      map[string]any     `json:"snapshot,omitempty"`
 	CustomTitle   string             `json:"customTitle,omitempty"`
+	AiTitle       string             `json:"aiTitle,omitempty"`
 }
 
 func toMessageEvent(msg claude.Message, activityState string) messageEvent {
@@ -491,5 +492,6 @@ func toMessageEvent(msg claude.Message, activityState string) messageEvent {
 		Data:          redact.RedactMapValues(msg.Data),
 		Snapshot:      redact.RedactMapValues(msg.Snapshot),
 		CustomTitle:   msg.CustomTitle,
+		AiTitle:       msg.AiTitle,
 	}
 }

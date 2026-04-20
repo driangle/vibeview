@@ -178,6 +178,23 @@ func TestParseMessageLine_Attachment(t *testing.T) {
 	}
 }
 
+func TestParseMessageLine_AiTitle(t *testing.T) {
+	line := `{"type":"ai-title","aiTitle":"Check recent PR comments and notify Slack","sessionId":"s1"}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypeAiTitle {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypeAiTitle)
+	}
+	if msg.AiTitle != "Check recent PR comments and notify Slack" {
+		t.Errorf("AiTitle = %q, want %q", msg.AiTitle, "Check recent PR comments and notify Slack")
+	}
+	if _, ok := msg.Data["aiTitle"]; ok {
+		t.Errorf("aiTitle should not be duplicated into Data; got %v", msg.Data)
+	}
+}
+
 func TestContentBlock_ToolUse(t *testing.T) {
 	line := `{"type":"assistant","uuid":"a2","sessionId":"s1","timestamp":1700000005,"message":{"role":"assistant","content":[{"type":"tool_use","id":"tu1","name":"Read","input":{"path":"/tmp/foo"}}]}}`
 	msg, err := ParseMessageLine([]byte(line))

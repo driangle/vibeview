@@ -912,6 +912,7 @@ type MessageResponse struct {
 	Data           map[string]any        `json:"data,omitempty"`
 	Snapshot       map[string]any        `json:"snapshot,omitempty"`
 	CustomTitle    string                `json:"customTitle,omitempty"`
+	AiTitle        string                `json:"aiTitle,omitempty"`
 	PermissionMode string                `json:"permissionMode,omitempty"`
 	Attachment     map[string]any        `json:"attachment,omitempty"`
 }
@@ -946,6 +947,7 @@ func toMessageResponse(msg claude.Message) MessageResponse {
 		Data:           redact.RedactMapValues(msg.Data),
 		Snapshot:       redact.RedactMapValues(msg.Snapshot),
 		CustomTitle:    msg.CustomTitle,
+		AiTitle:        msg.AiTitle,
 		PermissionMode: msg.PermissionMode,
 		Attachment:     redact.RedactMapValues(msg.Attachment),
 	}

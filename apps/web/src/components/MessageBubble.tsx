@@ -37,12 +37,23 @@ export function MessageBubble({
   isLastMessage,
   onFocusAgent,
 }: MessageBubbleProps) {
-  if (message.type === 'custom-title' || message.type === 'agent-name') {
-    const label = message.type === 'custom-title' ? 'Title set' : 'Agent';
+  if (
+    message.type === 'custom-title' ||
+    message.type === 'ai-title' ||
+    message.type === 'agent-name'
+  ) {
+    const label =
+      message.type === 'custom-title'
+        ? 'Title set'
+        : message.type === 'ai-title'
+          ? 'AI title'
+          : 'Agent';
     const detail =
       message.type === 'custom-title'
-        ? String(message.data?.title ?? '')
-        : String(message.data?.name ?? '');
+        ? String(message.customTitle ?? message.data?.title ?? '')
+        : message.type === 'ai-title'
+          ? String(message.aiTitle ?? '')
+          : String(message.data?.name ?? '');
     return (
       <div className="flex items-center overflow-hidden">
         <span className="border-l-2 border-gray-200 dark:border-gray-700 py-0.5 pl-2 pr-2 text-xs text-gray-400 dark:text-gray-500 max-w-full truncate">

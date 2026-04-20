@@ -69,6 +69,7 @@ const (
 	MessageTypeSystem              MessageType = "system"
 	MessageTypeFileHistorySnapshot MessageType = "file-history-snapshot"
 	MessageTypeCustomTitle         MessageType = "custom-title"
+	MessageTypeAiTitle             MessageType = "ai-title"
 	MessageTypeResult              MessageType = "result"
 	MessageTypeQueueOperation      MessageType = "queue-operation"
 	MessageTypeLastPrompt          MessageType = "last-prompt"
@@ -105,6 +106,9 @@ type Message struct {
 	// Present on custom-title messages (from /rename command).
 	CustomTitle string `json:"customTitle,omitempty"`
 
+	// Present on ai-title messages (auto-generated session title).
+	AiTitle string `json:"aiTitle,omitempty"`
+
 	// Present on permission-mode messages.
 	PermissionMode string `json:"permissionMode,omitempty"`
 
@@ -125,8 +129,8 @@ var knownMessageKeys = map[string]bool{
 	"timestamp": true, "cwd": true, "gitBranch": true, "isSidechain": true,
 	"isMeta": true, "version": true, "message": true, "content": true,
 	"data": true, "toolUseID": true, "snapshot": true, "customTitle": true,
-	"toolUseResult": true, "total_cost_usd": true, "permissionMode": true,
-	"attachment": true,
+	"aiTitle": true, "toolUseResult": true, "total_cost_usd": true,
+	"permissionMode": true, "attachment": true,
 }
 
 // UnmarshalJSON handles toolUseResult being either a ToolUseResult object or a plain string,

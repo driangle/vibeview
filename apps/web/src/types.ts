@@ -89,6 +89,7 @@ export interface MessageResponse {
     | 'system'
     | 'file-history-snapshot'
     | 'custom-title'
+    | 'ai-title'
     | 'agent-name'
     | 'queue-operation'
     | 'last-prompt'
@@ -105,6 +106,7 @@ export interface MessageResponse {
   data?: MessageData;
   snapshot?: MessageData;
   customTitle?: string;
+  aiTitle?: string;
   permissionMode?: string;
   attachment?: MessageData;
 }
