@@ -32,13 +32,13 @@ func TestScanPIDFiles(t *testing.T) {
 		PID:       12345,
 		SessionID: "sess-1",
 		Cwd:       "/tmp",
-		StartedAt: "2025-01-01T00:00:00Z",
+		StartedAt: "1735689600000",
 	})
 	writePIDFile(t, sessionsDir, PIDEntry{
 		PID:       67890,
 		SessionID: "sess-2",
 		Cwd:       "/tmp",
-		StartedAt: "2025-01-01T00:00:00Z",
+		StartedAt: "1735689600000",
 	})
 
 	c := NewChecker(dir)
@@ -146,6 +146,75 @@ func TestIsProcessAlive_DeadProcess(t *testing.T) {
 
 	if c.IsProcessAlive("dead-session") {
 		t.Error("expected dead process to return false")
+	}
+}
+
+func TestFindSessionByPID_Match(t *testing.T) {
+	dir := t.TempDir()
+	sessionsDir := filepath.Join(dir, "sessions")
+	if err := os.MkdirAll(sessionsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	writePIDFile(t, sessionsDir, PIDEntry{
+		PID:       os.Getpid(),
+		SessionID: "my-session-123",
+	})
+
+	id, err := FindSessionByPID(dir, os.Getpid())
+	if err != nil {
+		t.Fatalf("expected match, got error: %v", err)
+	}
+	if id != "my-session-123" {
+		t.Errorf("expected session ID my-session-123, got %s", id)
+	}
+}
+
+func TestFindSessionByPID_NoMatch(t *testing.T) {
+	dir := t.TempDir()
+	sessionsDir := filepath.Join(dir, "sessions")
+	if err := os.MkdirAll(sessionsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	writePIDFile(t, sessionsDir, PIDEntry{
+		PID:       os.Getpid(),
+		SessionID: "other-session",
+	})
+
+	_, err := FindSessionByPID(dir, 99999)
+	if err == nil {
+		t.Error("expected error for non-matching PID")
+	}
+}
+
+func TestFindSessionByPID_StalePID(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("PID liveness detection is a no-op on Windows")
+	}
+
+	dir := t.TempDir()
+	sessionsDir := filepath.Join(dir, "sessions")
+	if err := os.MkdirAll(sessionsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	writePIDFile(t, sessionsDir, PIDEntry{
+		PID:       999999999,
+		SessionID: "stale-session",
+	})
+
+	_, err := FindSessionByPID(dir, 999999999)
+	if err == nil {
+		t.Error("expected error for stale PID")
+	}
+}
+
+func TestFindSessionByPID_NoSessionsDir(t *testing.T) {
+	dir := t.TempDir()
+	_, err := FindSessionByPID(dir, os.Getpid())
+	if err == nil {
+		t.Error("expected error when sessions dir doesn't exist")
 	}
 }
 

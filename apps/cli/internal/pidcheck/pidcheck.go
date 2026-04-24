@@ -4,6 +4,7 @@ package pidcheck
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -14,10 +15,10 @@ import (
 
 // PIDEntry represents a single PID file written by Claude Code.
 type PIDEntry struct {
-	PID       int    `json:"pid"`
-	SessionID string `json:"sessionId"`
-	Cwd       string `json:"cwd"`
-	StartedAt string `json:"startedAt"`
+	PID       int         `json:"pid"`
+	SessionID string      `json:"sessionId"`
+	Cwd       string      `json:"cwd"`
+	StartedAt json.Number `json:"startedAt"`
 }
 
 // Checker scans PID files and checks process liveness.
@@ -78,6 +79,40 @@ func (c *Checker) IsProcessAlive(sessionID string) bool {
 // Refresh forces an immediate rescan of the PID files directory.
 func (c *Checker) Refresh() {
 	c.scan()
+}
+
+// FindSessionByPID scans PID files in claudeDir/sessions/ for an entry
+// whose PID matches the given pid and whose process is still alive.
+// Returns the session ID on match, or an error if no match is found.
+func FindSessionByPID(claudeDir string, pid int) (string, error) {
+	sessionsDir := filepath.Join(claudeDir, "sessions")
+	entries, err := os.ReadDir(sessionsDir)
+	if err != nil {
+		return "", fmt.Errorf("cannot read sessions dir: %w", err)
+	}
+
+	for _, e := range entries {
+		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(sessionsDir, e.Name()))
+		if err != nil {
+			continue
+		}
+		var pe PIDEntry
+		if err := json.Unmarshal(data, &pe); err != nil {
+			continue
+		}
+		if pe.PID != pid || pe.SessionID == "" {
+			continue
+		}
+		alive, err := isProcessRunning(pe.PID)
+		if err != nil || !alive {
+			continue
+		}
+		return pe.SessionID, nil
+	}
+	return "", fmt.Errorf("no session found for PID %d", pid)
 }
 
 func (c *Checker) scan() {

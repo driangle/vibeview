@@ -79,6 +79,17 @@ vibeview serve --open           # open browser automatically
 vibeview serve --lan            # bind to 0.0.0.0 with token auth
 ```
 
+### Discover current session
+
+When running inside a Claude Code tool-use context, discover which session launched this process.
+
+```
+vibeview self
+vibeview self --json
+```
+
+The command walks up the process tree and matches against active PID files to find the current session. Use `--json` for machine-readable output (`{"session_id": "..."}`).
+
 ## Global flags
 
 All commands accept:
@@ -92,6 +103,7 @@ All commands accept:
 - Use `vibeview sessions --sort cost` to help users identify their most expensive sessions.
 - Use `vibeview inspect` to get detailed metadata about a specific session (tokens, cost, tools, files).
 - Use `vibeview show` to read back the actual conversation content.
+- Use `vibeview self` when running inside Claude Code to discover the current session ID.
 - Use `vibeview stats` for aggregate usage reporting and cost tracking.
 - Prefer `--json` output when you need to parse or process the results programmatically.
 - Session IDs support prefix matching — a 6-character prefix is usually sufficient.

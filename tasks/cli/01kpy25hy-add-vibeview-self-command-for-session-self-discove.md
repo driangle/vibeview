@@ -1,11 +1,12 @@
 ---
 title: "Add vibeview self command for session self-discovery"
 id: "01kpy25hy"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: []
 created: "2026-04-23"
+completed_at: 2026-04-24
 ---
 
 # Add vibeview self command for session self-discovery
@@ -16,14 +17,14 @@ Add a `vibeview self` CLI command that allows a Claude Code process to discover 
 
 ## Tasks
 
-- [ ] Add `FindSessionByPID(claudeDir string, pid int) (string, error)` to the `pidcheck` package that scans `~/.claude/sessions/*.json` for a PID entry matching the given process ID
-- [ ] Add a process-tree walking utility that traverses ancestors from PPID upward (to handle shell intermediaries like `sh` between Claude Code and `vibeview`)
-- [ ] Create `cmd/vibeview/self.go` with a `selfCmd` Cobra command that combines ancestor walking + PID lookup to find the current session
-- [ ] Output the session ID and print suggested follow-up commands (inspect, show, sessions)
-- [ ] Support `--json` output flag for machine-readable output (consistent with other commands)
-- [ ] Add tests for `FindSessionByPID` with matching, non-matching, and stale PID scenarios
-- [ ] Add tests for the ancestor-walking logic
-- [ ] Update the Claude Code plugin skill (`claude-code-plugin/skills/vibeview/SKILL.md`) to document the `vibeview self` command and its usage
+- [x] Add `FindSessionByPID(claudeDir string, pid int) (string, error)` to the `pidcheck` package that scans `~/.claude/sessions/*.json` for a PID entry matching the given process ID
+- [x] Add a process-tree walking utility that traverses ancestors from PPID upward (to handle shell intermediaries like `sh` between Claude Code and `vibeview`)
+- [x] Create `cmd/vibeview/self.go` with a `selfCmd` Cobra command that combines ancestor walking + PID lookup to find the current session
+- [x] Output the session ID and print suggested follow-up commands (inspect, show, sessions)
+- [x] Support `--json` output flag for machine-readable output (consistent with other commands)
+- [x] Add tests for `FindSessionByPID` with matching, non-matching, and stale PID scenarios
+- [x] Add tests for the ancestor-walking logic
+- [x] Update the Claude Code plugin skill (`claude-code-plugin/skills/vibeview/SKILL.md`) to document the `vibeview self` command and its usage
 
 ## Acceptance Criteria
 
