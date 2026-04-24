@@ -36,6 +36,7 @@ The skill exposes all vibeview CLI commands:
 | `vibeview inspect <id>` | Get detailed metadata for a session |
 | `vibeview show <id>` | Read back conversation content |
 | `vibeview stats` | Aggregate usage and cost reporting |
+| `vibeview self` | Discover the current session from within Claude Code |
 
 All commands support `--json` output for structured processing. See the [CLI reference](./cli) for full details.
 

@@ -164,6 +164,38 @@ vibeview stats --yaml
 | `--json` | `false` | Output as JSON |
 | `--yaml` | `false` | Output as YAML |
 
+### `vibeview self`
+
+Discover which Claude Code session launched this process. Walks up the process tree and matches against active PID files in `~/.claude/sessions/`.
+
+```bash
+vibeview self
+vibeview self --json
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--json` | `false` | Output as JSON (`{"session_id": "..."}`) |
+
+This is useful when running vibeview from within a Claude Code tool-use context (e.g. a Bash tool call) to identify and inspect the current session.
+
+#### Example output
+
+```
+Session:  877fff1e-80c9-4d20-a600-f278eb2c7bdc
+
+Commands:
+  vibeview inspect 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+  vibeview show 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+  vibeview sessions
+```
+
+When no matching session is found:
+
+```
+error: no active Claude Code session found for this process tree
+```
+
 ### `vibeview completion`
 
 Generate shell autocompletion scripts for bash, zsh, fish, or powershell.
