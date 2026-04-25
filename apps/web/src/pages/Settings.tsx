@@ -3,7 +3,8 @@ import useSWR from 'swr';
 import { fetcher, withToken } from '../api';
 import { Footer } from '../components/Footer';
 import { useSettings } from '../contexts/useSettings';
-import type { AppConfig, Settings as SettingsType } from '../types';
+import type { AppConfig } from '../types';
+import type { Settings as SettingsType } from '../settings-types';
 import { Field, Section } from './SettingsControls';
 import {
   AppearanceSection,

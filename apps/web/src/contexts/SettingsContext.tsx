@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { fetcher, withToken } from '../api';
-import type { Settings } from '../types';
+import type { Settings } from '../settings-types';
 import { defaults, SettingsContext } from './useSettings';
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {

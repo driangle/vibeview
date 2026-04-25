@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { Settings } from '../types';
+import type { Settings } from '../settings-types';
 
 export const defaults: Settings = {
   theme: 'system',

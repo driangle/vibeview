@@ -6,7 +6,7 @@ import {
   refreshOptions,
   selectClass,
 } from './settings-utils';
-import type { Settings } from '../types';
+import type { Settings } from '../settings-types';
 
 interface SectionProps {
   form: Settings;
