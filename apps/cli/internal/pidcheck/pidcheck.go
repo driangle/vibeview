@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/driangle/vibeview/internal/logutil"
+	"github.com/driangle/vibeview/lib/logutil"
 )
 
 // PIDEntry represents a single PID file written by Claude Code.

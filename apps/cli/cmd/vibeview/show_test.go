@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/lib/claude"
 )
 
 func init() {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/driangle/vibeview/internal/logutil"
+	"github.com/driangle/vibeview/lib/logutil"
 	"github.com/driangle/vibeview/internal/pidcheck"
 	"github.com/spf13/cobra"
 )

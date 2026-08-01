@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/driangle/vibeview/internal/claude"
+	"github.com/driangle/vibeview/lib/claude"
 )
 
 func writeLine(t *testing.T, f *os.File, msg map[string]any) {

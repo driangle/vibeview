@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/driangle/vibeview/internal/claude"
-	"github.com/driangle/vibeview/internal/session"
+	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/lib/session"
 )
 
 // setupTestDir creates a temporary claude directory with history and session files.
