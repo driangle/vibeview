@@ -94,7 +94,8 @@ export interface MessageResponse {
     | 'queue-operation'
     | 'last-prompt'
     | 'permission-mode'
-    | 'attachment';
+    | 'attachment'
+    | 'mode';
   timestamp: string;
   isMeta?: boolean;
   isSidechain?: boolean;

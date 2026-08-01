@@ -241,10 +241,11 @@ func TestDeriveActivityState_SkipsPermissionModeAndAttachment(t *testing.T) {
 		}},
 		{Type: claude.MessageTypePermissionMode, Timestamp: ts},
 		{Type: claude.MessageTypeAttachment, Timestamp: ts},
+		{Type: claude.MessageTypeMode, Timestamp: ts},
 	}
-	// Should skip permission-mode and attachment, find the user message.
+	// Should skip permission-mode, attachment, and mode, find the user message.
 	if got := DeriveActivityState(msgs); got != ActivityWorking {
-		t.Errorf("skips permission-mode/attachment: got %q, want %q", got, ActivityWorking)
+		t.Errorf("skips permission-mode/attachment/mode: got %q, want %q", got, ActivityWorking)
 	}
 }
 

@@ -75,6 +75,7 @@ const (
 	MessageTypeLastPrompt          MessageType = "last-prompt"
 	MessageTypePermissionMode      MessageType = "permission-mode"
 	MessageTypeAttachment          MessageType = "attachment"
+	MessageTypeMode                MessageType = "mode"
 )
 
 // Message represents a single line from a session JSONL file.

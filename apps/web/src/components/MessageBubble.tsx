@@ -4,6 +4,7 @@ import {
   AttachmentMessage,
   HookMessage,
   LastPromptMessage,
+  ModeMessage,
   PermissionModeMessage,
   QueueOperationMessage,
   SystemMessage,
@@ -105,6 +106,10 @@ export function MessageBubble({
 
   if (message.type === 'permission-mode') {
     return <PermissionModeMessage message={message} />;
+  }
+
+  if (message.type === 'mode') {
+    return <ModeMessage message={message} />;
   }
 
   if (message.type === 'attachment') {

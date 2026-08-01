@@ -61,6 +61,21 @@ export function PermissionModeMessage({ message }: { message: MessageResponse })
   );
 }
 
+export function ModeMessage({ message }: { message: MessageResponse }) {
+  const mode = message.data?.mode ? String(message.data.mode) : 'unknown';
+
+  return (
+    <EventMessage
+      message={message}
+      label="Mode"
+      borderColor="border-indigo-300 dark:border-indigo-600"
+      labelColor="text-indigo-500 dark:text-indigo-400"
+      detailColor="text-indigo-400 dark:text-indigo-500"
+      detailText={mode}
+    />
+  );
+}
+
 export function AttachmentMessage({ message }: { message: MessageResponse }) {
   const attachmentType = String(message.attachment?.type ?? 'unknown');
   const label = formatAttachmentType(attachmentType);

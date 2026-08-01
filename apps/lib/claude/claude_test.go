@@ -154,6 +154,20 @@ func TestParseMessageLine_PermissionMode(t *testing.T) {
 	}
 }
 
+func TestParseMessageLine_Mode(t *testing.T) {
+	line := `{"type":"mode","uuid":"m1","timestamp":"2026-04-16T10:09:19.406Z","data":{"mode":"normal"}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypeMode {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypeMode)
+	}
+	if msg.Data["mode"] != "normal" {
+		t.Errorf("Data[mode] = %v, want %q", msg.Data["mode"], "normal")
+	}
+}
+
 func TestParseMessageLine_Attachment(t *testing.T) {
 	line := `{"type":"attachment","uuid":"a1","sessionId":"s1","timestamp":"2026-04-16T10:09:19.406Z","attachment":{"type":"deferred_tools_delta","addedNames":["Read","Write"],"removedNames":[]}}`
 	msg, err := ParseMessageLine([]byte(line))
