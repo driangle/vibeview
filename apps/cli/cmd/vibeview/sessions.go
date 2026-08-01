@@ -8,8 +8,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/driangle/vibeview/lib/logutil"
-	"github.com/driangle/vibeview/lib/session"
+	"github.com/driangle/vibeview/apps/lib/logutil"
+	"github.com/driangle/vibeview/apps/lib/session"
 	"github.com/spf13/cobra"
 )
 

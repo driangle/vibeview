@@ -3,7 +3,7 @@ package redact
 import (
 	"testing"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 func TestRedactAPIMessage_Nil(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/driangle/vibeview/lib/session"
+	"github.com/driangle/vibeview/apps/lib/session"
 )
 
 // writeSession writes a single-message session JSONL file to dir and returns a

@@ -1,8 +1,8 @@
 package insights
 
 import (
-	"github.com/driangle/vibeview/lib/claude"
-	"github.com/driangle/vibeview/lib/redact"
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/redact"
 )
 
 // GetContentBlocks safely extracts content blocks from a message.

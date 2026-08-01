@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 var skillExpansionRe = regexp.MustCompile(`^Base directory for this skill:.*\/skills\/([^\s/]+)`)

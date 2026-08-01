@@ -1,7 +1,7 @@
 package insights
 
 import (
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 // ExtractErrors finds tool_use blocks whose results have is_error set.

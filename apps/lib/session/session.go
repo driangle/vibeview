@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/driangle/vibeview/lib/claude"
-	"github.com/driangle/vibeview/lib/logutil"
-	"github.com/driangle/vibeview/lib/pathutil"
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/logutil"
+	"github.com/driangle/vibeview/apps/lib/pathutil"
 )
 
 // UsageTotals holds aggregated token and cost data for a session.

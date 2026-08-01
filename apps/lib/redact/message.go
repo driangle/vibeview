@@ -1,6 +1,6 @@
 package redact
 
-import "github.com/driangle/vibeview/lib/claude"
+import "github.com/driangle/vibeview/apps/lib/claude"
 
 // RedactAPIMessage returns a copy of the APIMessage with sensitive data redacted
 // in all content blocks. Returns nil if msg is nil.

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 var commandNameRe = regexp.MustCompile(`<command-name>/?(.+?)</command-name>`)

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/driangle/vibeview/lib/session"
+	"github.com/driangle/vibeview/apps/lib/session"
 )
 
 func testSessions() []session.SessionMeta {

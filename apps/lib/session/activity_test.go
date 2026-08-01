@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 // mockProcessChecker implements ProcessChecker for testing.

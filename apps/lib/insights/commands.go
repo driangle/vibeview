@@ -1,8 +1,8 @@
 package insights
 
 import (
-	"github.com/driangle/vibeview/lib/claude"
-	"github.com/driangle/vibeview/lib/redact"
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/redact"
 )
 
 // ExtractBashCommands finds all Bash tool_use blocks and extracts the command string.

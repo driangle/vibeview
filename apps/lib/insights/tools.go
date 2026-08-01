@@ -3,7 +3,7 @@ package insights
 import (
 	"sort"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 // ExtractToolCounts counts tool_use blocks by tool name, sorted by count descending.

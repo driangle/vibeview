@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/driangle/vibeview/lib/redact"
+	"github.com/driangle/vibeview/apps/lib/redact"
 )
 
 // --- Color / style ---

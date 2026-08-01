@@ -45,7 +45,7 @@ apps/
 │   │   └── projects/
 │   └── go.mod                    # github.com/driangle/vibeview — imports the library
 └── lib/                          # NEW: standalone library
-    ├── go.mod                    # github.com/driangle/vibeview/lib
+    ├── go.mod                    # github.com/driangle/vibeview/apps/lib
     ├── claude/                   # JSONL parsing & types
     ├── session/                  # discovery & indexing
     ├── insights/                 # session analysis
@@ -58,9 +58,9 @@ apps/
 The CLI's `go.mod` adds a `require` + `replace` directive to consume the library locally during development:
 
 ```go
-require github.com/driangle/vibeview/lib v0.0.0
+require github.com/driangle/vibeview/apps/lib v0.0.0
 
-replace github.com/driangle/vibeview/lib => ../lib
+replace github.com/driangle/vibeview/apps/lib => ../lib
 ```
 
 ### Dependency Direction
@@ -427,7 +427,7 @@ func Verbose(format string, args ...any)
 
 ### Phase 1: Create the library module
 
-1. Create `apps/lib/` with its own `go.mod` (`github.com/driangle/vibeview/lib`)
+1. Create `apps/lib/` with its own `go.mod` (`github.com/driangle/vibeview/apps/lib`)
 2. Copy the 7 packages from `apps/cli/internal/` into `apps/lib/`
 3. Remove the `internal/` path segment — packages become directly importable
 4. Adjust inter-package imports to use the new module path
@@ -437,14 +437,14 @@ func Verbose(format string, args ...any)
 ### Phase 2: Rewire vibeview CLI
 
 1. Add `require` + `replace` directives in `apps/cli/go.mod`
-2. Update all imports in `apps/cli/internal/` and `apps/cli/cmd/` from `github.com/driangle/vibeview/internal/...` to `github.com/driangle/vibeview/lib/...`
+2. Update all imports in `apps/cli/internal/` and `apps/cli/cmd/` from `github.com/driangle/vibeview/internal/...` to `github.com/driangle/vibeview/apps/lib/...`
 3. Delete the migrated packages from `apps/cli/internal/`
 4. Verify: `cd apps/cli && go build ./... && go test ./...`
 
 ### Phase 3: Publish
 
 1. Tag the library module: `git tag apps/lib/v0.1.0`
-2. Consumers install with: `go get github.com/driangle/vibeview/lib@v0.1.0`
+2. Consumers install with: `go get github.com/driangle/vibeview/apps/lib@v0.1.0`
 
 ---
 
@@ -459,10 +459,10 @@ import (
     "os"
     "path/filepath"
 
-    "github.com/driangle/vibeview/lib/claude"
-    "github.com/driangle/vibeview/lib/session"
-    "github.com/driangle/vibeview/lib/insights"
-    "github.com/driangle/vibeview/lib/search"
+    "github.com/driangle/vibeview/apps/lib/claude"
+    "github.com/driangle/vibeview/apps/lib/session"
+    "github.com/driangle/vibeview/apps/lib/insights"
+    "github.com/driangle/vibeview/apps/lib/search"
 )
 
 func main() {
@@ -500,6 +500,6 @@ func main() {
 
 ## Open Questions
 
-1. **Module path:** `github.com/driangle/vibeview/lib` vs a top-level `github.com/driangle/ccview` (or similar neutral name)?
+1. **Module path:** `github.com/driangle/vibeview/apps/lib` vs a top-level `github.com/driangle/ccview` (or similar neutral name)?
 2. **`pidcheck` package:** Platform-specific process detection — include in library or leave as app concern? Consumers would need to provide their own `ProcessChecker` implementation if excluded.
 3. **Redact policy:** Should redaction be opt-in at the library level? Some consumers (like `doer`) may not need it or may want different rules.

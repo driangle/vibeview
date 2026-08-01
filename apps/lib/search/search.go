@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/driangle/vibeview/lib/redact"
-	"github.com/driangle/vibeview/lib/session"
+	"github.com/driangle/vibeview/apps/lib/redact"
+	"github.com/driangle/vibeview/apps/lib/session"
 )
 
 // globalSem limits the total number of concurrent file-search goroutines

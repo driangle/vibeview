@@ -9,8 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/driangle/vibeview/lib/claude"
-	"github.com/driangle/vibeview/lib/logutil"
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/logutil"
 	"github.com/fsnotify/fsnotify"
 )
 

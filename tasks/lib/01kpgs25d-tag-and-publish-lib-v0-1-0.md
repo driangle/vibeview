@@ -1,7 +1,7 @@
 ---
 title: "Tag and publish lib v0.1.0"
 id: "01kpgs25d"
-status: pending
+status: in-progress
 priority: medium
 type: chore
 tags: ["lib", "phase:3-publish"]

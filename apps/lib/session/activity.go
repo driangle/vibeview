@@ -3,7 +3,7 @@ package session
 import (
 	"time"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 // Activity state constants.

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 // --- helpers to build test messages ---

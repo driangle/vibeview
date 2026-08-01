@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 var agentIDPattern = regexp.MustCompile(`agentId:\s*([a-f0-9]+)`)

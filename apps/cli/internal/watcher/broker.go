@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/driangle/vibeview/lib/claude"
-	"github.com/driangle/vibeview/lib/logutil"
-	"github.com/driangle/vibeview/lib/pathutil"
-	"github.com/driangle/vibeview/lib/redact"
-	"github.com/driangle/vibeview/lib/session"
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/logutil"
+	"github.com/driangle/vibeview/apps/lib/pathutil"
+	"github.com/driangle/vibeview/apps/lib/redact"
+	"github.com/driangle/vibeview/apps/lib/session"
 	"github.com/fsnotify/fsnotify"
 )
 

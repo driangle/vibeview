@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/driangle/vibeview/lib/claude"
-	"github.com/driangle/vibeview/lib/redact"
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/redact"
 )
 
 var worktreePathRe = regexp.MustCompile(`worktree at ([^\s]+)`)

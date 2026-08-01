@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/driangle/vibeview/lib/session"
+	"github.com/driangle/vibeview/apps/lib/session"
 )
 
 func setupBrokerTestDir(t *testing.T) (string, *session.Index) {

@@ -1,7 +1,7 @@
 package insights
 
 import (
-	"github.com/driangle/vibeview/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/claude"
 )
 
 // Extract computes all session insights from parsed messages.

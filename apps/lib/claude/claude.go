@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/driangle/vibeview/lib/logutil"
+	"github.com/driangle/vibeview/apps/lib/logutil"
 )
 
 // Timestamp can unmarshal from both an integer (epoch millis) and an ISO 8601 string.
