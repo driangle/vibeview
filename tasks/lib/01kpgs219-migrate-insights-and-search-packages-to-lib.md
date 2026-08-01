@@ -1,7 +1,7 @@
 ---
 title: "Migrate insights and search packages to lib"
 id: "01kpgs219"
-status: pending
+status: completed
 priority: high
 type: chore
 tags: ["lib", "phase:1-extract"]
@@ -12,6 +12,7 @@ created: "2026-04-18"
 verify:
   - type: bash
     run: "cd apps/lib && go build ./... && go test ./..."
+completed_at: 2026-08-01
 ---
 
 # Migrate insights and search packages to lib
@@ -22,11 +23,11 @@ Move the `insights` and `search` packages into `apps/lib/`. These are the analys
 
 ## Tasks
 
-- [ ] Copy `apps/cli/internal/insights/` to `apps/lib/insights/` (all files: extract.go, types.go, tools.go, errors.go, commands.go, files.go, skills.go, subagents.go, worktrees.go, helpers.go, messagekind.go + tests)
-- [ ] Copy `apps/cli/internal/search/` to `apps/lib/search/` (search.go)
-- [ ] Update `insights` imports to reference `lib/claude`, `lib/redact`
-- [ ] Update `search` imports to reference `lib/session`, `lib/claude`, `lib/redact`
-- [ ] Verify: `cd apps/lib && go build ./... && go test ./...`
+- [x] Copy `apps/cli/internal/insights/` to `apps/lib/insights/` (all files: extract.go, types.go, tools.go, errors.go, commands.go, files.go, skills.go, subagents.go, worktrees.go, helpers.go, messagekind.go + tests)
+- [x] Copy `apps/cli/internal/search/` to `apps/lib/search/` (search.go)
+- [x] Update `insights` imports to reference `lib/claude`, `lib/redact`
+- [x] Update `search` imports to reference `lib/session`, `lib/claude`, `lib/redact`
+- [x] Verify: `cd apps/lib && go build ./... && go test ./...`
 
 ## Acceptance Criteria
 
