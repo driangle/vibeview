@@ -241,7 +241,7 @@ Examples:
 	cmd.Flags().IntVar(&port, "port", 4880, "port to listen on")
 	cmd.Flags().BoolVar(&open, "open", false, "open browser on startup")
 	cmd.Flags().BoolVar(&lan, "lan", false, "enable LAN mode (bind to 0.0.0.0 with token auth)")
-	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project directory names to filter")
+	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project path substrings to filter (OR-combined)")
 
 	return cmd
 }
@@ -350,7 +350,7 @@ Examples:
 
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "output as JSON instead of YAML")
 	cmd.Flags().IntVar(&limit, "limit", 20, "maximum number of results")
-	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project directory names to filter")
+	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project path substrings to filter (OR-combined)")
 
 	return cmd
 }

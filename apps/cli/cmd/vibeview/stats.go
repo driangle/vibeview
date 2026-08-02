@@ -165,7 +165,7 @@ Examples:
 
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "output as JSON")
 	cmd.Flags().BoolVar(&yamlOutput, "yaml", false, "output as YAML")
-	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project directory names to filter")
+	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project path substrings to filter (OR-combined)")
 
 	return cmd
 }
