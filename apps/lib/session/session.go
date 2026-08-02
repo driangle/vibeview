@@ -160,8 +160,7 @@ func (idx *Index) SetActivityState(id, state string) {
 // sessions). History entries are canonical — filesystem-only sessions are appended
 // without overriding existing metadata.
 func Discover(claudeDir string, dirs []string) (*Index, error) {
-	// Build a set of valid dirs for filtering.
-	dirSet := buildDirSet(claudeDir, dirs)
+	filter := NewDirFilter(dirs)
 
 	// Deduplicate by session ID, keeping the entry with the latest timestamp.
 	seen := make(map[string]int) // sessionID -> index in sessions slice
@@ -179,7 +178,7 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 			logutil.Warnf("history.jsonl: skipped %d malformed lines", parseResult.SkippedLines)
 		}
 		for _, entry := range entries {
-			if !matchesDirFilter(dirSet, entry.Project) {
+			if !filter.Matches(entry.Project) {
 				continue
 			}
 			if err := pathutil.ValidateSessionID(entry.SessionID); err != nil {
@@ -205,7 +204,7 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 	}
 
 	// Filesystem fallback: scan projects directory for sessions missing from history.
-	for _, meta := range ScanProjectDirs(claudeDir, dirSet) {
+	for _, meta := range ScanProjectDirs(claudeDir, filter) {
 		if _, exists := seen[meta.SessionID]; !exists {
 			seen[meta.SessionID] = len(sessions)
 			sessions = append(sessions, meta)
@@ -217,14 +216,16 @@ func Discover(claudeDir string, dirs []string) (*Index, error) {
 		return sessions[i].Timestamp > sessions[j].Timestamp
 	})
 
+	warnUnmatchedDirs(filter, sessions)
+
 	return &Index{Sessions: sessions}, nil
 }
 
 // ScanProjectDirs scans claudeDir/projects/*/ for .jsonl session files and returns
 // lightweight SessionMeta entries (no file content is read — enrichment handles that).
-// When dirSet is non-nil, only project directories whose encoded name is in the set
-// are scanned. This is used as a fallback to discover sessions not in history.jsonl.
-func ScanProjectDirs(claudeDir string, dirSet map[string]struct{}) []SessionMeta {
+// When filter is non-empty, only project directories whose decoded path matches the
+// filter are scanned. This is used as a fallback to discover sessions not in history.jsonl.
+func ScanProjectDirs(claudeDir string, filter DirFilter) []SessionMeta {
 	projectsDir := filepath.Join(claudeDir, "projects")
 	projEntries, err := os.ReadDir(projectsDir)
 	if err != nil {
@@ -237,10 +238,9 @@ func ScanProjectDirs(claudeDir string, dirSet map[string]struct{}) []SessionMeta
 			continue
 		}
 		dirName := projEntry.Name()
-		if dirSet != nil {
-			if _, ok := dirSet[dirName]; !ok {
-				continue
-			}
+		decoded := claude.DecodeProjectPath(dirName)
+		if !filter.Matches(decoded) {
+			continue
 		}
 
 		files, err := os.ReadDir(filepath.Join(projectsDir, dirName))
@@ -261,7 +261,7 @@ func ScanProjectDirs(claudeDir string, dirSet map[string]struct{}) []SessionMeta
 			}
 			sessions = append(sessions, SessionMeta{
 				SessionID: sessionID,
-				Project:   claude.DecodeProjectPath(dirName),
+				Project:   decoded,
 				Timestamp: ts,
 			})
 		}
@@ -269,55 +269,54 @@ func ScanProjectDirs(claudeDir string, dirSet map[string]struct{}) []SessionMeta
 	return sessions
 }
 
-// buildDirSet resolves user-provided directory names against actual subdirectories
-// under claudeDir/projects/. Each value can be an exact encoded directory name,
-// or a simple name like "myproject" that is matched against the basename of the
-// decoded project path. Returns a set of matched encoded directory names.
-// Warns on stderr for any value that doesn't match. Returns nil if dirs is empty.
-func buildDirSet(claudeDir string, dirs []string) map[string]struct{} {
-	if len(dirs) == 0 {
-		return nil
-	}
+// DirFilter is a set of substring terms used to filter sessions by their project
+// path. Terms combine as OR: a project matches if its path contains any term as a
+// substring. A nil or empty DirFilter matches every session, mirroring the
+// `sessions --dir` flag and the server's dir/project query params.
+type DirFilter []string
 
-	projectsDir := filepath.Join(claudeDir, "projects")
-	entries, err := os.ReadDir(projectsDir)
-	if err != nil {
-		logutil.Warnf("cannot read projects directory %s: %v", projectsDir, err)
-		return nil
-	}
-
-	dirSet := make(map[string]struct{})
+// NewDirFilter trims whitespace from each term and drops empties. It returns nil
+// when no usable terms remain, which Matches treats as "match everything".
+func NewDirFilter(dirs []string) DirFilter {
+	var terms DirFilter
 	for _, d := range dirs {
+		if t := strings.TrimSpace(d); t != "" {
+			terms = append(terms, t)
+		}
+	}
+	return terms
+}
+
+// Matches reports whether projectPath contains any of the filter's terms as a
+// substring. A nil or empty filter matches every path.
+func (f DirFilter) Matches(projectPath string) bool {
+	if len(f) == 0 {
+		return true
+	}
+	for _, term := range f {
+		if strings.Contains(projectPath, term) {
+			return true
+		}
+	}
+	return false
+}
+
+// warnUnmatchedDirs warns on stderr for each filter term that matched no sessions,
+// helping catch typos. A legitimate broad term still matches something and produces
+// no warning, so it is never wrongly flagged.
+func warnUnmatchedDirs(filter DirFilter, sessions []SessionMeta) {
+	for _, term := range filter {
 		matched := false
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				continue
-			}
-			name := entry.Name()
-			decoded := claude.DecodeProjectPath(name)
-			// Match against: exact encoded name, basename of decoded path,
-			// or trailing path suffix.
-			if name == d || filepath.Base(decoded) == d || strings.HasSuffix(decoded, "/"+d) {
-				dirSet[name] = struct{}{}
+		for _, s := range sessions {
+			if strings.Contains(s.Project, term) {
 				matched = true
+				break
 			}
 		}
 		if !matched {
-			logutil.Warnf("no project directory matching %q found under %s", d, projectsDir)
+			logutil.Warnf("no sessions match directory filter %q", term)
 		}
 	}
-	return dirSet
-}
-
-// matchesDirFilter returns true if the entry's project matches the dir filter.
-// Returns true for all entries when dirSet is nil (no filter).
-func matchesDirFilter(dirSet map[string]struct{}, project string) bool {
-	if dirSet == nil {
-		return true
-	}
-	encoded := claude.EncodeProjectPath(project)
-	_, ok := dirSet[encoded]
-	return ok
 }
 
 const enrichBatchSize = 100

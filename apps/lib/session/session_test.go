@@ -869,8 +869,8 @@ func TestGetSessionsExcludesTombstoned(t *testing.T) {
 func TestDiscoverWithDirsFilter(t *testing.T) {
 	dir := setupTestDir(t)
 
-	// Use the exact encoded directory name to match.
-	idx, err := Discover(dir, []string{"-Users-me-project-a"})
+	// A partial substring of the project path matches (not the encoded name).
+	idx, err := Discover(dir, []string{"project-a"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -886,6 +886,35 @@ func TestDiscoverWithDirsFilter(t *testing.T) {
 	}
 }
 
+func TestDiscoverWithDirsFilterBroadSubstring(t *testing.T) {
+	dir := setupTestDir(t)
+
+	// A broad term ("project") is a substring of both project-a and project-b.
+	idx, err := Discover(dir, []string{"project"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// sess-1, sess-2 (project-a) + sess-3 (project-b, history-only).
+	if got := len(idx.GetSessions()); got != 3 {
+		t.Errorf("expected 3 sessions for broad substring, got %d", got)
+	}
+}
+
+func TestDiscoverWithDirsFilterMultipleOR(t *testing.T) {
+	dir := setupTestDir(t)
+
+	// Multiple comma-separated terms combine as OR.
+	idx, err := Discover(dir, []string{"project-a", "project-b"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := len(idx.GetSessions()); got != 3 {
+		t.Errorf("expected 3 sessions across both projects, got %d", got)
+	}
+}
+
 func TestDiscoverWithDirsFilterNoMatch(t *testing.T) {
 	dir := setupTestDir(t)
 
@@ -896,6 +925,30 @@ func TestDiscoverWithDirsFilterNoMatch(t *testing.T) {
 
 	if len(idx.GetSessions()) != 0 {
 		t.Error("expected 0 sessions for non-matching dir filter")
+	}
+}
+
+func TestDirFilterMatches(t *testing.T) {
+	tests := []struct {
+		name    string
+		dirs    []string
+		project string
+		want    bool
+	}{
+		{"nil filter matches all", nil, "/Users/me/anything", true},
+		{"empty terms match all", []string{"", "  "}, "/Users/me/anything", true},
+		{"substring match", []string{"modpol"}, "/Users/me/modpol-api", true},
+		{"no match", []string{"modpol"}, "/Users/me/other", false},
+		{"OR match on second term", []string{"foo", "modpol"}, "/Users/me/modpol", true},
+		{"term is trimmed", []string{"  modpol  "}, "/Users/me/modpol-api", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := NewDirFilter(tt.dirs)
+			if got := f.Matches(tt.project); got != tt.want {
+				t.Errorf("Matches(%q) = %v, want %v", tt.project, got, tt.want)
+			}
+		})
 	}
 }
 
@@ -951,14 +1004,14 @@ func TestScanProjectDirs(t *testing.T) {
 func TestScanProjectDirsWithFilter(t *testing.T) {
 	dir := setupFilesystemOnlyDir(t)
 
-	// With matching filter.
-	sessions := ScanProjectDirs(dir, map[string]struct{}{"-Users-me-sdk-project": {}})
+	// A substring of the decoded project path ("/Users/me/sdk/project") matches.
+	sessions := ScanProjectDirs(dir, NewDirFilter([]string{"sdk"}))
 	if len(sessions) != 2 {
 		t.Fatalf("expected 2 sessions with matching filter, got %d", len(sessions))
 	}
 
 	// With non-matching filter.
-	sessions = ScanProjectDirs(dir, map[string]struct{}{"other-project": {}})
+	sessions = ScanProjectDirs(dir, NewDirFilter([]string{"other"}))
 	if len(sessions) != 0 {
 		t.Errorf("expected 0 sessions with non-matching filter, got %d", len(sessions))
 	}

@@ -17,7 +17,7 @@ vibeview serve --port 8080 --open
 |------|---------|-------------|
 | `--port` | `4880` | Port to listen on |
 | `--open` | `false` | Open the browser on startup |
-| `--dirs` | | Comma-separated project directory names to filter |
+| `--dirs` | | Comma-separated project path substrings to filter (OR-combined) |
 | `--claude-dir` | `~/.claude` | Path to claude data directory |
 | `--log-level` | `warn` | Log level: `debug`, `warn`, `error` |
 
@@ -119,7 +119,7 @@ vibeview search --dirs myproject "TODO"
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--limit` | `20` | Maximum number of results |
-| `--dirs` | | Comma-separated project directory names to filter |
+| `--dirs` | | Comma-separated project path substrings to filter (OR-combined) |
 | `--json` | `false` | Output as JSON instead of YAML |
 
 #### Example output
@@ -160,7 +160,7 @@ vibeview stats --yaml
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--dirs` | | Comma-separated project directory names to filter |
+| `--dirs` | | Comma-separated project path substrings to filter (OR-combined) |
 | `--json` | `false` | Output as JSON |
 | `--yaml` | `false` | Output as YAML |
 

@@ -35,7 +35,7 @@ type Broker struct {
 	standalone bool
 	index      *session.Index
 	pidChecker session.ProcessChecker
-	dirSet     map[string]struct{} // encoded project dir names to filter (nil = no filter)
+	dirFilter  session.DirFilter // project path substrings to filter (nil = no filter)
 
 	mu            sync.Mutex
 	clients       map[string]map[*Client]struct{} // sessionID -> set of clients
@@ -51,20 +51,12 @@ type Broker struct {
 // In standalone mode, history watching is skipped.
 // pidChecker may be nil, in which case PID-based liveness detection is disabled.
 func NewBroker(claudeDir string, index *session.Index, standalone bool, dirs []string, pidChecker session.ProcessChecker) (*Broker, error) {
-	var dirSet map[string]struct{}
-	if len(dirs) > 0 {
-		dirSet = make(map[string]struct{}, len(dirs))
-		for _, d := range dirs {
-			dirSet[d] = struct{}{}
-		}
-	}
-
 	b := &Broker{
 		claudeDir:     claudeDir,
 		standalone:    standalone,
 		index:         index,
 		pidChecker:    pidChecker,
-		dirSet:        dirSet,
+		dirFilter:     session.NewDirFilter(dirs),
 		clients:       make(map[string]map[*Client]struct{}),
 		tailers:       make(map[string]*Tailer),
 		lastMessageAt: make(map[string]time.Time),
@@ -326,11 +318,8 @@ func (b *Broker) readNewHistoryEntries(path string, offset int64) int64 {
 		}
 
 		// Skip entries that don't match the directory filter.
-		if b.dirSet != nil {
-			encoded := claude.EncodeProjectPath(entry.Project)
-			if _, ok := b.dirSet[encoded]; !ok {
-				continue
-			}
+		if !b.dirFilter.Matches(entry.Project) {
+			continue
 		}
 
 		b.index.AddSession(b.claudeDir, entry)
@@ -382,7 +371,7 @@ func (b *Broker) startProjectsPoller() {
 		case <-b.done:
 			return
 		case <-ticker.C:
-			for _, meta := range session.ScanProjectDirs(b.claudeDir, b.dirSet) {
+			for _, meta := range session.ScanProjectDirs(b.claudeDir, b.dirFilter) {
 				if b.index.AddSessionMeta(meta) {
 					go b.enrichNewSession(meta.SessionID)
 				}
