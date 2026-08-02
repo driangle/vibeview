@@ -1,11 +1,12 @@
 ---
 title: "Make --dirs filter by path substring instead of exact match"
 id: "01kz1py04"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["cli", "filtering"]
 created: "2026-08-02"
+completed_at: 2026-08-02
 ---
 
 # Make --dirs filter by path substring instead of exact match
@@ -64,12 +65,12 @@ filters that already exist (`search.go:43`, `server.go:372`,
 
 ## Tasks
 
-- [ ] Change the gate in `buildDirSet` (`session.go:300`) to a path substring (`strings.Contains(decoded, d)`) or `filepath.Match` glob against the decoded project path.
-- [ ] Relax `matchesDirFilter` (`session.go:314-320`) to substring-match against the decoded/full `Project` rather than an exact encoded map lookup, keeping it consistent with `buildDirSet`.
-- [ ] Confirm `ScanProjectDirs` filesystem fallback (`session.go:208`, `240-243`) honors the same substring semantics.
-- [ ] Keep multi-value OR combining and drop or adjust the "no project directory matching %q found" warning (`session.go:305-307`) so a legitimate-but-broad term isn't wrongly flagged.
-- [ ] Add tests covering substring `--dirs` matches (partial term, multiple OR terms) for serve/search/stats.
-- [ ] Update `--dirs` flag help text and docs to describe substring/glob behavior.
+- [x] Change the gate in `buildDirSet` (`session.go:300`) to a path substring (`strings.Contains(decoded, d)`) or `filepath.Match` glob against the decoded project path.
+- [x] Relax `matchesDirFilter` (`session.go:314-320`) to substring-match against the decoded/full `Project` rather than an exact encoded map lookup, keeping it consistent with `buildDirSet`.
+- [x] Confirm `ScanProjectDirs` filesystem fallback (`session.go:208`, `240-243`) honors the same substring semantics.
+- [x] Keep multi-value OR combining and drop or adjust the "no project directory matching %q found" warning (`session.go:305-307`) so a legitimate-but-broad term isn't wrongly flagged.
+- [x] Add tests covering substring `--dirs` matches (partial term, multiple OR terms) for serve/search/stats.
+- [x] Update `--dirs` flag help text and docs to describe substring/glob behavior.
 
 ## Acceptance Criteria
 
