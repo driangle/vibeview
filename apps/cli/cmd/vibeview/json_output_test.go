@@ -77,6 +77,44 @@ func captureStdout(t *testing.T, fn func()) string {
 	return <-done
 }
 
+// TestSearchJSONOutputIsPure locks in that `search --json` emits exactly one
+// JSON document to stdout for both the match and the no-match path. The empty
+// path is the one most likely to accidentally print "No results" to stdout.
+func TestSearchJSONOutputIsPure(t *testing.T) {
+	dir, _ := writeJSONFixture(t)
+	lvl := "warn"
+
+	cases := []struct {
+		name      string
+		query     string
+		wantTotal float64
+	}{
+		{"matching-term", "database migration", 1},
+		{"no-match-term", "zzz-nonexistent-term-zzz", 0},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := searchCmd(&dir, &lvl)
+			cmd.SetArgs([]string{"--json", tc.query})
+
+			out := captureStdout(t, func() {
+				if err := cmd.Execute(); err != nil {
+					t.Fatalf("command failed: %v", err)
+				}
+			})
+
+			var report map[string]any
+			if err := json.Unmarshal([]byte(out), &report); err != nil {
+				t.Fatalf("stdout is not a single pure JSON document: %v\n--- stdout ---\n%s", err, out)
+			}
+			if got := report["total"]; got != tc.wantTotal {
+				t.Errorf("total = %v, want %v", got, tc.wantTotal)
+			}
+		})
+	}
+}
+
 func TestJSONOutputIsPureJSON(t *testing.T) {
 	dir, sessionID := writeJSONFixture(t)
 	sessionPath := filepath.Join(dir, "projects", claude.EncodeProjectPath("/Users/test/jsonproject"), sessionID+".jsonl")
