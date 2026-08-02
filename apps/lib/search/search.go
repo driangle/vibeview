@@ -7,9 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
+	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/session"
 )
@@ -49,29 +51,29 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 		sessions = filtered
 	}
 	query := strings.ToLower(opts.Query)
-	queryBytes := []byte(query)
+
+	// scored pairs a match with its relevance score and the session's original
+	// position, so equal-scoring results keep their newest-first ordering.
+	type scored struct {
+		result Result
+		score  int
+		order  int
+	}
 
 	var (
-		mu      sync.Mutex
-		results []Result
+		mu        sync.Mutex
+		collected []scored
+		wg        sync.WaitGroup
 	)
 
-	var wg sync.WaitGroup
-
-	for _, meta := range sessions {
+	for i, meta := range sessions {
 		if ctx.Err() != nil {
-			break
-		}
-
-		mu.Lock()
-		done := len(results) >= opts.Limit
-		mu.Unlock()
-		if done {
 			break
 		}
 
 		wg.Add(1)
 		meta := meta
+		order := i
 		go func() {
 			defer wg.Done()
 
@@ -82,58 +84,78 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 				return
 			}
 
-			mu.Lock()
-			done := len(results) >= opts.Limit
-			mu.Unlock()
-			if done {
-				return
-			}
-
-			r, ok := searchFile(ctx, opts.ClaudeDir, meta, query, queryBytes)
+			r, score, ok := searchFile(ctx, opts.ClaudeDir, meta, query)
 			if !ok {
 				return
 			}
 
 			mu.Lock()
-			if len(results) < opts.Limit {
-				results = append(results, r)
-			}
+			collected = append(collected, scored{result: r, score: score, order: order})
 			mu.Unlock()
 		}()
 	}
 
 	wg.Wait()
+
+	// Rank by relevance, then by original (newest-first) order, before truncating.
+	sort.Slice(collected, func(i, j int) bool {
+		if collected[i].score != collected[j].score {
+			return collected[i].score > collected[j].score
+		}
+		return collected[i].order < collected[j].order
+	})
+
+	limit := opts.Limit
+	if limit <= 0 || limit > len(collected) {
+		limit = len(collected)
+	}
+	results := make([]Result, 0, limit)
+	for _, s := range collected[:limit] {
+		results = append(results, s.result)
+	}
 	return results
 }
 
-// contentLine is a minimal struct for extracting text from JSONL lines.
-type contentLine struct {
-	Type    string `json:"type"`
-	Message *struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	} `json:"message"`
+// Field weights favor human-authored prose over machine text when both a text
+// block and a tool payload match, so the snippet and ranking reflect intent.
+const (
+	weightText       = 3 // user/assistant text blocks (string- or array-form content)
+	weightToolInput  = 2 // tool_use inputs: file paths, commands, patterns, written content
+	weightToolResult = 1 // tool_result output text
+)
+
+// weightedText is one searchable string drawn from a message, tagged with the
+// field weight of its source.
+type weightedText struct {
+	text   string
+	weight int
 }
 
-func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta, query string, queryBytes []byte) (Result, bool) {
+// searchFile scans a session's JSONL for the query and returns a snippet plus a
+// relevance score (weighted occurrence count across all searchable fields).
+func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta, query string) (Result, int, bool) {
 	path, err := session.ResolveFilePath(claudeDir, meta)
 	if err != nil {
-		return Result{}, false
+		return Result{}, 0, false
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		return Result{}, false
+		return Result{}, 0, false
 	}
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 256*1024), 2*1024*1024)
 
+	var (
+		score         int
+		snippet       string
+		snippetWeight int // weight of the field the current snippet came from
+	)
+
 	for scanner.Scan() {
 		if ctx.Err() != nil {
-			return Result{}, false
+			return Result{}, 0, false
 		}
 
 		line := scanner.Bytes()
@@ -143,30 +165,83 @@ func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta,
 			continue
 		}
 
-		var cl contentLine
-		if err := json.Unmarshal(line, &cl); err != nil {
-			continue
-		}
-		if cl.Message == nil {
+		var msg claude.Message
+		if err := json.Unmarshal(line, &msg); err != nil || msg.Message == nil {
 			continue
 		}
 
-		for _, block := range cl.Message.Content {
-			if block.Type != "text" || block.Text == "" {
+		for _, wt := range searchableTexts(&msg) {
+			count := strings.Count(strings.ToLower(wt.text), query)
+			if count == 0 {
 				continue
 			}
-			lower := strings.ToLower(block.Text)
-			if !bytes.Contains([]byte(lower), queryBytes) {
-				continue
+			score += count * wt.weight
+			// Prefer a snippet from the highest-weight field that matched.
+			if wt.weight > snippetWeight {
+				snippet = redact.RedactSecrets(buildSnippet(wt.text, query, 120))
+				snippetWeight = wt.weight
 			}
-			return Result{
-				Meta:    meta,
-				Snippet: redact.RedactSecrets(buildSnippet(block.Text, query, 120)),
-			}, true
 		}
 	}
 
-	return Result{}, false
+	if score == 0 {
+		return Result{}, 0, false
+	}
+	return Result{Meta: meta, Snippet: snippet}, score, true
+}
+
+// searchableTexts extracts every searchable string from a user/assistant
+// message: text blocks (string- or array-form content, normalized by the claude
+// parser), tool_use inputs, and tool_result output.
+func searchableTexts(msg *claude.Message) []weightedText {
+	if msg.Message == nil {
+		return nil
+	}
+	var out []weightedText
+	for _, block := range msg.Message.Content {
+		switch block.Type {
+		case "text":
+			if block.Text != "" {
+				out = append(out, weightedText{text: block.Text, weight: weightText})
+			}
+		case "tool_use":
+			for _, s := range collectStrings(block.Input) {
+				out = append(out, weightedText{text: s, weight: weightToolInput})
+			}
+		case "tool_result":
+			for _, s := range collectStrings(block.Content) {
+				out = append(out, weightedText{text: s, weight: weightToolResult})
+			}
+		}
+	}
+	return out
+}
+
+// collectStrings recursively gathers all non-empty string values from an
+// arbitrary JSON value (tool inputs and results), so nested fields like
+// file_path, command, and pattern are all indexed without a key allowlist.
+func collectStrings(v any) []string {
+	switch val := v.(type) {
+	case string:
+		if val == "" {
+			return nil
+		}
+		return []string{val}
+	case map[string]any:
+		var out []string
+		for _, item := range val {
+			out = append(out, collectStrings(item)...)
+		}
+		return out
+	case []any:
+		var out []string
+		for _, item := range val {
+			out = append(out, collectStrings(item)...)
+		}
+		return out
+	default:
+		return nil
+	}
 }
 
 // buildSnippet extracts a ~maxLen character window around the first match,

@@ -1,11 +1,12 @@
 ---
 title: "Fix vibeview search: match string-form user messages, rank hits, index tool inputs"
 id: "01kz1q6rd"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["cli", "search", "indexing"]
 created: "2026-08-02"
+completed_at: 2026-08-02
 ---
 
 # Fix vibeview search: match string-form user messages, rank hits, index tool inputs
@@ -88,12 +89,12 @@ the topic, forcing a fallback to raw `grep` over `~/.claude/projects/**/*.jsonl`
 
 ## Tasks
 
-- [ ] Fix content decoding in `search.go` to accept string-or-array `content` (reuse `claude` parser types instead of `contentLine`).
-- [ ] Index `tool_use` input fields (file paths, commands, patterns) and optionally `tool_result` text.
-- [ ] Rank results by relevance and draw the snippet from the top matching message; collect-then-rank so `--limit` truncation happens after ranking.
-- [ ] Coordinate the `--dirs` substring fix with task `01kz1py04` (don't duplicate).
-- [ ] Add a regression test that `search --json` emits only valid JSON on stdout (diagnostics on stderr).
-- [ ] Add tests: string-form user prompt matches, assistant-array matches, tool-input match, ranking order, snippet content.
+- [x] Fix content decoding in `search.go` to accept string-or-array `content` (reuse `claude` parser types instead of `contentLine`).
+- [x] Index `tool_use` input fields (file paths, commands, patterns) and optionally `tool_result` text.
+- [x] Rank results by relevance and draw the snippet from the top matching message; collect-then-rank so `--limit` truncation happens after ranking.
+- [x] Coordinate the `--dirs` substring fix with task `01kz1py04` (don't duplicate).
+- [x] Add a regression test that `search --json` emits only valid JSON on stdout (diagnostics on stderr).
+- [x] Add tests: string-form user prompt matches, assistant-array matches, tool-input match, ranking order, snippet content.
 
 ## Acceptance Criteria
 

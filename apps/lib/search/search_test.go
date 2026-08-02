@@ -25,6 +25,17 @@ func writeSession(t *testing.T, dir, id, project, text string) session.SessionMe
 	return session.SessionMeta{SessionID: id, Project: project, FilePath: path}
 }
 
+// writeRawSession writes the given JSONL lines verbatim to a session file so
+// tests can exercise specific message shapes (string content, tool_use, etc.).
+func writeRawSession(t *testing.T, dir, id, project string, lines ...string) session.SessionMeta {
+	t.Helper()
+	path := filepath.Join(dir, id+".jsonl")
+	if err := os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), 0o644); err != nil {
+		t.Fatalf("write session %s: %v", id, err)
+	}
+	return session.SessionMeta{SessionID: id, Project: project, FilePath: path}
+}
+
 func indexOf(metas ...session.SessionMeta) *session.Index {
 	return &session.Index{Sessions: metas}
 }
@@ -136,6 +147,122 @@ func TestSearchHonorsCanceledContext(t *testing.T) {
 
 	if len(results) != 0 {
 		t.Fatalf("expected no results with canceled context, got %d", len(results))
+	}
+}
+
+func TestSearchMatchesStringFormUserPrompt(t *testing.T) {
+	dir := t.TempDir()
+	// User prompts commonly carry content as a bare string, not an array.
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"user","message":{"role":"user","content":"please refactor review cli"}}`))
+
+	results := Search(context.Background(), idx, Options{Query: "refactor review cli", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result for string-form user prompt, got %d", len(results))
+	}
+	if !strings.Contains(results[0].Snippet, "refactor review cli") {
+		t.Errorf("snippet %q does not contain the match", results[0].Snippet)
+	}
+}
+
+func TestSearchMatchesAssistantArrayContent(t *testing.T) {
+	dir := t.TempDir()
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Here is the migration plan"}]}}`))
+
+	results := Search(context.Background(), idx, Options{Query: "migration plan", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result for assistant array content, got %d", len(results))
+	}
+}
+
+func TestSearchMatchesToolInput(t *testing.T) {
+	dir := t.TempDir()
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"t1","name":"Bash","input":{"command":"grep -r needle apps/lib/search/search.go"}}]}}`))
+
+	// A file path used only inside a tool input should be findable.
+	results := Search(context.Background(), idx, Options{Query: "apps/lib/search/search.go", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result matching tool input, got %d", len(results))
+	}
+	if !strings.Contains(results[0].Snippet, "apps/lib/search/search.go") {
+		t.Errorf("snippet %q does not contain the tool-input match", results[0].Snippet)
+	}
+}
+
+func TestSearchMatchesToolResultContent(t *testing.T) {
+	dir := t.TempDir()
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":[{"type":"text","text":"compilation error: undefined symbol frobnicate"}]}]}}`))
+
+	results := Search(context.Background(), idx, Options{Query: "frobnicate", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result matching tool result content, got %d", len(results))
+	}
+}
+
+func TestSearchRanksByRelevance(t *testing.T) {
+	dir := t.TempDir()
+	// sess-low mentions the term once; sess-high mentions it several times.
+	idx := indexOf(
+		writeRawSession(t, dir, "sess-low", "/proj",
+			`{"type":"user","message":{"role":"user","content":"a passing mention of widget here"}}`),
+		writeRawSession(t, dir, "sess-high", "/proj",
+			`{"type":"user","message":{"role":"user","content":"widget widget widget — all about the widget"}}`),
+	)
+
+	results := Search(context.Background(), idx, Options{Query: "widget", Limit: 10})
+
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(results))
+	}
+	if results[0].Meta.SessionID != "sess-high" {
+		t.Errorf("expected highest-scoring session first, got %q", results[0].Meta.SessionID)
+	}
+}
+
+func TestSearchRankingSurvivesLimitTruncation(t *testing.T) {
+	dir := t.TempDir()
+	// The most relevant session is created first in the index but must still win
+	// under Limit=1 — proving results are ranked before truncation, not by order.
+	idx := indexOf(
+		writeRawSession(t, dir, "sess-weak", "/proj",
+			`{"type":"user","message":{"role":"user","content":"one target reference"}}`),
+		writeRawSession(t, dir, "sess-strong", "/proj",
+			`{"type":"user","message":{"role":"user","content":"target target target target"}}`),
+	)
+
+	results := Search(context.Background(), idx, Options{Query: "target", Limit: 1})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result under Limit=1, got %d", len(results))
+	}
+	if results[0].Meta.SessionID != "sess-strong" {
+		t.Errorf("Limit truncated before ranking: got %q, want sess-strong", results[0].Meta.SessionID)
+	}
+}
+
+func TestSearchSnippetPrefersTextOverToolInput(t *testing.T) {
+	dir := t.TempDir()
+	// Same term appears in both a tool input and a human-readable text block;
+	// the snippet should be drawn from the higher-weight text block.
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"assistant","message":{"role":"assistant","content":[`+
+			`{"type":"tool_use","id":"t1","name":"Grep","input":{"pattern":"beacon"}},`+
+			`{"type":"text","text":"I searched for the beacon and here is what it means"}]}}`))
+
+	results := Search(context.Background(), idx, Options{Query: "beacon", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if !strings.Contains(results[0].Snippet, "here is what it means") {
+		t.Errorf("snippet should come from the text block, got %q", results[0].Snippet)
 	}
 }
 
