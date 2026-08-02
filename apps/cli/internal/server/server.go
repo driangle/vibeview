@@ -18,11 +18,11 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/insights"
-	"github.com/driangle/vibeview/internal/pidcheck"
-	"github.com/driangle/vibeview/internal/projects"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/internal/pidcheck"
+	"github.com/driangle/vibeview/internal/projects"
 	"github.com/driangle/vibeview/internal/settings"
 	"github.com/driangle/vibeview/internal/spa"
 	"github.com/driangle/vibeview/internal/watcher"
@@ -421,7 +421,8 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		for _, sm := range sessions {
 			if strings.Contains(strings.ToLower(sm.Project), query) ||
 				strings.Contains(strings.ToLower(sm.Slug), query) ||
-				strings.Contains(strings.ToLower(sm.CustomTitle), query) {
+				strings.Contains(strings.ToLower(sm.CustomTitle), query) ||
+				strings.Contains(strings.ToLower(sm.SessionID), query) {
 				filtered = append(filtered, sm)
 			}
 		}

@@ -1,11 +1,12 @@
 ---
 title: "Allow searching by session ID in web search box"
 id: "01kn113ms"
-status: pending
+status: completed
 priority: medium
 type: feature
 tags: []
 created: "2026-03-31"
+completed_at: 2026-08-02
 ---
 
 # Allow searching by session ID in web search box
@@ -16,9 +17,9 @@ Allow users to search for sessions by their session ID (full or partial match) u
 
 ## Tasks
 
-- [ ] Add session ID to the searchable fields in the `/api/sessions` endpoint's `q` parameter filter (case-insensitive substring match, like the other fields)
-- [ ] Verify the frontend search box picks up session ID matches without additional changes
-- [ ] Add tests for partial session ID matching
+- [x] Add session ID to the searchable fields in the `/api/sessions` endpoint's `q` parameter filter (case-insensitive substring match, like the other fields)
+- [x] Verify the frontend search box picks up session ID matches without additional changes
+- [x] Add tests for partial session ID matching
 
 ## Acceptance Criteria
 

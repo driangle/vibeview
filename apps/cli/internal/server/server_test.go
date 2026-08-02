@@ -147,6 +147,10 @@ func TestListSessionsSearchByQuery(t *testing.T) {
 		{"HELLO", []string{"sess-1"}},     // case-insensitive
 		{"nonexistent", nil},              // no match
 		{"session", []string{"sess-2"}},   // matches slug "second session"
+		{"sess-1", []string{"sess-1"}},    // full session ID
+		{"SESS-1", []string{"sess-1"}},    // session ID, case-insensitive
+		// partial session ID substring matches both, timestamp desc order
+		{"sess-", []string{"sess-2", "sess-1"}},
 	}
 
 	for _, tt := range tests {
