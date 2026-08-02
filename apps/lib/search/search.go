@@ -50,14 +50,20 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 		}
 		sessions = filtered
 	}
-	query := strings.ToLower(opts.Query)
+	terms := parseQuery(opts.Query)
+	if len(terms) == 0 {
+		return nil
+	}
 
-	// scored pairs a match with its relevance score and the session's original
-	// position, so equal-scoring results keep their newest-first ordering.
+	// scored pairs a match with its relevance and the session's original
+	// position. coverage (how many distinct query terms the session contains)
+	// ranks above raw score, so a session mentioning every term outranks one
+	// that merely repeats a subset. order keeps equal ranks newest-first.
 	type scored struct {
-		result Result
-		score  int
-		order  int
+		result   Result
+		coverage int
+		score    int
+		order    int
 	}
 
 	var (
@@ -84,21 +90,24 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 				return
 			}
 
-			r, score, ok := searchFile(ctx, opts.ClaudeDir, meta, query)
+			r, coverage, score, ok := searchFile(ctx, opts.ClaudeDir, meta, terms)
 			if !ok {
 				return
 			}
 
 			mu.Lock()
-			collected = append(collected, scored{result: r, score: score, order: order})
+			collected = append(collected, scored{result: r, coverage: coverage, score: score, order: order})
 			mu.Unlock()
 		}()
 	}
 
 	wg.Wait()
 
-	// Rank by relevance, then by original (newest-first) order, before truncating.
+	// Rank by term coverage, then weighted score, then newest-first order.
 	sort.Slice(collected, func(i, j int) bool {
+		if collected[i].coverage != collected[j].coverage {
+			return collected[i].coverage > collected[j].coverage
+		}
 		if collected[i].score != collected[j].score {
 			return collected[i].score > collected[j].score
 		}
@@ -131,16 +140,17 @@ type weightedText struct {
 	weight int
 }
 
-// searchFile scans a session's JSONL for the query and returns a snippet plus a
-// relevance score (weighted occurrence count across all searchable fields).
-func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta, query string) (Result, int, bool) {
+// searchFile scans a session's JSONL for the query terms and returns a snippet,
+// the number of distinct terms found (coverage), and a weighted occurrence score
+// across all searchable fields. A session matches if it contains any term.
+func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta, terms []string) (Result, int, int, bool) {
 	path, err := session.ResolveFilePath(claudeDir, meta)
 	if err != nil {
-		return Result{}, 0, false
+		return Result{}, 0, 0, false
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		return Result{}, 0, false
+		return Result{}, 0, 0, false
 	}
 	defer f.Close()
 
@@ -148,14 +158,18 @@ func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta,
 	scanner.Buffer(make([]byte, 0, 256*1024), 2*1024*1024)
 
 	var (
-		score         int
-		snippet       string
-		snippetWeight int // weight of the field the current snippet came from
+		score   int
+		termHit = make([]bool, len(terms)) // which terms appeared at least once
+		snippet string
+		// best identifies the field the current snippet came from, ranked so the
+		// snippet highlights the most representative match: higher field weight
+		// first, then more distinct query terms, then more total occurrences.
+		bestWeight, bestDistinct, bestCount int
 	)
 
 	for scanner.Scan() {
 		if ctx.Err() != nil {
-			return Result{}, 0, false
+			return Result{}, 0, 0, false
 		}
 
 		line := scanner.Bytes()
@@ -171,23 +185,57 @@ func searchFile(ctx context.Context, claudeDir string, meta session.SessionMeta,
 		}
 
 		for _, wt := range searchableTexts(&msg) {
-			count := strings.Count(strings.ToLower(wt.text), query)
-			if count == 0 {
-				continue
+			lower := strings.ToLower(wt.text)
+			var (
+				firstTerm string // first matching term, for snippet centering
+				distinct  int    // distinct query terms present in this field
+				total     int    // total occurrences across all terms
+			)
+			for ti, term := range terms {
+				count := strings.Count(lower, term)
+				if count == 0 {
+					continue
+				}
+				termHit[ti] = true
+				score += count * wt.weight
+				distinct++
+				total += count
+				if firstTerm == "" {
+					firstTerm = term
+				}
 			}
-			score += count * wt.weight
-			// Prefer a snippet from the highest-weight field that matched.
-			if wt.weight > snippetWeight {
-				snippet = redact.RedactSecrets(buildSnippet(wt.text, query, 120))
-				snippetWeight = wt.weight
+			// Prefer a snippet from the field that best represents the query:
+			// higher weight, then broader term coverage, then more occurrences.
+			if distinct > 0 && betterSnippet(wt.weight, distinct, total, bestWeight, bestDistinct, bestCount) {
+				snippet = redact.RedactSecrets(buildSnippet(wt.text, firstTerm, 120))
+				bestWeight, bestDistinct, bestCount = wt.weight, distinct, total
 			}
 		}
 	}
 
-	if score == 0 {
-		return Result{}, 0, false
+	coverage := 0
+	for _, hit := range termHit {
+		if hit {
+			coverage++
+		}
 	}
-	return Result{Meta: meta, Snippet: snippet}, score, true
+	if coverage == 0 {
+		return Result{}, 0, 0, false
+	}
+	return Result{Meta: meta, Snippet: snippet}, coverage, score, true
+}
+
+// betterSnippet reports whether a field with the given (weight, distinct term
+// count, total occurrences) is a stronger snippet source than the current best,
+// comparing the three in order of importance.
+func betterSnippet(weight, distinct, total, bestWeight, bestDistinct, bestCount int) bool {
+	if weight != bestWeight {
+		return weight > bestWeight
+	}
+	if distinct != bestDistinct {
+		return distinct > bestDistinct
+	}
+	return total > bestCount
 }
 
 // searchableTexts extracts every searchable string from a user/assistant

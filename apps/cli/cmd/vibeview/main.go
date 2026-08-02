@@ -319,8 +319,13 @@ func searchCmd(claudeDir *string, logLevel *string) *cobra.Command {
 		Long: `Full-text search across all Claude Code session JSONL files.
 Uses the same search algorithm as the vibeview web interface.
 
+A multi-word query matches each word independently; sessions are ranked by how
+many of the words they contain, then by frequency. Wrap words in double quotes
+to require them as an adjacent phrase.
+
 Examples:
-  vibeview search "database migration"
+  vibeview search "refactor review cli"     # ranks sessions covering all 3 words
+  vibeview search '"database migration"'    # requires the exact phrase
   vibeview search --limit 5 "auth middleware"
   vibeview search --dirs myproject "TODO"
   vibeview search --json "error handling"`,

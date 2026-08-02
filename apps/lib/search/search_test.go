@@ -266,6 +266,117 @@ func TestSearchSnippetPrefersTextOverToolInput(t *testing.T) {
 	}
 }
 
+func TestSearchMatchesNonAdjacentTerms(t *testing.T) {
+	dir := t.TempDir()
+	// The three terms all appear in the session but never as a contiguous
+	// phrase — the natural topical query that previously returned nothing.
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"user","message":{"role":"user","content":"please refactor the cli and also review the output"}}`))
+
+	results := Search(context.Background(), idx, Options{Query: "refactor review cli", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result for non-adjacent terms, got %d", len(results))
+	}
+}
+
+func TestSearchRanksByTermCoverage(t *testing.T) {
+	dir := t.TempDir()
+	// sess-partial repeats one term many times; sess-all mentions every term
+	// once. Coverage must win over raw frequency.
+	idx := indexOf(
+		writeRawSession(t, dir, "sess-partial", "/proj",
+			`{"type":"user","message":{"role":"user","content":"refactor refactor refactor refactor refactor"}}`),
+		writeRawSession(t, dir, "sess-all", "/proj",
+			`{"type":"user","message":{"role":"user","content":"one refactor, one review, one cli mention"}}`),
+	)
+
+	results := Search(context.Background(), idx, Options{Query: "refactor review cli", Limit: 10})
+
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(results))
+	}
+	if results[0].Meta.SessionID != "sess-all" {
+		t.Errorf("expected full-coverage session first, got %q", results[0].Meta.SessionID)
+	}
+}
+
+func TestSearchQuotedPhraseRequiresAdjacency(t *testing.T) {
+	dir := t.TempDir()
+	idx := indexOf(
+		writeRawSession(t, dir, "sess-phrase", "/proj",
+			`{"type":"user","message":{"role":"user","content":"the refactor review cli work"}}`),
+		writeRawSession(t, dir, "sess-scattered", "/proj",
+			`{"type":"user","message":{"role":"user","content":"refactor here, review there, cli elsewhere"}}`),
+	)
+
+	results := Search(context.Background(), idx, Options{Query: `"refactor review cli"`, Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected only the adjacent-phrase session, got %d", len(results))
+	}
+	if results[0].Meta.SessionID != "sess-phrase" {
+		t.Errorf("quoted phrase matched wrong session: %q", results[0].Meta.SessionID)
+	}
+}
+
+func TestSearchEmptyQueryReturnsNothing(t *testing.T) {
+	dir := t.TempDir()
+	idx := indexOf(writeSession(t, dir, "sess-1", "/proj", "some content"))
+
+	results := Search(context.Background(), idx, Options{Query: "   ", Limit: 10})
+
+	if len(results) != 0 {
+		t.Fatalf("expected no results for empty query, got %d", len(results))
+	}
+}
+
+func TestSearchSnippetPrefersFieldCoveringMoreTerms(t *testing.T) {
+	dir := t.TempDir()
+	// Two text blocks at the same weight: the first matches one query term, the
+	// second matches both. The snippet should come from the richer sentence.
+	idx := indexOf(writeRawSession(t, dir, "sess-1", "/proj",
+		`{"type":"assistant","message":{"role":"assistant","content":[`+
+			`{"type":"text","text":"an offhand mention of alpha in passing"},`+
+			`{"type":"text","text":"the core discussion weaving alpha and beta together"}]}}`))
+
+	results := Search(context.Background(), idx, Options{Query: "alpha beta", Limit: 10})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if !strings.Contains(results[0].Snippet, "core discussion") {
+		t.Errorf("snippet should come from the field covering both terms, got %q", results[0].Snippet)
+	}
+}
+
+func TestParseQuery(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  string
+		want []string
+	}{
+		{"bare words split into terms", "refactor review cli", []string{"refactor", "review", "cli"}},
+		{"quoted span is one phrase term", `"refactor review" cli`, []string{"refactor review", "cli"}},
+		{"lowercased", "Refactor REVIEW", []string{"refactor", "review"}},
+		{"collapses extra whitespace", "  a   b  ", []string{"a", "b"}},
+		{"empty query yields no terms", "   ", nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseQuery(tt.raw)
+			if len(got) != len(tt.want) {
+				t.Fatalf("parseQuery(%q) = %v, want %v", tt.raw, got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("parseQuery(%q)[%d] = %q, want %q", tt.raw, i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestBuildSnippet(t *testing.T) {
 	tests := []struct {
 		name   string
