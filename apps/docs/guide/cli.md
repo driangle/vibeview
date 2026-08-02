@@ -249,7 +249,7 @@ session, `related` groups it with:
   or nearly so). Sessions outside the window, or in other projects, are
   excluded.
 
-Accepts a full session ID or an 8-character prefix.
+Accepts a full session ID or any-length ID prefix.
 
 ```bash
 vibeview related 877fff1e-80c9-4d20-a600-f278eb2c7bdc
