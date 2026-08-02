@@ -22,8 +22,8 @@ import (
 	"github.com/driangle/vibeview/apps/lib/pathutil"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
-	"github.com/driangle/vibeview/internal/server"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/internal/server"
 	qrcode "github.com/skip2/go-qrcode"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -568,6 +568,20 @@ func buildLookupReport(claudeDir, sessionID string) *lookupReport {
 		return r
 	}
 	r.Valid = true
+
+	// Resolve exact-or-prefix input to a canonical session ID using the same
+	// lookup path as `show`, so `inspect` accepts 8-char prefixes as well as
+	// full UUIDs, with consistent ambiguous/unknown-prefix errors.
+	meta, err := resolveSessionMeta(claudeDir, sessionID)
+	if err != nil {
+		r.Problems = append(r.Problems, err.Error())
+		return r
+	}
+	if meta.SessionID != sessionID {
+		r.Notes = append(r.Notes, fmt.Sprintf("resolved prefix %q to session %s", sessionID, meta.SessionID))
+		sessionID = meta.SessionID
+		r.SessionID = sessionID
+	}
 
 	historyPath := filepath.Join(claudeDir, "history.jsonl")
 	f, err := os.Open(historyPath)

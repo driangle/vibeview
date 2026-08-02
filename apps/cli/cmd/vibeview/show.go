@@ -91,19 +91,10 @@ func resolveSessionMessages(claudeDir, target string) ([]claude.Message, error) 
 		return parseSessionFromPath(target)
 	}
 
-	// Discover sessions and try exact match, then prefix match.
-	idx, err := session.Discover(claudeDir, nil)
+	// Resolve via the shared exact-then-prefix lookup path.
+	meta, err := resolveSessionMeta(claudeDir, target)
 	if err != nil {
-		return nil, fmt.Errorf("discovering sessions: %w", err)
-	}
-
-	meta := idx.FindSession(target)
-	if meta == nil {
-		m, prefixErr := idx.FindSessionByPrefix(target)
-		if prefixErr != nil {
-			return nil, prefixErr
-		}
-		meta = m
+		return nil, err
 	}
 
 	path, err := session.ResolveFilePath(claudeDir, *meta)

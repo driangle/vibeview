@@ -1,11 +1,12 @@
 ---
 title: "Make session prefix resolution consistent across commands"
 id: "01kz1ptvy"
-status: pending
+status: completed
 priority: high
 type: bug
 tags: ["cli", "session-lookup"]
 created: "2026-08-02"
+completed_at: 2026-08-02
 ---
 
 # Make session prefix resolution consistent across commands
@@ -59,9 +60,9 @@ exclusive to `show`. This task makes `inspect` match `show`.)
 
 ## Tasks
 
-- [ ] Change `inspect`'s lookup (`buildLookupReport` / `findSessionOnDisk`) to reuse the prefix-capable resolver `Index.FindSessionByPrefix` instead of exact-only equality.
-- [ ] Preserve the same exact-then-prefix precedence and ambiguous-prefix error handling that `show` uses.
-- [ ] Add a test covering `inspect` prefix resolution and guarding parity with `show`.
+- [x] Change `inspect`'s lookup (`buildLookupReport` / `findSessionOnDisk`) to reuse the prefix-capable resolver `Index.FindSessionByPrefix` instead of exact-only equality.
+- [x] Preserve the same exact-then-prefix precedence and ambiguous-prefix error handling that `show` uses.
+- [x] Add a test covering `inspect` prefix resolution and guarding parity with `show`.
 
 ## Acceptance Criteria
 

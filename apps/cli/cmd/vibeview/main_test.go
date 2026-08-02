@@ -291,11 +291,10 @@ func TestBuildLookupReport_NotInHistory(t *testing.T) {
 	if !r.Valid {
 		t.Error("expected valid session ID")
 	}
-	if r.HistoryHits != 0 {
-		t.Errorf("HistoryHits = %d, want 0", r.HistoryHits)
-	}
-	if len(r.Problems) == 0 || !strings.Contains(r.Problems[0], "not found in history") {
-		t.Errorf("expected 'not found' problem, got %v", r.Problems)
+	// An unknown ID resolves through the shared lookup path, producing the same
+	// error `show` would report for a non-matching prefix.
+	if len(r.Problems) == 0 || !strings.Contains(r.Problems[0], "no session matching") {
+		t.Errorf("expected 'no session matching' problem, got %v", r.Problems)
 	}
 }
 
