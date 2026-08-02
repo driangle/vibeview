@@ -17,6 +17,7 @@ vibeview serve --port 8080 --open
 |------|---------|-------------|
 | `--port` | `4880` | Port to listen on |
 | `--open` | `false` | Open the browser on startup |
+| `--lan` | `false` | Enable LAN mode: bind to `0.0.0.0` with token auth |
 | `--dirs` | | Comma-separated project path substrings to filter (OR-combined) |
 | `--claude-dir` | `~/.claude` | Path to claude data directory |
 | `--log-level` | `warn` | Log level: `debug`, `warn`, `error` |
@@ -27,6 +28,30 @@ You can also pass file paths or directories as positional arguments to run in st
 vibeview session.jsonl
 vibeview /path/to/sessions/
 ```
+
+#### LAN mode
+
+By default the server binds to `127.0.0.1` and is reachable only from your own
+machine. Passing `--lan` binds to `0.0.0.0` so other devices on your local
+network can reach it, and generates a random access token to guard against
+unauthorized access.
+
+```bash
+vibeview serve --lan
+```
+
+On startup, vibeview prints a warning and a ready-to-use URL that includes the
+token:
+
+```
+WARNING: LAN mode enabled — sessions are exposed on the local network
+listening on 0.0.0.0:4880
+  http://192.168.1.42:4880?token=<generated-token>
+```
+
+The token may be supplied either as a `?token=` query parameter or an
+`Authorization: Bearer <token>` header. Because LAN mode exposes your session
+data to every device on the network, only enable it on networks you trust.
 
 ### `vibeview inspect`
 
@@ -105,6 +130,52 @@ Files
 ```
 
 With `--verbose`, additional diagnostic sections are appended (Resolution, Enrichment).
+
+### `vibeview sessions`
+
+List all Claude Code sessions in a formatted table. Supports filtering by
+directory, sorting by various columns, pagination, and JSON output for
+scripting.
+
+```bash
+vibeview sessions
+vibeview sessions --json
+vibeview sessions --dir myproject --limit 10
+vibeview sessions --sort cost
+vibeview sessions --limit 10 --offset 20
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--dir` | | Filter by project directory (substring match) |
+| `--sort` | `timestamp` | Sort by: `timestamp`, `cost`, `messages`, `model`, `dir` |
+| `--limit` | `25` | Maximum number of sessions to show |
+| `--offset` | `0` | Number of sessions to skip (for pagination) |
+| `--json` | `false` | Output as JSON |
+
+### `vibeview show`
+
+Render a session's full conversation as compact, human-readable text. Shows
+user and assistant messages with role labels, tool calls as one-line summaries,
+and omits raw JSON, token counts, and metadata.
+
+Input can be a session ID (full or 8-character prefix) or a `.jsonl` file path.
+
+```bash
+vibeview show 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+vibeview show 877fff
+vibeview show --verbose 877fff1e
+vibeview show --thinking 877fff1e
+vibeview show --json 877fff1e
+vibeview show session.jsonl
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--verbose`, `-v` | `false` | Expand tool calls with full input/output |
+| `--thinking` | `false` | Include thinking blocks |
+| `--json` | `false` | Output raw messages as JSON |
+| `--no-color` | `false` | Strip ANSI color codes |
 
 ### `vibeview search`
 
@@ -275,6 +346,12 @@ These flags are available on all commands:
 ## Session discovery
 
 vibeview automatically discovers sessions from Claude Code's data directory (`~/.claude/projects/`). No configuration is needed. The web server watches the session directory and picks up new sessions in real time.
+
+The data directory is resolved in this order:
+
+1. The `--claude-dir` flag, if provided.
+2. The `CLAUDE_CONFIG_DIR` environment variable, if set.
+3. The default `~/.claude`.
 
 ## Aliasing
 

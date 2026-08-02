@@ -46,13 +46,13 @@ Once created, select a project from the navigation bar to scope the session list
 
 ## Activity
 
-The Activity page shows a timeline of recent session activity across all projects.
+The Activity page visualizes your usage patterns across all projects. It includes a GitHub-style contribution graph showing session activity per day, and an hour-of-day chart breaking down when you're most active. Selecting a project from the navigation bar scopes these views to that project's folders.
 
 ![Activity](/images/activity.png)
 
 ## Settings
 
-The Settings page lets you customize vibeview's behavior. Changes are saved to a local JSON file on disk.
+The Settings page lets you customize vibeview's behavior. Changes are saved to a local JSON file at `~/.config/vibeview/settings.json`.
 
 ![Settings](/images/settings.png)
 
