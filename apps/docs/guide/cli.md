@@ -164,6 +164,58 @@ vibeview stats --yaml
 | `--json` | `false` | Output as JSON |
 | `--yaml` | `false` | Output as YAML |
 
+### `vibeview related`
+
+Reconstruct a whole multi-agent work episode from a single session ID. Given a
+session, `related` groups it with:
+
+- **Subagent transcripts** — the `agent-*.jsonl` files the session spawned (its
+  `subagents/` directory), each shown with its agent type, description, and
+  message/turn counts.
+- **Sibling sessions** — other sessions from the **same project** whose time
+  windows cluster with the target's. Clustering includes any session whose
+  `[start, end]` window is within `--gap` of the target's window (overlapping
+  or nearly so). Sessions outside the window, or in other projects, are
+  excluded.
+
+Accepts a full session ID or an 8-character prefix.
+
+```bash
+vibeview related 877fff1e-80c9-4d20-a600-f278eb2c7bdc
+vibeview related 877fff
+vibeview related --gap 1h 877fff1e
+vibeview related --no-siblings 877fff1e
+vibeview related --json 877fff1e
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--gap` | `30m` | Max gap between time windows to cluster siblings (Go duration, e.g. `10m`, `1h`) |
+| `--no-subagents` | `false` | Skip the subagents section |
+| `--no-siblings` | `false` | Skip the sibling-sessions section |
+| `--json` | `false` | Emit the grouped structure (`target`, `subagents`, `siblings`) as JSON for scripting |
+| `--no-color` | `false` | Strip ANSI color codes |
+
+#### Example output
+
+```
+Session
+  ID           7425387b-39ff-4bf5-91a9-83f210b92c5c
+  Title        typescript-session-management-port
+  Project      starfish
+  Started      2026-07-10 15:47  (23d ago)
+
+Subagents (2)
+  AGENT ID            TYPE              DESCRIPTION                 MSGS   TURNS
+  a86318110715528c0   Explore           Explore Go session code     34     20
+  aec4c3c310e017380   Explore           Explore TS server code      52     31
+
+Sibling sessions (4)
+  ID        TITLE                        DATE               MSGS   COST
+  b3c400c9  websocket-server-handshake   2026-07-10 15:47   135    $0.00
+  ...
+```
+
 ### `vibeview self`
 
 Discover which Claude Code session launched this process. Walks up the process tree and matches against active PID files in `~/.claude/sessions/`.

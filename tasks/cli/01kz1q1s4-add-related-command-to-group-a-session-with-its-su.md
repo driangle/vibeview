@@ -1,11 +1,12 @@
 ---
 title: "Add 'related' command to group a session with its subagents and time-clustered siblings"
 id: "01kz1q1s4"
-status: pending
+status: completed
 priority: high
 type: feature
 tags: ["cli", "sessions", "subagents"]
 created: "2026-08-02"
+completed_at: 2026-08-02
 ---
 
 # Add 'related' command to group a session with its subagents and time-clustered siblings
@@ -65,14 +66,14 @@ for understanding complex, multi-agent sessions.
 
 ## Tasks
 
-- [ ] Add `related.go` cobra command (`ExactArgs(1)`, resolves ID/prefix via `FindSession`/`FindSessionByPrefix`); register it in `main.go`.
-- [ ] Add a `session`-package helper to enumerate a session's subagent transcripts from `{sessionDir}/subagents/agent-*.jsonl` + `.meta.json` (agentType, description, turn/message count), reusing `insights` logic where possible.
-- [ ] Gather same-project siblings via `Discover` → `FilterByProject` → enrich-subset, then cluster by time window (define a clustering rule, e.g. sessions overlapping or within a gap threshold of the target's `[start, end]`).
-- [ ] Consider adding explicit `StartTime`/`EndTime` to `SessionMeta` (populate in `enrichSession`) for reliable time-clustering; otherwise derive from `Timestamp` + `DurationMs` and document the limitation.
-- [ ] Render grouped output: a "Subagents" section and a "Sibling sessions" section (table like `sessions.go`), plus a `--json` structured variant.
-- [ ] Add a `--window`/`--gap` flag (and/or `--no-subagents`/`--no-siblings`) to tune the clustering window and scope.
-- [ ] Add tests: subagent enumeration for a session with a `subagents/` dir, sibling clustering with fixture sessions in/out of the window, ID-prefix resolution, and `--json` shape.
-- [ ] Document the `related` command (help text + docs).
+- [x] Add `related.go` cobra command (`ExactArgs(1)`, resolves ID/prefix via `FindSession`/`FindSessionByPrefix`); register it in `main.go`.
+- [x] Add a `session`-package helper to enumerate a session's subagent transcripts from `{sessionDir}/subagents/agent-*.jsonl` + `.meta.json` (agentType, description, turn/message count), reusing `insights` logic where possible.
+- [x] Gather same-project siblings via `Discover` → `FilterByProject` → enrich-subset, then cluster by time window (define a clustering rule, e.g. sessions overlapping or within a gap threshold of the target's `[start, end]`).
+- [x] Consider adding explicit `StartTime`/`EndTime` to `SessionMeta` (populate in `enrichSession`) for reliable time-clustering; otherwise derive from `Timestamp` + `DurationMs` and document the limitation.
+- [x] Render grouped output: a "Subagents" section and a "Sibling sessions" section (table like `sessions.go`), plus a `--json` structured variant.
+- [x] Add a `--window`/`--gap` flag (and/or `--no-subagents`/`--no-siblings`) to tune the clustering window and scope.
+- [x] Add tests: subagent enumeration for a session with a `subagents/` dir, sibling clustering with fixture sessions in/out of the window, ID-prefix resolution, and `--json` shape.
+- [x] Document the `related` command (help text + docs).
 
 ## Acceptance Criteria
 
