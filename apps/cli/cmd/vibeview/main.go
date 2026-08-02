@@ -22,8 +22,8 @@ import (
 	"github.com/driangle/vibeview/apps/lib/pathutil"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
-	"github.com/driangle/vibeview/internal/server"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/internal/server"
 	qrcode "github.com/skip2/go-qrcode"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -95,6 +95,7 @@ Running vibeview without a subcommand starts the web server.`,
 	root.AddCommand(statsCmd(&claudeDir, &logLevel))
 	root.AddCommand(showCmd(&claudeDir, &logLevel))
 	root.AddCommand(sessionsCmd(&claudeDir, &logLevel))
+	root.AddCommand(relatedCmd(&claudeDir, &logLevel))
 	root.AddCommand(selfCmd(&claudeDir, &logLevel))
 
 	// Make "serve" the default when no subcommand is given.
@@ -106,7 +107,7 @@ Running vibeview without a subcommand starts the web server.`,
 	} else {
 		knownCmds := map[string]bool{
 			"serve": true, "inspect": true, "search": true, "stats": true,
-			"show": true, "sessions": true, "self": true, "help": true, "completion": true,
+			"show": true, "sessions": true, "related": true, "self": true, "help": true, "completion": true,
 		}
 		rootFlags := map[string]bool{
 			"--help": true, "-h": true, "--version": true,

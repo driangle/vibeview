@@ -39,6 +39,13 @@ type SessionMeta struct {
 	ActivityState string      `json:"activityState"`
 	DurationMs    int64       `json:"durationMs"` // last message timestamp - first message timestamp
 
+	// StartTime and EndTime are the first and last message timestamps (epoch
+	// millis), populated during enrichment. They enable reliable time-based
+	// clustering of related sessions. Zero when not yet enriched or when the
+	// session has no timestamped messages.
+	StartTime int64 `json:"startTime"`
+	EndTime   int64 `json:"endTime"`
+
 	// FilePath is the absolute path to the JSONL file for standalone sessions.
 	// Empty for sessions discovered from ~/.claude.
 	FilePath string `json:"-"`
@@ -471,6 +478,10 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
 	}
+	if firstTS > 0 {
+		meta.StartTime = firstTS
+		meta.EndTime = lastTS
+	}
 	if firstTS > 0 && lastTS > firstTS {
 		meta.DurationMs = lastTS - firstTS
 	}
@@ -752,6 +763,10 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		if msg.Type == claude.MessageTypeResult && msg.TotalCostUSD > 0 {
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
+	}
+	if firstTS > 0 {
+		meta.StartTime = firstTS
+		meta.EndTime = lastTS
 	}
 	if firstTS > 0 && lastTS > firstTS {
 		meta.DurationMs = lastTS - firstTS
