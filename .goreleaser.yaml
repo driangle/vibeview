@@ -26,7 +26,7 @@ builds:
         goarch: arm64
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
@@ -40,16 +40,6 @@ changelog:
       - "^test:"
       - "^chore:"
 
-brews:
-  - repository:
-      owner: driangle
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Formula
-    homepage: "https://github.com/driangle/vibeview"
-    description: "A local viewer for Claude Code sessions"
-    license: "MIT"
-    install: |
-      bin.install "vibeview"
-    test: |
-      system "#{bin}/vibeview", "--version"
+# Homebrew publishing is handled by the "Update Homebrew Formula" step in
+# .github/workflows/release.yml (a hand-rolled formula supporting macOS +
+# Linux), not by GoReleaser. See that workflow for the formula template.
