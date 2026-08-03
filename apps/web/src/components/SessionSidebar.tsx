@@ -119,7 +119,6 @@ export function SessionSidebar({
         {insights && (
           <FilesTouched
             files={insights.files}
-            toolResults={toolResults}
             onFileClick={handleFileClick}
             onNavigateToMessage={onNavigateToMessage}
           />

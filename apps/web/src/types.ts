@@ -133,6 +133,9 @@ export interface SessionInsights {
       input: ContentBlockInput;
       timestamp: string;
       messageUuid: string;
+      operation?:
+        | { type: 'read' | 'write'; content: string; timestamp: string }
+        | { type: 'edit'; oldString: string; newString: string; timestamp: string };
     }[];
   };
   worktrees: { name: string; path: string; branch: string; messageUuid: string }[];
@@ -188,6 +191,9 @@ export interface ActivityHour {
 
 export interface ActivityResponse {
   days: ActivityDay[];
+  dayYears: Array<{ year: number; weeks: Array<Array<{ date: string; count: number; dayOfWeek: number }>>; monthLabels: Array<{ label: string; col: number }> }>;
+  weekYears: Array<{ year: number; cells: Array<{ count: number; month: number; fromDate: string; toDate: string }>; monthLabels: Array<{ label: string; col: number }> }>;
+  months: { shortLabel: string; count: number; fromDate: string; toDate: string }[];
   hours: ActivityHour[];
   dirs: string[];
 }

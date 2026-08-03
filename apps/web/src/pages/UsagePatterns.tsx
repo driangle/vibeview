@@ -148,7 +148,7 @@ export function UsagePatterns() {
         ) : (
           <>
             <ContributionGraph
-              days={data.days}
+              activity={data}
               view={view}
               height={graphHeight}
               width={chartWidth}

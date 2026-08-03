@@ -1,7 +1,7 @@
 ---
 id: "cf-011"
 title: "Move client-side domain logic back to Go per CLAUDE.md"
-status: pending
+status: completed
 priority: high
 effort: large
 type: improvement
@@ -16,6 +16,7 @@ context:
   - "apps/web/src/components/date-range-utils.ts"
   - "apps/web/src/lib/extractors/files/resolveOperations.ts"
   - "apps/web/src/lib/timeline/classifyPhase.ts"
+completed_at: 2026-08-03
 ---
 
 # Move client-side domain logic back to Go per CLAUDE.md
@@ -42,11 +43,11 @@ violate this:
 
 ## Acceptance Criteria
 
-- [ ] Contribution-graph grids are built from server-provided buckets; the client only lays out what Go returns
-- [ ] Conversation search uses the server `/api/search` result; the duplicate client-side `searchMessages` is removed (or justified as an explicitly offline-only path)
-- [ ] File-operation history comes from server `insights.files`; the client no longer re-parses tool results
-- [ ] Any surviving date-range preset classification is server-authoritative or documented as pure presentation
-- [ ] Tests cover the Go side of whatever logic moves
+- [x] Contribution-graph grids are built from server-provided buckets; the client only lays out what Go returns
+- [x] Conversation search uses the server `/api/search` result; the duplicate client-side `searchMessages` is removed (or justified as an explicitly offline-only path)
+- [x] File-operation history comes from server `insights.files`; the client no longer re-parses tool results
+- [x] Any surviving date-range preset classification is server-authoritative or documented as pure presentation
+- [x] Tests cover the Go side of whatever logic moves
 
 ## verify
 ```yaml

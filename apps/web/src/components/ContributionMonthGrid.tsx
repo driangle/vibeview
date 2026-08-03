@@ -89,7 +89,12 @@ export function ContributionMonthGrid({
                   <div
                     className={`flex items-center justify-center rounded ${LEVEL_CLASSES[level]} ${onCellClick ? 'cursor-pointer' : ''}`}
                     style={{ height: cellSize, width: cellSize }}
-                    onMouseEnter={(e) => show(e, cell.tooltip)}
+                    onMouseEnter={(e) =>
+                      show(
+                        e,
+                        `${cell.shortLabel} ${cell.fromDate.slice(0, 4)}: ${cell.count} session${cell.count !== 1 ? 's' : ''}`,
+                      )
+                    }
                     onMouseLeave={hide}
                     onClick={() => onCellClick?.(cell.fromDate, cell.toDate)}
                   >

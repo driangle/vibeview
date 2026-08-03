@@ -1,10 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import type { ActivityDay } from '../types';
-import {
-  buildDayGridByYear,
-  buildWeekGridByYear,
-  buildMonthGrid,
-} from './contribution-graph-builders';
+import type { ActivityResponse } from '../types';
 import { type CellRange, type ViewMode, startOfDay, endOfDay } from './contribution-graph-utils';
 import { ContributionDayGrid } from './ContributionDayGrid';
 import { ContributionWeekGrid } from './ContributionWeekGrid';
@@ -14,7 +9,7 @@ export type { CellRange } from './contribution-graph-utils';
 export { ContributionLegend } from './ContributionLegend';
 
 interface ContributionGraphProps {
-  days: ActivityDay[];
+  activity: Pick<ActivityResponse, 'days' | 'dayYears' | 'weekYears' | 'months'>;
   view: ViewMode;
   height?: number;
   width?: number;
@@ -22,25 +17,22 @@ interface ContributionGraphProps {
 }
 
 export function ContributionGraph({
-  days,
+  activity,
   view,
   height,
   width,
   onCellClick,
 }: ContributionGraphProps) {
-  const dayYears = useMemo(() => (view === 'day' ? buildDayGridByYear(days) : null), [days, view]);
-  const weekYears = useMemo(
-    () => (view === 'week' ? buildWeekGridByYear(days) : null),
-    [days, view],
-  );
-  const monthCells = useMemo(() => (view === 'month' ? buildMonthGrid(days) : null), [days, view]);
+  const dayYears = view === 'day' ? activity.dayYears : null;
+  const weekYears = view === 'week' ? activity.weekYears : null;
+  const monthCells = view === 'month' ? activity.months : null;
   const maxCount = useMemo(() => {
-    if (view === 'day') return Math.max(0, ...days.map((d) => d.count));
+    if (view === 'day') return Math.max(0, ...activity.days.map((d) => d.count));
     if (view === 'week' && weekYears)
       return Math.max(0, ...weekYears.flatMap((y) => y.cells.map((c) => c.count)));
     if (view === 'month' && monthCells) return Math.max(0, ...monthCells.map((c) => c.count));
     return 0;
-  }, [days, view, weekYears, monthCells]);
+  }, [activity.days, view, weekYears, monthCells]);
 
   const handleClick = useCallback(
     (fromDate: string, toDate: string) => {

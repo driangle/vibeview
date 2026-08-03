@@ -166,9 +166,10 @@ func TestExtractFiles(t *testing.T) {
 			toolUse("tu-3", "Edit", map[string]any{"file_path": "/tmp/b.go", "old_string": "a", "new_string": "b"}),
 			toolUse("tu-4", "Read", map[string]any{"file_path": "/tmp/a.go"}), // duplicate
 		),
+		userMsg("m2", 1711000001000, toolResult("tu-1", "     1→package main", false)),
 	}
 
-	result := ExtractFiles(messages)
+	result := ExtractFiles(messages, BuildToolResultMap(messages))
 
 	if len(result.Categories.Read) != 1 || result.Categories.Read[0] != "/tmp/a.go" {
 		t.Errorf("unexpected read files: %v", result.Categories.Read)
@@ -183,6 +184,15 @@ func TestExtractFiles(t *testing.T) {
 	if result.Entries[0].Timestamp == "" {
 		t.Error("expected non-empty timestamp")
 	}
+	if op := result.Entries[0].Operation; op == nil || op.Type != "read" || op.Content != "package main" {
+		t.Fatalf("unexpected server-derived read operation: %+v", op)
+	}
+	if op := result.Entries[1].Operation; op == nil || op.Type != "write" || op.Content != "x" {
+		t.Fatalf("unexpected server-derived write operation: %+v", op)
+	}
+	if op := result.Entries[2].Operation; op == nil || op.Type != "edit" || op.OldString != "a" || op.NewString != "b" {
+		t.Fatalf("unexpected server-derived edit operation: %+v", op)
+	}
 }
 
 func TestExtractFiles_SkipsMissingFilePath(t *testing.T) {
@@ -194,7 +204,7 @@ func TestExtractFiles_SkipsMissingFilePath(t *testing.T) {
 		),
 	}
 
-	result := ExtractFiles(messages)
+	result := ExtractFiles(messages, BuildToolResultMap(messages))
 	if len(result.Categories.Read) != 0 {
 		t.Errorf("expected 0 read files, got %d", len(result.Categories.Read))
 	}
@@ -213,7 +223,7 @@ func TestExtractFiles_SortedDedup(t *testing.T) {
 		),
 	}
 
-	result := ExtractFiles(messages)
+	result := ExtractFiles(messages, BuildToolResultMap(messages))
 	if len(result.Categories.Written) != 2 {
 		t.Fatalf("expected 2 unique written files, got %d", len(result.Categories.Written))
 	}

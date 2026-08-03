@@ -18,7 +18,6 @@ export {
   extractFiles,
   extractFilePathSet,
   extractFileExtensions,
-  resolveFileOperations,
 } from './files';
 export type { FileContentEntry, FilesByCategory, FilesResult } from './files';
 

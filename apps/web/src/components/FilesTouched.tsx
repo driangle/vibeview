@@ -1,12 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { FileOperation } from './FileViewer';
 import { SidebarSection, LocateButton } from './SidebarSection';
-import type { ContentBlock, SessionInsights } from '../types';
-import { resolveFileOperations } from '../lib/extractors';
+import type { SessionInsights } from '../types';
 
 interface FilesTouchedProps {
   files: SessionInsights['files'];
-  toolResults: Map<string, ContentBlock>;
   onFileClick: (filePath: string, operations: FileOperation[]) => void;
   onNavigateToMessage: (uuid: string) => void;
 }
@@ -116,7 +114,6 @@ function FileGroup({
 
 export function FilesTouched({
   files,
-  toolResults,
   onFileClick,
   onNavigateToMessage,
 }: FilesTouchedProps) {
@@ -135,10 +132,12 @@ export function FilesTouched({
 
   const handleFileClick = useCallback(
     (filePath: string) => {
-      const ops = resolveFileOperations(filePath, entries, toolResults);
+      const ops = entries
+        .filter((entry) => entry.filePath === filePath && entry.operation)
+        .map((entry) => entry.operation!);
       onFileClick(filePath, ops);
     },
-    [entries, toolResults, onFileClick],
+    [entries, onFileClick],
   );
 
   const totalCount = categories.written.length + categories.read.length;

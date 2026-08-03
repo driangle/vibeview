@@ -45,6 +45,15 @@ type FileEntry struct {
 	Input       map[string]any `json:"input"`
 	Timestamp   string         `json:"timestamp"`
 	MessageUUID string         `json:"messageUuid"`
+	Operation   *FileOperation `json:"operation,omitempty"`
+}
+
+type FileOperation struct {
+	Type      string `json:"type"`
+	Content   string `json:"content,omitempty"`
+	OldString string `json:"oldString,omitempty"`
+	NewString string `json:"newString,omitempty"`
+	Timestamp string `json:"timestamp"`
 }
 
 type WorktreeEntry struct {

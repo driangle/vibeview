@@ -143,7 +143,6 @@ export function SessionView() {
           activityState={activityState}
           liveUsage={liveUsage}
           displayMessages={displayMessages}
-          activeMessages={activeMessages}
           navigateToMessage={navigateToMessage}
           onExportPdf={handleExportPdf}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}

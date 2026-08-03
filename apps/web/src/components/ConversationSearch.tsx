@@ -1,8 +1,17 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import type { MessageResponse } from '../types';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import useSWR from 'swr';
+import { fetcher } from '../api';
 import { HighlightedSnippet } from './HighlightedSnippet';
-import { searchMessages } from './search-messages';
-export type { SearchResult } from './search-messages';
+
+interface SearchResult {
+  messageUuid: string;
+  messageIndex: number;
+  role: string;
+  snippet: string;
+  matchStart: number;
+}
+
+const EMPTY_RESULTS: SearchResult[] = [];
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   user: { label: 'You', color: 'text-primary' },
@@ -10,10 +19,10 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function ConversationSearch({
-  messages,
+  sessionId,
   onNavigateToMessage,
 }: {
-  messages: MessageResponse[];
+  sessionId: string;
   onNavigateToMessage: (uuid: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -22,7 +31,13 @@ export function ConversationSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const results = useMemo(() => searchMessages(messages, query), [messages, query]);
+  const searchURL = query.trim()
+    ? `/api/search?q=${encodeURIComponent(query)}&limit=100&session=${encodeURIComponent(sessionId)}`
+    : null;
+  const { data } = useSWR<{ results: SearchResult[] }>(searchURL, fetcher, {
+    keepPreviousData: false,
+  });
+  const results = data?.results ?? EMPTY_RESULTS;
 
   // Reset active index when results change
   useEffect(() => {

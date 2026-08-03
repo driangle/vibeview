@@ -49,7 +49,6 @@ interface SessionViewHeaderProps {
   activityState: ActivityState | undefined;
   liveUsage: UsageTotals | null;
   displayMessages: MessageResponse[];
-  activeMessages: MessageResponse[];
   navigateToMessage: (uuid: string) => void;
   onExportPdf: () => void;
   onToggleSidebar: () => void;
@@ -69,7 +68,6 @@ export function SessionViewHeader({
   activityState,
   liveUsage,
   displayMessages,
-  activeMessages,
   navigateToMessage,
   onExportPdf,
   onToggleSidebar,
@@ -97,10 +95,12 @@ export function SessionViewHeader({
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               {liveUsage && <InlineMetrics usage={liveUsage} />}
-              <ConversationSearch
-                messages={activeMessages}
-                onNavigateToMessage={navigateToMessage}
-              />
+              {!focusedAgentId && (
+                <ConversationSearch
+                  sessionId={sessionId}
+                  onNavigateToMessage={navigateToMessage}
+                />
+              )}
               <button
                 onClick={onExportPdf}
                 className="text-muted-fg hover:text-fg transition-colors print:hidden"

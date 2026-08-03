@@ -1,7 +1,7 @@
 import { Tooltip } from './Tooltip';
 import { useTooltip } from './useTooltip';
 import type { WeekGridYear } from './contribution-graph-builders';
-import { LEVEL_CLASSES, intensityLevel } from './contribution-graph-utils';
+import { LEVEL_CLASSES, intensityLevel, formatDate } from './contribution-graph-utils';
 
 interface ContributionWeekGridProps {
   weekYears: WeekGridYear[];
@@ -71,7 +71,12 @@ export function ContributionWeekGrid({
                     key={i}
                     className={`rounded-sm ${LEVEL_CLASSES[level]} ${onCellClick ? 'cursor-pointer' : ''}`}
                     style={{ height: cellSize, width: cellSize }}
-                    onMouseEnter={(e) => show(e, cell.tooltip)}
+                    onMouseEnter={(e) =>
+                      show(
+                        e,
+                        `${formatDate(cell.fromDate)} – ${formatDate(cell.toDate)}: ${cell.count} session${cell.count !== 1 ? 's' : ''}`,
+                      )
+                    }
                     onMouseLeave={hide}
                     onClick={() => onCellClick?.(cell.fromDate, cell.toDate)}
                   />

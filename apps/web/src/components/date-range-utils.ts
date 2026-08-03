@@ -26,14 +26,8 @@ export function toDateStr(ms: string): string {
 
 export function formatLabel(from: string, to: string): string {
   if (!from && !to) return 'All time';
-
-  const now = new Date();
-  const todayStart = String(startOfDay(now));
-  const todayEnd = String(endOfDay(now));
-  if (from === todayStart && to === todayEnd) return 'Today';
-  if (from === String(daysAgo(7)) && to === todayEnd) return 'Last 7 days';
-  if (from === String(daysAgo(30)) && to === todayEnd) return 'Last 30 days';
-
+  // Presentation only: format the authoritative epoch range from the URL.
+  // Do not reverse-classify it into domain presets in the browser.
   const fmt = (ms: string) =>
     new Date(Number(ms)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const fromDate = fmt(from);
@@ -47,6 +41,7 @@ export interface PresetDef {
 }
 
 export function usePresets(): PresetDef[] {
+  // These are user input shortcuts, not classification of server state.
   return useMemo(
     () => [
       { label: 'All time', getRange: (): [string, string] => ['', ''] },

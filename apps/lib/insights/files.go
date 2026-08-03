@@ -1,6 +1,7 @@
 package insights
 
 import (
+	"regexp"
 	"sort"
 	"time"
 
@@ -8,11 +9,13 @@ import (
 	"github.com/driangle/vibeview/apps/lib/redact"
 )
 
+var catLineNumberPrefix = regexp.MustCompile(`(?m)^ *\d+→`)
+
 var writeTools = map[string]bool{"Edit": true, "Write": true}
 var readTools = map[string]bool{"Read": true}
 
 // ExtractFiles categorizes file operations from Read/Write/Edit tool_use blocks.
-func ExtractFiles(messages []claude.Message) FilesResult {
+func ExtractFiles(messages []claude.Message, toolResults map[string]claude.ContentBlock) FilesResult {
 	written := make(map[string]bool)
 	read := make(map[string]bool)
 	var entries []FileEntry
@@ -35,13 +38,34 @@ func ExtractFiles(messages []claude.Message) FilesResult {
 			}
 
 			if block.ID != "" {
+				timestamp := msToISO(msg.Timestamp.Int64())
+				var operation *FileOperation
+				switch block.Name {
+				case "Write":
+					if content, ok := block.Input["content"].(string); ok {
+						operation = &FileOperation{Type: "write", Content: redact.RedactSecrets(content), Timestamp: timestamp}
+					}
+				case "Read":
+					if result, ok := toolResults[block.ID]; ok {
+						if content := ResolveResultText(result); content != "" {
+							operation = &FileOperation{Type: "read", Content: catLineNumberPrefix.ReplaceAllString(content, ""), Timestamp: timestamp}
+						}
+					}
+				case "Edit":
+					oldString, oldOK := block.Input["old_string"].(string)
+					newString, newOK := block.Input["new_string"].(string)
+					if oldOK && newOK {
+						operation = &FileOperation{Type: "edit", OldString: redact.RedactSecrets(oldString), NewString: redact.RedactSecrets(newString), Timestamp: timestamp}
+					}
+				}
 				entries = append(entries, FileEntry{
 					ToolUseID:   block.ID,
 					ToolName:    block.Name,
 					FilePath:    maskedPath,
 					Input:       block.Input,
-					Timestamp:   msToISO(msg.Timestamp.Int64()),
+					Timestamp:   timestamp,
 					MessageUUID: msg.UUID,
+					Operation:   operation,
 				})
 			}
 		}

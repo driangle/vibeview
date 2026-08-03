@@ -895,6 +895,36 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	if limit > 100 {
 		limit = 100
 	}
+	if sessionID := r.URL.Query().Get("session"); sessionID != "" {
+		meta := s.index.FindSession(sessionID)
+		if meta == nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			return
+		}
+		path, err := session.ResolveFilePath(s.claudeDir, *meta)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+			return
+		}
+		if _, err := pathutil.SafeResolve(path, s.claudeDir); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+			return
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})
+			return
+		}
+		defer file.Close()
+		messages, _, err := claude.ParseSessionFile(file)
+		if err != nil && len(messages) == 0 {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse session"})
+			return
+		}
+		results := search.SearchMessages(messages, q, limit)
+		writeJSON(w, http.StatusOK, MessageSearchResponse{Results: results, Total: len(results)})
+		return
+	}
 
 	var dirs []string
 	if projectID := r.URL.Query().Get("project"); projectID != "" {
@@ -987,7 +1017,8 @@ func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 		hours[h] = ActivityHourResponse{Hour: h, Count: hourCounts[h]}
 	}
 
-	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, Hours: hours, Dirs: dirs})
+	dayYears, weekYears, months := buildActivityBuckets(days, time.Now())
+	writeJSON(w, http.StatusOK, ActivityResponse{Days: days, DayYears: dayYears, WeekYears: weekYears, Months: months, Hours: hours, Dirs: dirs})
 }
 
 // --- Response Types ---
@@ -1016,9 +1047,12 @@ type ActivityHourResponse struct {
 
 // ActivityResponse is the API representation of daily activity data.
 type ActivityResponse struct {
-	Days  []ActivityDayResponse  `json:"days"`
-	Hours []ActivityHourResponse `json:"hours"`
-	Dirs  []string               `json:"dirs"`
+	Days      []ActivityDayResponse          `json:"days"`
+	DayYears  []ActivityDayGridYearResponse  `json:"dayYears"`
+	WeekYears []ActivityWeekGridYearResponse `json:"weekYears"`
+	Months    []ActivityMonthCellResponse    `json:"months"`
+	Hours     []ActivityHourResponse         `json:"hours"`
+	Dirs      []string                       `json:"dirs"`
 }
 
 // SessionResponse is the API representation of a session in list responses.
@@ -1052,6 +1086,11 @@ type SearchResultResponse struct {
 // SearchResponse wraps content search results.
 type SearchResponse struct {
 	Results []SearchResultResponse `json:"results"`
+	Total   int                    `json:"total"`
+}
+
+type MessageSearchResponse struct {
+	Results []search.MessageResult `json:"results"`
 	Total   int                    `json:"total"`
 }
 

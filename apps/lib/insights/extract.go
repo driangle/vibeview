@@ -12,7 +12,7 @@ func Extract(messages []claude.Message) SessionInsights {
 		Tools:     ExtractToolCounts(messages),
 		Commands:  ExtractBashCommands(messages),
 		Errors:    ExtractErrors(messages, toolResults),
-		Files:     ExtractFiles(messages),
+		Files:     ExtractFiles(messages, toolResults),
 		Worktrees: ExtractWorktrees(messages, toolResults),
 		Skills:    ExtractSkills(messages),
 		Subagents: ExtractSubagents(messages, toolResults),
