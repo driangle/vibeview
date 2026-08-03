@@ -2,7 +2,6 @@
 package watcher
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -122,13 +121,18 @@ func (t *Tailer) readNewLines() {
 		return
 	}
 
-	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
+	scanner := claude.NewLineScanner(f, claude.DefaultMaxLineBytes)
 
 	bytesConsumed := int64(0)
 	for scanner.Scan() {
+		// Consumed includes the trailing newline, so oversized lines advance the
+		// offset just like normal ones and are never re-scanned on the next write.
+		bytesConsumed += scanner.Consumed()
+		if scanner.Oversized() {
+			logutil.Warnf("tailer: skipping oversized line in %s (%d bytes exceeds %d limit)", t.path, scanner.OversizedBytes(), claude.DefaultMaxLineBytes)
+			continue
+		}
 		line := scanner.Bytes()
-		bytesConsumed += int64(len(line)) + 1 // +1 for newline
 		if len(line) == 0 {
 			continue
 		}

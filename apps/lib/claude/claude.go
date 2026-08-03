@@ -2,7 +2,6 @@
 package claude
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -286,7 +285,8 @@ func ParseMessageLine(line []byte) (Message, error) {
 // ParseResult holds diagnostics about skipped or malformed lines encountered
 // during JSONL parsing.
 type ParseResult struct {
-	SkippedLines     int      // number of malformed lines that were skipped
+	SkippedLines     int      // total lines skipped (malformed + oversized)
+	OversizedLines   int      // lines skipped for exceeding the size limit
 	MalformedSamples []string // first 100 chars of up to 5 malformed lines
 }
 
@@ -303,16 +303,25 @@ func (r *ParseResult) recordMalformed(line []byte) {
 	}
 }
 
+func (r *ParseResult) recordOversized() {
+	r.SkippedLines++
+	r.OversizedLines++
+}
+
 // ParseHistoryFile reads and parses an entire history.jsonl file.
 // Malformed lines are skipped and logged to stderr.
 func ParseHistoryFile(r io.Reader) ([]HistoryEntry, ParseResult, error) {
 	var entries []HistoryEntry
 	var result ParseResult
-	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
+	scanner := NewLineScanner(r, DefaultMaxLineBytes)
 	lineNum := 0
 	for scanner.Scan() {
 		lineNum++
+		if scanner.Oversized() {
+			result.recordOversized()
+			logutil.Warnf("history.jsonl line %d: skipping oversized line (%d bytes exceeds %d limit)", lineNum, scanner.OversizedBytes(), DefaultMaxLineBytes)
+			continue
+		}
 		line := scanner.Bytes()
 		if len(line) == 0 {
 			continue
@@ -336,11 +345,15 @@ func ParseHistoryFile(r io.Reader) ([]HistoryEntry, ParseResult, error) {
 func ParseSessionFile(r io.Reader) ([]Message, ParseResult, error) {
 	var messages []Message
 	var result ParseResult
-	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 1024*1024), 2*1024*1024)
+	scanner := NewLineScanner(r, DefaultMaxLineBytes)
 	lineNum := 0
 	for scanner.Scan() {
 		lineNum++
+		if scanner.Oversized() {
+			result.recordOversized()
+			logutil.Warnf("session jsonl line %d: skipping oversized line (%d bytes exceeds %d limit)", lineNum, scanner.OversizedBytes(), DefaultMaxLineBytes)
+			continue
+		}
 		line := scanner.Bytes()
 		if len(line) == 0 {
 			continue

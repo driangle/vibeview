@@ -1,7 +1,7 @@
 ---
 id: "cf-006"
 title: "Handle oversized JSONL lines without breaking the whole session"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: bug
@@ -13,6 +13,7 @@ created: 2026-08-03
 context:
   - "apps/lib/claude/claude.go"
   - "apps/cli/internal/watcher/tailer.go"
+completed_at: 2026-08-03
 ---
 
 # Handle oversized JSONL lines without breaking the whole session
@@ -38,10 +39,10 @@ line — repeating work on that file indefinitely.
 
 ## Acceptance Criteria
 
-- [ ] Skip (and count/log) an over-limit line instead of aborting the parse, or raise/stream the buffer so large-but-valid lines parse
-- [ ] In the tailer, advance past an over-limit line so it is not re-scanned every write
-- [ ] Surface skipped oversized lines via the existing `SkippedLines` mechanism
-- [ ] Add tests for a >2 MB line in both `ParseSessionFile` and the tailer
+- [x] Skip (and count/log) an over-limit line instead of aborting the parse, or raise/stream the buffer so large-but-valid lines parse
+- [x] In the tailer, advance past an over-limit line so it is not re-scanned every write
+- [x] Surface skipped oversized lines via the existing `SkippedLines` mechanism
+- [x] Add tests for a >2 MB line in both `ParseSessionFile` and the tailer
 
 ## verify
 ```yaml
