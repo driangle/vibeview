@@ -71,6 +71,41 @@ func TestGetSubagentReturnsConversation(t *testing.T) {
 	}
 }
 
+func TestGetSubagentResolvesToolUseID(t *testing.T) {
+	dir := setupTestDir(t)
+	writeSubagent(t, dir, "real-agent", `{"agentType":"Explore","description":"Investigate tests"}`)
+
+	parentPath := filepath.Join(dir, "projects", "-users-me-project-a", "sess-1.jsonl")
+	toolUse := `{"type":"assistant","uuid":"tool-parent","sessionId":"sess-1","timestamp":1700000002000,"message":{"role":"assistant","content":[{"type":"tool_use","id":"call-123","name":"Agent","input":{"description":"Investigate tests"}}]}}` + "\n"
+	f, err := os.OpenFile(parentPath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.WriteString(toolUse); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	srv := newServerWithClaudeDir(t, dir)
+	req := httptest.NewRequest("GET", "/api/sessions/sess-1/subagents/tool_use_call-123", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp SubagentDetailResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.AgentID != "real-agent" {
+		t.Errorf("AgentID = %q, want real-agent", resp.AgentID)
+	}
+}
+
 func TestGetSubagentSessionNotFound(t *testing.T) {
 	srv := newTestServer(t)
 	req := httptest.NewRequest("GET", "/api/sessions/nonexistent/subagents/abc123", nil)

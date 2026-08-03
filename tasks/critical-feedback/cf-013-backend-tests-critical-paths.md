@@ -1,7 +1,7 @@
 ---
 id: "cf-013"
 title: "Add backend tests for the untested critical paths"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: chore
@@ -14,6 +14,7 @@ dependencies: ["cf-001", "cf-006"]
 context:
   - "apps/cli/internal/server/server_test.go"
   - "apps/cli/internal/watcher/broker_test.go"
+completed_at: 2026-08-03
 ---
 
 # Add backend tests for the untested critical paths
@@ -36,10 +37,10 @@ exactly the risky code:
 
 ## Acceptance Criteria
 
-- [ ] `handleGetSubagent` tests: happy path, `tool_use_` resolution, and traversal payloads
-- [ ] SSE end-to-end test: append → broker → subscribed client receives the message; plus client-cap enforcement and idle-decay
-- [ ] Oversized-line test for the parser and tailer (pairs with cf-006)
-- [ ] Symlink/traversal tests at the HTTP layer for both read endpoints
+- [x] `handleGetSubagent` tests: happy path, `tool_use_` resolution, and traversal payloads
+- [x] SSE end-to-end test: append → broker → subscribed client receives the message; plus client-cap enforcement and idle-decay
+- [x] Oversized-line test for the parser and tailer (pairs with cf-006)
+- [x] Symlink/traversal tests at the HTTP layer for both read endpoints
 
 ## verify
 ```yaml

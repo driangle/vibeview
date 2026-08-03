@@ -113,6 +113,74 @@ func TestBrokerMultipleClients(t *testing.T) {
 	broker.Unsubscribe(c2)
 }
 
+func TestBrokerClientCap(t *testing.T) {
+	dir, idx := setupBrokerTestDir(t)
+	broker, err := NewBroker(dir, idx, true, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer broker.Close()
+
+	clients := make([]*Client, 0, maxClientsPerSession)
+	for i := 0; i < maxClientsPerSession; i++ {
+		client, err := broker.Subscribe("sess-1")
+		if err != nil {
+			t.Fatalf("subscribe %d: %v", i, err)
+		}
+		clients = append(clients, client)
+	}
+	if _, err := broker.Subscribe("sess-1"); err == nil {
+		t.Fatalf("expected subscription %d to exceed per-session cap", maxClientsPerSession+1)
+	}
+	for _, client := range clients {
+		broker.Unsubscribe(client)
+	}
+}
+
+func TestBrokerHeartbeatDecaysIdleAndPings(t *testing.T) {
+	dir, idx := setupBrokerTestDir(t)
+	broker, err := NewBroker(dir, idx, true, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer broker.Close()
+
+	client, err := broker.Subscribe("sess-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer broker.Unsubscribe(client)
+
+	now := time.Date(2026, 8, 3, 12, 0, 0, 0, time.UTC)
+	idx.SetActivityState("sess-1", session.ActivityWorking)
+	broker.mu.Lock()
+	broker.lastMessageAt["sess-1"] = now.Add(-idleDecayDuration - time.Second)
+	broker.mu.Unlock()
+
+	broker.heartbeat(now)
+
+	wantEvents := map[string]bool{"activity_state": false, "ping": false}
+	for range wantEvents {
+		select {
+		case event := <-client.Events:
+			if _, ok := wantEvents[event.Event]; !ok {
+				t.Fatalf("unexpected event %q", event.Event)
+			}
+			wantEvents[event.Event] = true
+		case <-time.After(time.Second):
+			t.Fatal("timed out waiting for heartbeat events")
+		}
+	}
+	for event, seen := range wantEvents {
+		if !seen {
+			t.Errorf("missing %s event", event)
+		}
+	}
+	if got := idx.FindSession("sess-1").ActivityState; got != session.ActivityIdle {
+		t.Errorf("activity state = %q, want idle", got)
+	}
+}
+
 func TestBrokerHistoryWatcher(t *testing.T) {
 	dir, idx := setupBrokerTestDir(t)
 	broker, err := NewBroker(dir, idx, false, nil, nil)

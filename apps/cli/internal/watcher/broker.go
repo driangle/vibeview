@@ -389,63 +389,59 @@ func (b *Broker) pingLoop() {
 		case <-b.done:
 			return
 		case <-ticker.C:
-			now := time.Now()
-			event := SSEEvent{Event: "ping", Data: `{"time":"` + now.UTC().Format(time.RFC3339) + `"}`}
-			b.mu.Lock()
-			// Decay stale active sessions to idle.
-			var idledSessions []string
-			for sessionID, lastMsg := range b.lastMessageAt {
-				if now.Sub(lastMsg) > idleDecayDuration {
-					b.index.SetActivityState(sessionID, session.ActivityIdle)
-					delete(b.lastMessageAt, sessionID)
-					idledSessions = append(idledSessions, sessionID)
-				}
+			b.heartbeat(time.Now())
+		}
+	}
+}
+
+// heartbeat performs one ping/idle-decay pass. Keeping the clock at the call
+// site makes the behavior deterministic in tests while pingLoop owns scheduling.
+func (b *Broker) heartbeat(now time.Time) {
+	event := SSEEvent{Event: "ping", Data: `{"time":"` + now.UTC().Format(time.RFC3339) + `"}`}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	var idledSessions []string
+	for sessionID, lastMsg := range b.lastMessageAt {
+		if now.Sub(lastMsg) > idleDecayDuration {
+			b.index.SetActivityState(sessionID, session.ActivityIdle)
+			delete(b.lastMessageAt, sessionID)
+			idledSessions = append(idledSessions, sessionID)
+		}
+	}
+	if b.pidChecker != nil {
+		for sessionID := range b.lastMessageAt {
+			if !b.pidChecker.IsProcessAlive(sessionID) {
+				b.index.SetActivityState(sessionID, session.ActivityIdle)
+				delete(b.lastMessageAt, sessionID)
+				idledSessions = append(idledSessions, sessionID)
 			}
-			// Check process liveness for tracked active sessions.
-			if b.pidChecker != nil {
-				for sessionID := range b.lastMessageAt {
-					if !b.pidChecker.IsProcessAlive(sessionID) {
-						b.index.SetActivityState(sessionID, session.ActivityIdle)
-						delete(b.lastMessageAt, sessionID)
-						idledSessions = append(idledSessions, sessionID)
-					}
-				}
-				// Also check sessions that were active at startup but never
-				// received new messages through the tailer. Without this,
-				// a session whose process dies after server start stays
-				// "working" in the index indefinitely.
-				for _, sessionID := range b.index.ActiveSessionIDs() {
-					if _, tracked := b.lastMessageAt[sessionID]; tracked {
-						continue // already handled above
-					}
-					if !b.pidChecker.IsProcessAlive(sessionID) {
-						b.index.SetActivityState(sessionID, session.ActivityIdle)
-						idledSessions = append(idledSessions, sessionID)
-					}
-				}
+		}
+		for _, sessionID := range b.index.ActiveSessionIDs() {
+			if _, tracked := b.lastMessageAt[sessionID]; tracked {
+				continue
 			}
-			// Notify connected clients when their session becomes idle.
-			for _, sessionID := range idledSessions {
-				idleEvent := SSEEvent{
-					Event: "activity_state",
-					Data:  `{"state":"idle"}`,
-				}
-				for client := range b.clients[sessionID] {
-					select {
-					case client.Events <- idleEvent:
-					default:
-					}
-				}
+			if !b.pidChecker.IsProcessAlive(sessionID) {
+				b.index.SetActivityState(sessionID, session.ActivityIdle)
+				idledSessions = append(idledSessions, sessionID)
 			}
-			for _, clients := range b.clients {
-				for client := range clients {
-					select {
-					case client.Events <- event:
-					default:
-					}
-				}
+		}
+	}
+	for _, sessionID := range idledSessions {
+		idleEvent := SSEEvent{Event: "activity_state", Data: `{"state":"idle"}`}
+		for client := range b.clients[sessionID] {
+			select {
+			case client.Events <- idleEvent:
+			default:
 			}
-			b.mu.Unlock()
+		}
+	}
+	for _, clients := range b.clients {
+		for client := range clients {
+			select {
+			case client.Events <- event:
+			default:
+			}
 		}
 	}
 }
