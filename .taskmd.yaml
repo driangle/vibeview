@@ -12,3 +12,6 @@ phases:
   - id: polish
     name: "Polish"
     description: "Integration, embedding, and finishing touches"
+  - id: critical-feedback
+    name: "Critical Feedback"
+    description: "Security, correctness, architecture, and testing fixes from the critical codebase evaluation"
