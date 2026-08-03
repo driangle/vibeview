@@ -1,27 +1,4 @@
-import type { ContentBlock, MessageResponse, PaginatedSessions, SessionDetail } from './types';
-
-// --- API response validation ---
-
-function isObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-export function isMessageResponse(v: unknown): v is MessageResponse {
-  if (!isObject(v)) return false;
-  return (
-    typeof v.uuid === 'string' && typeof v.type === 'string' && typeof v.timestamp === 'string'
-  );
-}
-
-export function isPaginatedSessions(v: unknown): v is PaginatedSessions {
-  if (!isObject(v)) return false;
-  return Array.isArray(v.sessions) && typeof v.total === 'number';
-}
-
-export function isSessionDetail(v: unknown): v is SessionDetail {
-  if (!isObject(v)) return false;
-  return typeof v.id === 'string' && typeof v.filePath === 'string' && Array.isArray(v.messages);
-}
+import type { ContentBlock } from './types';
 
 // --- ContentBlock type guards ---
 

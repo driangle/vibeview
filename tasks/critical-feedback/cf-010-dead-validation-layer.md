@@ -1,7 +1,7 @@
 ---
 id: "cf-010"
 title: "Remove or actually use the dead runtime-validation layer"
-status: pending
+status: completed
 priority: medium
 effort: small
 type: improvement
@@ -13,6 +13,7 @@ created: 2026-08-03
 context:
   - "apps/web/src/lib/api.ts"
   - "apps/web/src/lib/validation.ts"
+completed_at: 2026-08-03
 ---
 
 # Remove or actually use the dead runtime-validation layer
@@ -30,10 +31,10 @@ runtime-validation apparatus sits unused right next to the code that would benef
 
 ## Acceptance Criteria
 
-- [ ] Decide: adopt `validatedFetcher` on the session/message/list fetch paths, or remove the unused validators
-- [ ] If adopting: route the primary data hooks through `validatedFetcher` and surface a typed error when the wire shape is wrong
-- [ ] If removing: delete `validatedFetcher` and the unused guards so the code doesn't imply validation that never runs
-- [ ] `typeCheck`/`lint`/`test` stay green
+- [x] Decide: adopt `validatedFetcher` on the session/message/list fetch paths, or remove the unused validators
+- [ ] If adopting: route the primary data hooks through `validatedFetcher` and surface a typed error when the wire shape is wrong *(not applicable; removal selected)*
+- [x] If removing: delete `validatedFetcher` and the unused guards so the code doesn't imply validation that never runs
+- [x] `typeCheck`/`lint`/`test` stay green
 
 ## verify
 ```yaml
