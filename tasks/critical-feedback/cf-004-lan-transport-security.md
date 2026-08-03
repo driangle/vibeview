@@ -1,7 +1,7 @@
 ---
 id: "cf-004"
 title: "Address LAN plaintext transport and permissive private-IP CORS"
-status: pending
+status: completed
 priority: medium
 effort: medium
 type: improvement
@@ -13,6 +13,7 @@ created: 2026-08-03
 context:
   - "apps/cli/internal/server/server.go"
   - "apps/cli/cmd/vibeview/main.go"
+completed_at: 2026-08-03
 ---
 
 # Address LAN plaintext transport and permissive private-IP CORS
@@ -32,10 +33,10 @@ concern; this ticket is specifically about the LAN exposure surface.
 
 ## Acceptance Criteria
 
-- [ ] Decide and document the intended LAN threat model (trusted LAN vs. hostile LAN)
-- [ ] Offer an encrypted option (e.g. self-signed TLS or a documented reverse-proxy/tunnel recipe) so contents aren't sent in cleartext
-- [ ] Reconsider whether "any private IP origin" is the right CORS default in LAN mode, or whether it should be an explicit allowlist
-- [ ] Make the startup warning state precisely what is exposed and to whom
+- [x] Decide and document the intended LAN threat model (trusted LAN vs. hostile LAN)
+- [x] Offer an encrypted option (e.g. self-signed TLS or a documented reverse-proxy/tunnel recipe) so contents aren't sent in cleartext
+- [x] Reconsider whether "any private IP origin" is the right CORS default in LAN mode, or whether it should be an explicit allowlist
+- [x] Make the startup warning state precisely what is exposed and to whom
 
 ## verify
 ```yaml

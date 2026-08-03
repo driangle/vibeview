@@ -50,7 +50,8 @@ Start the web interface.
 
 ```sh
 vibeview web --port 8080 --open
-vibeview web --lan              # bind to 0.0.0.0 with token auth
+vibeview web --lan              # trusted LAN only: plaintext, token-authenticated
+vibeview web --lan --tls-cert ./cert.pem --tls-key ./key.pem  # encrypted LAN access
 vibeview web /path/to/session.jsonl
 ```
 

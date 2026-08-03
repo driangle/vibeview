@@ -89,7 +89,8 @@ Launch a local web UI for browsing sessions visually.
 vibeview web                    # default port 4880
 vibeview web --port 8080
 vibeview web --open             # open browser automatically
-vibeview web --lan              # bind to 0.0.0.0 with token auth
+vibeview web --lan              # trusted LAN only: plaintext, token-authenticated
+vibeview web --lan --tls-cert ./cert.pem --tls-key ./key.pem  # encrypted LAN access
 ```
 
 ### Discover current session

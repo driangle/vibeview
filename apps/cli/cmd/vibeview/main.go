@@ -110,6 +110,9 @@ func webCmd(home string, claudeDir *string, logLevel *string) *cobra.Command {
 	var open bool
 	var lan bool
 	var dirsFlag string
+	var tlsCert string
+	var tlsKey string
+	var allowedOrigins []string
 
 	cmd := &cobra.Command{
 		Use:   "web [files...]",
@@ -126,6 +129,10 @@ Examples:
   vibeview web --dirs myproject`,
 		Run: func(cmd *cobra.Command, args []string) {
 			logutil.SetLevel(logutil.ParseLevel(*logLevel))
+			if (tlsCert == "") != (tlsKey == "") {
+				fmt.Fprintln(os.Stderr, "error: --tls-cert and --tls-key must be provided together")
+				return
+			}
 
 			var dirs []string
 			if dirsFlag != "" {
@@ -141,10 +148,11 @@ Examples:
 			projectsPath := filepath.Join(configDir, "projects.json")
 
 			cfg := server.Config{
-				ClaudeDir:    *claudeDir,
-				Dirs:         dirs,
-				SettingsPath: settingsPath,
-				ProjectsPath: projectsPath,
+				ClaudeDir:      *claudeDir,
+				Dirs:           dirs,
+				SettingsPath:   settingsPath,
+				ProjectsPath:   projectsPath,
+				AllowedOrigins: allowedOrigins,
 			}
 
 			if lan {
@@ -180,7 +188,11 @@ Examples:
 				os.Exit(1)
 			}
 
-			url := fmt.Sprintf("http://localhost:%d", port)
+			scheme := "http"
+			if tlsCert != "" {
+				scheme = "https"
+			}
+			url := fmt.Sprintf("%s://localhost:%d", scheme, port)
 
 			if lan {
 				lanIP := localLANIP()
@@ -188,10 +200,15 @@ Examples:
 				// fragment is never sent to the server, so it stays out of access
 				// logs and Referer headers. The SPA reads it and switches to
 				// header/cookie auth.
-				lanURL := fmt.Sprintf("http://%s:%d/#token=%s", lanIP, port, cfg.Token)
+				lanURL := fmt.Sprintf("%s://%s:%d/#token=%s", scheme, lanIP, port, cfg.Token)
 				fmt.Println()
-				fmt.Printf("\033[33mWARNING: LAN mode enabled — sessions are exposed on the local network\033[0m\n")
+				if scheme == "http" {
+					fmt.Printf("\033[33mWARNING: LAN mode uses plaintext HTTP. Any device able to observe local-network traffic can read the access token and your complete session contents. Use --tls-cert and --tls-key on untrusted networks.\033[0m\n")
+				} else {
+					fmt.Printf("\033[33mWARNING: LAN mode exposes token-protected session contents to devices that can reach this host; TLS encrypts traffic in transit.\033[0m\n")
+				}
 				fmt.Printf("listening on 0.0.0.0:%d\n", port)
+				fmt.Printf("CORS: same-origin/localhost only; %d additional origin(s) explicitly allowed\n", len(allowedOrigins))
 				fmt.Printf("access URL: %s\n", lanURL)
 				printQRCode(lanURL)
 			} else {
@@ -212,7 +229,7 @@ Examples:
 				_ = srv.Shutdown(ctx)
 			}()
 
-			if err := srv.ListenAndServe(port); err != nil && err.Error() != "http: Server closed" {
+			if err := srv.ListenAndServe(port, tlsCert, tlsKey); err != nil && err.Error() != "http: Server closed" {
 				fmt.Fprintf(os.Stderr, "error: %v\n", err)
 				os.Exit(1)
 			}
@@ -222,6 +239,9 @@ Examples:
 	cmd.Flags().IntVar(&port, "port", 4880, "port to listen on")
 	cmd.Flags().BoolVar(&open, "open", false, "open browser on startup")
 	cmd.Flags().BoolVar(&lan, "lan", false, "enable LAN mode (bind to 0.0.0.0 with token auth)")
+	cmd.Flags().StringVar(&tlsCert, "tls-cert", "", "TLS certificate PEM file (requires --tls-key)")
+	cmd.Flags().StringVar(&tlsKey, "tls-key", "", "TLS private key PEM file (requires --tls-cert)")
+	cmd.Flags().StringSliceVar(&allowedOrigins, "cors-origin", nil, "additional exact CORS origin (repeatable)")
 	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project path substrings to filter (OR-combined)")
 
 	return cmd

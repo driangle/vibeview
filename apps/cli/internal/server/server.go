@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -33,31 +32,33 @@ import (
 
 // Config holds the configuration for creating a Server.
 type Config struct {
-	ClaudeDir    string
-	Index        *session.Index // Pre-built index (for standalone mode).
-	Standalone   bool           // True when viewing standalone files (no ~/.claude).
-	Paths        []string       // Explicit file/directory paths (standalone mode).
-	Dirs         []string       // Filter to these project directory names (under ~/.claude/projects/).
-	SettingsPath string         // Path to the settings JSON file.
-	ProjectsPath string         // Path to the projects JSON file.
-	Host         string         // Bind address (default "127.0.0.1", "0.0.0.0" for LAN mode).
-	Token        string         // Access token for LAN mode (empty disables auth).
+	ClaudeDir      string
+	Index          *session.Index // Pre-built index (for standalone mode).
+	Standalone     bool           // True when viewing standalone files (no ~/.claude).
+	Paths          []string       // Explicit file/directory paths (standalone mode).
+	Dirs           []string       // Filter to these project directory names (under ~/.claude/projects/).
+	SettingsPath   string         // Path to the settings JSON file.
+	ProjectsPath   string         // Path to the projects JSON file.
+	Host           string         // Bind address (default "127.0.0.1", "0.0.0.0" for LAN mode).
+	Token          string         // Access token for LAN mode (empty disables auth).
+	AllowedOrigins []string       // Additional exact origins allowed by CORS.
 }
 
 // Server serves the vibeview HTTP API.
 type Server struct {
-	claudeDir    string
-	standalone   bool
-	paths        []string
-	dirs         []string
-	settingsPath string
-	projectsPath string
-	host         string
-	token        string
-	index        *session.Index
-	broker       *watcher.Broker
-	mux          *http.ServeMux
-	httpServer   *http.Server
+	claudeDir      string
+	standalone     bool
+	paths          []string
+	dirs           []string
+	settingsPath   string
+	projectsPath   string
+	host           string
+	token          string
+	allowedOrigins []string
+	index          *session.Index
+	broker         *watcher.Broker
+	mux            *http.ServeMux
+	httpServer     *http.Server
 }
 
 // New creates a Server. In standalone mode, it uses the provided Index directly.
@@ -92,17 +93,18 @@ func New(cfg Config) (*Server, error) {
 	}
 
 	s := &Server{
-		claudeDir:    cfg.ClaudeDir,
-		standalone:   cfg.Standalone,
-		paths:        cfg.Paths,
-		dirs:         cfg.Dirs,
-		settingsPath: cfg.SettingsPath,
-		projectsPath: cfg.ProjectsPath,
-		host:         host,
-		token:        cfg.Token,
-		index:        idx,
-		broker:       broker,
-		mux:          http.NewServeMux(),
+		claudeDir:      cfg.ClaudeDir,
+		standalone:     cfg.Standalone,
+		paths:          cfg.Paths,
+		dirs:           cfg.Dirs,
+		settingsPath:   cfg.SettingsPath,
+		projectsPath:   cfg.ProjectsPath,
+		host:           host,
+		token:          cfg.Token,
+		allowedOrigins: append([]string(nil), cfg.AllowedOrigins...),
+		index:          idx,
+		broker:         broker,
+		mux:            http.NewServeMux(),
 	}
 	s.routes()
 
@@ -136,16 +138,18 @@ func (s *Server) routes() {
 }
 
 // ListenAndServe starts the HTTP server on the given address.
-func (s *Server) ListenAndServe(port int) error {
+func (s *Server) ListenAndServe(port int, certFile, keyFile string) error {
 	addr := fmt.Sprintf("%s:%d", s.host, port)
-	lanMode := s.host == "0.0.0.0"
 
-	var handler http.Handler = corsHandler(port, lanMode, s.mux)
+	var handler http.Handler = corsHandler(port, s.allowedOrigins, s.mux)
 	if s.token != "" {
 		handler = tokenAuthMiddleware(s.token, handler)
 	}
 
 	s.httpServer = &http.Server{Addr: addr, Handler: handler}
+	if certFile != "" && keyFile != "" {
+		return s.httpServer.ListenAndServeTLS(certFile, keyFile)
+	}
 	return s.httpServer.ListenAndServe()
 }
 
@@ -168,56 +172,27 @@ func localhostOrigins(port int) map[string]struct{} {
 	}
 }
 
-// isPrivateIP checks whether the given IP string is in an RFC 1918 private range.
-func isPrivateIP(ip string) bool {
-	parsed := net.ParseIP(ip)
-	if parsed == nil {
-		return false
+// isAllowedOrigin checks the built-in localhost origins and any exact origins
+// explicitly configured by the operator. LAN mode does not implicitly trust
+// every browser origin on a private network.
+func isAllowedOrigin(origin string, port int, additional []string) bool {
+	allowed := localhostOrigins(port)
+	if _, ok := allowed[origin]; ok {
+		return true
 	}
-	privateRanges := []net.IPNet{
-		{IP: net.IP{10, 0, 0, 0}, Mask: net.CIDRMask(8, 32)},
-		{IP: net.IP{172, 16, 0, 0}, Mask: net.CIDRMask(12, 32)},
-		{IP: net.IP{192, 168, 0, 0}, Mask: net.CIDRMask(16, 32)},
-	}
-	for _, r := range privateRanges {
-		if r.Contains(parsed) {
+	for _, candidate := range additional {
+		if origin == candidate {
 			return true
 		}
 	}
 	return false
 }
 
-// isAllowedOrigin checks whether an origin is allowed based on mode.
-// In LAN mode, private-IP origins are also accepted.
-func isAllowedOrigin(origin string, port int, lanMode bool) bool {
-	allowed := localhostOrigins(port)
-	if _, ok := allowed[origin]; ok {
-		return true
-	}
-	if !lanMode {
-		return false
-	}
-	// Parse the origin to check if its host is a private IP.
-	// Origins look like "http://192.168.1.5:4880".
-	host := origin
-	for _, prefix := range []string{"https://", "http://"} {
-		if strings.HasPrefix(host, prefix) {
-			host = strings.TrimPrefix(host, prefix)
-			break
-		}
-	}
-	// Strip port.
-	if idx := strings.LastIndex(host, ":"); idx != -1 {
-		host = host[:idx]
-	}
-	return isPrivateIP(host)
-}
-
 // corsHandler wraps a handler with CORS headers restricted to allowed origins.
-func corsHandler(port int, lanMode bool, next http.Handler) http.Handler {
+func corsHandler(port int, additionalOrigins []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin != "" && isAllowedOrigin(origin, port, lanMode) {
+		if origin != "" && isAllowedOrigin(origin, port, additionalOrigins) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")

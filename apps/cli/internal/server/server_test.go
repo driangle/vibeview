@@ -346,7 +346,7 @@ func TestGetSubagentRejectsSymlinkOutsideClaudeDir(t *testing.T) {
 
 func TestCORSAllowsLocalhostOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
@@ -360,7 +360,7 @@ func TestCORSAllowsLocalhostOrigin(t *testing.T) {
 
 func TestCORSRejectsExternalOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "https://evil.com")
@@ -374,7 +374,7 @@ func TestCORSRejectsExternalOrigin(t *testing.T) {
 
 func TestCORSRejectsWildcard(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	w := httptest.NewRecorder()
@@ -387,7 +387,7 @@ func TestCORSRejectsWildcard(t *testing.T) {
 
 func TestCORSAllows127001Origin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://127.0.0.1:3000")
@@ -401,7 +401,7 @@ func TestCORSAllows127001Origin(t *testing.T) {
 
 func TestCORSPreflight(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("OPTIONS", "/api/sessions", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
@@ -415,7 +415,7 @@ func TestCORSPreflight(t *testing.T) {
 
 func TestCORSNoOriginHeader(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	// Same-origin requests have no Origin header; should still serve content.
 	req := httptest.NewRequest("GET", "/api/health", nil)
@@ -1159,7 +1159,7 @@ func TestActivityEndpointWithProjectFilter(t *testing.T) {
 
 func TestCORSAllowsIPv6Origin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://[::1]:3000")
@@ -1173,7 +1173,7 @@ func TestCORSAllowsIPv6Origin(t *testing.T) {
 
 func TestCORSAllowsHTTPS(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "https://localhost:3000")
@@ -1187,7 +1187,7 @@ func TestCORSAllowsHTTPS(t *testing.T) {
 
 func TestCORSRejectsWrongPort(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(3000, false, srv.mux)
+	handler := corsHandler(3000, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://localhost:9999")
@@ -1501,9 +1501,9 @@ func TestTokenAuthRejectsWrongToken(t *testing.T) {
 
 // --- LAN CORS tests ---
 
-func TestCORSAllowsLANOriginInLANMode(t *testing.T) {
+func TestCORSAllowsExplicitLANOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(4880, true, srv.mux)
+	handler := corsHandler(4880, []string{"http://192.168.1.5:4880"}, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://192.168.1.5:4880")
@@ -1515,9 +1515,9 @@ func TestCORSAllowsLANOriginInLANMode(t *testing.T) {
 	}
 }
 
-func TestCORSRejectsLANOriginWithoutLANMode(t *testing.T) {
+func TestCORSRejectsUnlistedLANOrigin(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(4880, false, srv.mux)
+	handler := corsHandler(4880, nil, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://192.168.1.5:4880")
@@ -1529,9 +1529,9 @@ func TestCORSRejectsLANOriginWithoutLANMode(t *testing.T) {
 	}
 }
 
-func TestCORSRejectsPublicIPInLANMode(t *testing.T) {
+func TestCORSRejectsUnlistedPublicIP(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(4880, true, srv.mux)
+	handler := corsHandler(4880, []string{"http://192.168.1.5:4880"}, srv.mux)
 
 	req := httptest.NewRequest("GET", "/api/health", nil)
 	req.Header.Set("Origin", "http://8.8.8.8:4880")
@@ -1543,34 +1543,9 @@ func TestCORSRejectsPublicIPInLANMode(t *testing.T) {
 	}
 }
 
-func TestIsPrivateIP(t *testing.T) {
-	tests := []struct {
-		ip   string
-		want bool
-	}{
-		{"192.168.1.1", true},
-		{"192.168.0.100", true},
-		{"10.0.0.1", true},
-		{"10.255.255.255", true},
-		{"172.16.0.1", true},
-		{"172.31.255.255", true},
-		{"172.32.0.1", false},
-		{"8.8.8.8", false},
-		{"127.0.0.1", false},
-		{"not-an-ip", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.ip, func(t *testing.T) {
-			if got := isPrivateIP(tt.ip); got != tt.want {
-				t.Errorf("isPrivateIP(%q) = %v, want %v", tt.ip, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCORSAllowsAuthorizationHeader(t *testing.T) {
 	srv := newTestServer(t)
-	handler := corsHandler(4880, true, srv.mux)
+	handler := corsHandler(4880, []string{"http://192.168.1.5:4880"}, srv.mux)
 
 	req := httptest.NewRequest("OPTIONS", "/api/sessions", nil)
 	req.Header.Set("Origin", "http://192.168.1.5:4880")

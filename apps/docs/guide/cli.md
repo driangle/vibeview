@@ -18,6 +18,9 @@ vibeview web --port 8080 --open
 | `--port` | `4880` | Port to listen on |
 | `--open` | `false` | Open the browser on startup |
 | `--lan` | `false` | Enable LAN mode: bind to `0.0.0.0` with token auth |
+| `--tls-cert` | — | Serve HTTPS with this PEM certificate (requires `--tls-key`) |
+| `--tls-key` | — | Serve HTTPS with this PEM private key (requires `--tls-cert`) |
+| `--cors-origin` | — | Allow an additional exact browser origin; may be repeated |
 | `--dirs` | | Comma-separated project path substrings to filter (OR-combined) |
 | `--claude-dir` | `~/.claude` | Path to claude data directory |
 | `--log-level` | `warn` | Log level: `debug`, `warn`, `error` |
@@ -34,7 +37,10 @@ vibeview web /path/to/sessions/
 By default the server binds to `127.0.0.1` and is reachable only from your own
 machine. Passing `--lan` binds to `0.0.0.0` so other devices on your local
 network can reach it, and generates a random access token to guard against
-unauthorized access.
+unauthorized access. The threat model is a **trusted LAN**: plaintext mode does
+not protect the token or session contents from another device that can observe
+network traffic. Treat public Wi-Fi, shared office networks, and compromised
+home networks as hostile and use TLS or an encrypted tunnel.
 
 ```bash
 vibeview web --lan
@@ -44,9 +50,9 @@ On startup, vibeview prints a warning and a ready-to-use URL that includes the
 token:
 
 ```
-WARNING: LAN mode enabled — sessions are exposed on the local network
+WARNING: LAN mode uses plaintext HTTP. Any device able to observe local-network traffic can read the access token and your complete session contents. Use --tls-cert and --tls-key on untrusted networks.
 listening on 0.0.0.0:4880
-  http://192.168.1.42:4880/#token=<generated-token>
+access URL: http://192.168.1.42:4880/#token=<generated-token>
 ```
 
 The token travels in the URL **fragment** (`#token=`), which browsers never send
@@ -55,8 +61,26 @@ web app reads the token, removes it from the visible URL, and then authenticates
 with an `Authorization: Bearer <token>` header. The live session stream (which
 cannot send headers) is authorized by a short handshake that sets an `HttpOnly`
 cookie, so the token is never placed in a request URL. Because LAN mode exposes
-your session data to every device on the network, only enable it on networks you
-trust.
+your session data on a network interface, only enable plaintext LAN mode on
+networks you trust.
+
+For encrypted transport, supply a certificate and matching private key. A local
+CA tool such as `mkcert` can issue a certificate trusted by your devices:
+
+```bash
+vibeview web --lan --tls-cert ./vibeview.pem --tls-key ./vibeview-key.pem
+```
+
+Alternatively, keep vibeview on its default loopback address and reach it
+through an encrypted SSH tunnel (`ssh -L 4880:127.0.0.1:4880 host`).
+
+The embedded UI is same-origin and needs no CORS permission. LAN mode therefore
+does **not** trust arbitrary RFC1918 browser origins. If a separate frontend must
+call the API, opt in to its exact scheme, host, and port:
+
+```bash
+vibeview web --lan --cors-origin https://dashboard.example.test:8443
+```
 
 ### `vibeview inspect`
 
