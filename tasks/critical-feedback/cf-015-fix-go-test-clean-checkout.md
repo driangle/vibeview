@@ -1,7 +1,7 @@
 ---
 id: "cf-015"
 title: "Make 'go test ./...' pass on a clean checkout"
-status: pending
+status: completed
 priority: low
 effort: small
 type: chore
@@ -14,6 +14,7 @@ context:
   - "apps/cli/internal/spa/spa.go"
   - ".github/workflows/test.yml"
   - "Makefile"
+completed_at: 2026-08-03
 ---
 
 # Make 'go test ./...' pass on a clean checkout
@@ -35,9 +36,9 @@ confusing setup failure that looks like a broken repo rather than a missing buil
 
 ## Acceptance Criteria
 
-- [ ] `go test ./...` succeeds on a clean checkout with no manual placeholder step (e.g. commit a minimal placeholder `dist/index.html`, add a build tag, or embed a fallback)
-- [ ] The chosen fix does not ship a stale SPA into release builds (release still embeds the real built `dist`)
-- [ ] Document the one-command test path in the contributor/README workflow if any prerequisite remains
+- [x] `go test ./...` succeeds on a clean checkout with no manual placeholder step (e.g. commit a minimal placeholder `dist/index.html`, add a build tag, or embed a fallback)
+- [x] The chosen fix does not ship a stale SPA into release builds (release still embeds the real built `dist`)
+- [x] Document the one-command test path in the contributor/README workflow if any prerequisite remains
 
 ## verify
 ```yaml

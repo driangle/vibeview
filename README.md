@@ -22,6 +22,14 @@ make install
 
 Requires Go 1.22+ and Node.js.
 
+## Development
+
+Run the Go test suite directly after cloning; no web build is required:
+
+```sh
+cd apps/cli && go test ./...
+```
+
 ## Usage
 
 ```sh
