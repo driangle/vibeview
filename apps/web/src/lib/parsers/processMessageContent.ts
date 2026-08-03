@@ -132,7 +132,7 @@ export function processMessageContent(raw: string): MessageSegment[] {
   for (const { start, end, segment } of found) {
     if (start > cursor) {
       const raw = text.slice(cursor, start);
-      const cleaned = cleanTextSegment(restoreCodeBlocks(raw, blocks));
+      const cleaned = restoreCodeBlocks(cleanTextSegment(raw), blocks);
       if (cleaned) segments.push({ type: 'text', content: cleaned });
     }
     segments.push(segment);
@@ -142,7 +142,7 @@ export function processMessageContent(raw: string): MessageSegment[] {
   // Trailing text.
   if (cursor < text.length) {
     const raw = text.slice(cursor);
-    const cleaned = cleanTextSegment(restoreCodeBlocks(raw, blocks));
+    const cleaned = restoreCodeBlocks(cleanTextSegment(raw), blocks);
     if (cleaned) segments.push({ type: 'text', content: cleaned });
   }
 

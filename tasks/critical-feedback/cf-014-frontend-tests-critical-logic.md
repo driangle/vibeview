@@ -1,7 +1,7 @@
 ---
 id: "cf-014"
 title: "Add frontend tests for the untested critical logic"
-status: pending
+status: completed
 priority: medium
 effort: medium
 type: chore
@@ -15,6 +15,7 @@ context:
   - "apps/web/src/components/contribution-graph-builders.ts"
   - "apps/web/src/components/search-messages.ts"
   - "apps/web/src/components/date-range-utils.ts"
+completed_at: 2026-08-03
 ---
 
 # Add frontend tests for the untested critical logic
@@ -37,10 +38,10 @@ where the logic moves.)
 
 ## Acceptance Criteria
 
-- [ ] Tests for `useSessionStream` dedup + reconnect behavior (mocked EventSource)
-- [ ] Tests for any surviving client-side date math and preset-range classification, including timezone edge cases
-- [ ] Tests for any surviving client-side search/snippet logic
-- [ ] Coverage added for the highest-risk derivation modules that remain after cf-009/cf-011
+- [x] Tests for `useSessionStream` dedup + reconnect behavior (mocked EventSource)
+- [x] Tests for any surviving client-side date math and preset-range classification, including timezone edge cases
+- [x] Tests for any surviving client-side search/snippet logic
+- [x] Coverage added for the highest-risk derivation modules that remain after cf-009/cf-011
 
 ## verify
 ```yaml
