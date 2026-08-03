@@ -12,7 +12,7 @@ created: "2026-03-26"
 
 ## Objective
 
-Create a new Claude Code skill at `.claude/skills/audit.md` that performs a comprehensive codebase audit covering security, privacy, code quality, and architectural concerns. The skill should be invocable via `/audit` and produce a structured report across 8 audit dimensions. Since VibeView handles sensitive Claude session data, the audit must pay special attention to ensuring data never leaves the local machine.
+Create a new Claude Code skill at `.claude/skills/audit.md` that performs a comprehensive codebase audit covering security, privacy, code quality, and architectural concerns. The skill should be invocable via `/audit` and produce a structured report across 8 audit dimensions. Since vibeview handles sensitive Claude session data, the audit must pay special attention to ensuring data never leaves the local machine.
 
 ## Tasks
 

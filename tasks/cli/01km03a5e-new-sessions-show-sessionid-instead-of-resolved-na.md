@@ -13,7 +13,7 @@ created: "2026-03-18"
 ## Steps to Reproduce
 
 1. Start a new Claude Code session (so a new entry is appended to `~/.claude/history.jsonl`)
-2. Open the VibeView web UI — the new session appears in the session table
+2. Open the vibeview web UI — the new session appears in the session table
 3. Observe the session name column
 
 ## Expected Behavior

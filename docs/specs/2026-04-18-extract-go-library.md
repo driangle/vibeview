@@ -7,7 +7,7 @@
 
 ## Overview
 
-VibeView's core logic — parsing Claude Code JSONL files, discovering sessions, extracting insights, and searching — is currently locked behind Go's `internal/` convention. This spec defines how to extract that logic into a standalone, importable Go library so other tools can consume it.
+vibeview's core logic — parsing Claude Code JSONL files, discovering sessions, extracting insights, and searching — is currently locked behind Go's `internal/` convention. This spec defines how to extract that logic into a standalone, importable Go library so other tools can consume it.
 
 **Known consumer:** `doer` CLI.
 

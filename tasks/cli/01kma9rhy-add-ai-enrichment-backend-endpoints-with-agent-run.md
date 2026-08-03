@@ -23,7 +23,7 @@ Add backend API endpoints that let the frontend trigger AI-powered semantic enri
 - [ ] Design the enrichment prompt — include session messages (or a summary for very long sessions) and request structured JSON output matching the enrichment schema
 - [ ] Create a core enrichment service that accepts session data, invokes Claude CLI via `agentrunner.Run()` with a budget cap, and returns a parsed `SessionEnrichment`
 - [ ] Add error handling in the service: agent-runner failures, budget exceeded, Claude CLI not installed
-- [ ] Add caching: store/load enrichment results as `{sessionId}.enrichment.json` in VibeView's data directory
+- [ ] Add caching: store/load enrichment results as `{sessionId}.enrichment.json` in vibeview's data directory
 
 ### API endpoints
 - [ ] Create `POST /api/sessions/{id}/enrich` endpoint that calls the enrichment service and returns the result

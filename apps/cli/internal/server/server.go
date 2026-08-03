@@ -1,4 +1,4 @@
-// Package server implements the HTTP API server for VibeView.
+// Package server implements the HTTP API server for vibeview.
 package server
 
 import (
@@ -43,7 +43,7 @@ type Config struct {
 	Token        string         // Access token for LAN mode (empty disables auth).
 }
 
-// Server serves the VibeView HTTP API.
+// Server serves the vibeview HTTP API.
 type Server struct {
 	claudeDir    string
 	standalone   bool

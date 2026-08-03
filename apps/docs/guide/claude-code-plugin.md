@@ -1,6 +1,6 @@
 # Claude Code Plugin
 
-VibeView ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that adds a `/vibeview` skill to Claude Code. This lets you search, inspect, and analyze your session history directly from within a Claude Code conversation.
+vibeview ships a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that adds a `/vibeview` skill to Claude Code. This lets you search, inspect, and analyze your session history directly from within a Claude Code conversation.
 
 ## Install
 

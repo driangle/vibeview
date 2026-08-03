@@ -2,9 +2,9 @@
 description: Use the vibeview CLI to browse, search, inspect, and analyze Claude Code sessions. Trigger when the user asks about their session history, token usage, costs, past conversations, or wants to find something they discussed previously.
 ---
 
-# VibeView CLI
+# vibeview CLI
 
-VibeView is a CLI tool for browsing and analyzing Claude Code sessions. It reads session data from `~/.claude` and provides commands to search, inspect, and report on past conversations.
+vibeview is a CLI tool for browsing and analyzing Claude Code sessions. It reads session data from `~/.claude` and provides commands to search, inspect, and report on past conversations.
 
 **Prerequisite:** `vibeview` must be installed and available in PATH. If not found, tell the user to install it with `go install github.com/gg/vibeview/apps/cli/cmd/vibeview@latest` or `brew install vibeview`.
 

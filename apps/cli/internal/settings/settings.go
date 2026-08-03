@@ -1,4 +1,4 @@
-// Package settings handles persistent user preferences for VibeView.
+// Package settings handles persistent user preferences for vibeview.
 package settings
 
 import (

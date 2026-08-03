@@ -12,7 +12,7 @@ created: "2026-03-15"
 
 ## Steps to Reproduce
 
-1. Run VibeView and observe stderr/logs
+1. Run vibeview and observe stderr/logs
 2. Warning messages appear for sessions that have a `history.jsonl` entry but no corresponding session JSONL file on disk
 
 ## Actual Behavior

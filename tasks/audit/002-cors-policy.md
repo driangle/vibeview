@@ -17,7 +17,7 @@ context:
 ## Findings
 
 ### HIGH: Permissive CORS headers (server.go:126-138)
-Server responds with `Access-Control-Allow-Origin: *`. Any website can query the localhost API while VibeView is running, extracting session metadata, performing searches, and even modifying settings via PUT.
+Server responds with `Access-Control-Allow-Origin: *`. Any website can query the localhost API while vibeview is running, extracting session metadata, performing searches, and even modifying settings via PUT.
 
 ## Acceptance Criteria
 

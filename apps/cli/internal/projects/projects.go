@@ -1,4 +1,4 @@
-// Package projects handles persistent project storage for VibeView.
+// Package projects handles persistent project storage for vibeview.
 package projects
 
 import (

@@ -1,10 +1,10 @@
-# VibeView
+# vibeview
 
 A local CLI tool for browsing your Claude Code sessions in a clean, read-only web interface.
 
 [Documentation](https://driangle.github.io/vibeview/)
 
-VibeView watches your `~/.claude` directory, discovers sessions in real time, and presents them as a browsable chat UI with tool calls, file edits, thinking blocks, and cost breakdowns.
+vibeview watches your `~/.claude` directory, discovers sessions in real time, and presents them as a browsable chat UI with tool calls, file edits, thinking blocks, and cost breakdowns.
 
 ## Install
 
@@ -120,7 +120,7 @@ Live sessions update in real time via SSE.
 
 ## Claude Code Plugin
 
-VibeView includes a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that adds a `/vibeview` skill to Claude Code. This lets you search, inspect, and analyze your sessions directly from a conversation.
+vibeview includes a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that adds a `/vibeview` skill to Claude Code. This lets you search, inspect, and analyze your sessions directly from a conversation.
 
 ```sh
 claude plugin add driangle/vibeview

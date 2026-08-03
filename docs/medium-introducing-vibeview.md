@@ -1,4 +1,4 @@
-# I Built VibeView to See What Claude Code Was Actually Doing
+# I Built vibeview to See What Claude Code Was Actually Doing
 
 *A local, read-only viewer for browsing, searching, and understanding your Claude Code sessions.*
 
@@ -17,7 +17,7 @@ I wanted to answer simple questions:
 
 The answers were already on my machine. Claude Code records a surprisingly detailed history of every session. What was missing was a good way to look at it.
 
-So I built [VibeView](https://driangle.github.io/vibeview/).
+So I built [vibeview](https://driangle.github.io/vibeview/).
 
 ## A Claude Code session is more than a chat
 
@@ -53,9 +53,9 @@ Some of the most interesting sessions are even harder to inspect. Sub-agents wor
 
 Their complete histories still exist on disk. They just needed a viewer.
 
-## Meet VibeView
+## Meet vibeview
 
-VibeView turns Claude Code’s session files into something you can browse, search, and reason about.
+vibeview turns Claude Code’s session files into something you can browse, search, and reason about.
 
 It has three interfaces:
 
@@ -68,7 +68,7 @@ All three use the same data and analysis underneath.
 Two principles shape the project:
 
 - **Local-first:** your session history stays on your machine.
-- **Read-only:** VibeView never modifies the Claude Code sessions it displays.
+- **Read-only:** vibeview never modifies the Claude Code sessions it displays.
 
 It is an observer, not an editor.
 
@@ -80,7 +80,7 @@ Start the interface with:
 vibeview web --open
 ```
 
-VibeView launches a local web app, by default at `localhost:4880`, and discovers the Claude Code sessions already on your machine.
+vibeview launches a local web app, by default at `localhost:4880`, and discovers the Claude Code sessions already on your machine.
 
 The sessions page gives you a searchable, filterable view of your history. You can browse by project, directory, model, state, and time, and see useful metadata without opening every conversation.
 
@@ -88,7 +88,7 @@ Open a session and the raw event stream becomes a readable timeline: user and as
 
 A summary shows the files touched, tools used, commands run, sub-agents created, errors encountered, token usage, and estimated cost.
 
-Large sessions are paginated so they remain usable, and active conversations update in real time as Claude Code writes new events. VibeView also includes activity and directory views for seeing when and where you have been working.
+Large sessions are paginated so they remain usable, and active conversations update in real time as Claude Code writes new events. vibeview also includes activity and directory views for seeing when and where you have been working.
 
 This is particularly useful for sub-agent and headless sessions. Instead of relying on a short handoff, you can read the complete transcript and see the work behind it.
 
@@ -131,11 +131,11 @@ vibeview inspect <session-id>
 
 `inspect` reports message counts, duration, model, token usage, estimated cost, tools, errors, and files touched. It also traces session discovery and reports problems along the way, which makes it useful for diagnosing the surprisingly common question: “Why is this session not showing up?”
 
-Commands support structured output such as JSON, so VibeView can also become part of scripts and other developer tools.
+Commands support structured output such as JSON, so vibeview can also become part of scripts and other developer tools.
 
 ## Let Claude Code search its own history
 
-VibeView also ships as a Claude Code plugin that adds a `/vibeview` skill:
+vibeview also ships as a Claude Code plugin that adds a `/vibeview` skill:
 
 ```sh
 claude plugin add driangle/vibeview
@@ -149,7 +149,7 @@ Once installed, you can ask questions in natural language:
 
 > Show me the most expensive sessions in this project.
 
-Claude Code runs the appropriate VibeView command, reads the structured result, and answers in context.
+Claude Code runs the appropriate vibeview command, reads the structured result, and answers in context.
 
 There is also a `vibeview self` command that identifies the current session from inside a tool call. In other words, an agent can inspect the session it is participating in.
 
@@ -163,7 +163,7 @@ A final answer tells you what the agent wants you to know. A session tells you w
 
 That difference matters when you are debugging, learning, auditing, estimating costs, or trying to recover context from earlier work. The session history is already there, and it is richer than most people realize. It should be as easy to inspect as a Git history or a test log.
 
-VibeView is my attempt to make it that easy.
+vibeview is my attempt to make it that easy.
 
 ## Try it
 
@@ -180,7 +180,7 @@ To query your history from Claude Code:
 claude plugin add driangle/vibeview
 ```
 
-VibeView is local, read-only, and available now.
+vibeview is local, read-only, and available now.
 
 [Read the documentation](https://driangle.github.io/vibeview/)
 

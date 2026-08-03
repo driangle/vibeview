@@ -12,7 +12,7 @@ created: "2026-03-18"
 
 ## Objective
 
-Add a dedicated Settings page to the web UI where users can configure various aspects of VibeView. Settings should be persisted to a file on disk (via a new backend API) so they survive browser clears and work across devices hitting the same server. The first step is to audit the codebase for configurable behaviors and surface the most useful ones as settings.
+Add a dedicated Settings page to the web UI where users can configure various aspects of vibeview. Settings should be persisted to a file on disk (via a new backend API) so they survive browser clears and work across devices hitting the same server. The first step is to audit the codebase for configurable behaviors and surface the most useful ones as settings.
 
 ## Discovery
 

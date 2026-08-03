@@ -263,7 +263,7 @@ interface KeyDecision {
 
 ### Storage
 
-Enrichment results are stored as `{sessionId}.enrichment.json` alongside the session JSONL, or in a dedicated VibeView data directory. Cached indefinitely — user can re-trigger to refresh.
+Enrichment results are stored as `{sessionId}.enrichment.json` alongside the session JSONL, or in a dedicated vibeview data directory. Cached indefinitely — user can re-trigger to refresh.
 
 ---
 

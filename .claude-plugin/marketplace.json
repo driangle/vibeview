@@ -4,7 +4,7 @@
     "name": "German Greiner"
   },
   "metadata": {
-    "description": "VibeView plugin for Claude Code",
+    "description": "vibeview plugin for Claude Code",
     "version": "0.0.1",
     "pluginRoot": "./claude-code-plugin"
   },

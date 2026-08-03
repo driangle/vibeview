@@ -510,8 +510,8 @@ No v2 feature requires modifying v1's core data pipeline. All extensions are add
 
 These PM ideas are noted but deferred beyond v2:
 
-- **Branchable reality / what-if forks** — Requires conversation forking at the agent level, which is outside VibeView's read-only observation model. VibeView visualizes sessions that have already happened; it does not control the agent. This would require integration with the agent runtime.
+- **Branchable reality / what-if forks** — Requires conversation forking at the agent level, which is outside vibeview's read-only observation model. vibeview visualizes sessions that have already happened; it does not control the agent. This would require integration with the agent runtime.
 - **Drag to cluster** — User-driven spatial rearrangement conflicts with the algorithmic layout. Would need a freeform canvas mode that is a fundamentally different interaction model.
-- **Collaborative cursor presence** — VibeView is a single-user tool. Multi-user presence requires WebSocket infrastructure and auth.
+- **Collaborative cursor presence** — vibeview is a single-user tool. Multi-user presence requires WebSocket infrastructure and auth.
 - **Diff view between agent responses** — Meaningful only for branched conversations, which are out of scope (see above).
 - **Token stream playback** (L5 zoom) — Requires token-level timing data not available in the JSONL format.

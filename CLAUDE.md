@@ -3,6 +3,10 @@
 - Run `make check-lite` frequently to catch compilation and lint errors early.
 - After finishing a task, run `make check` to verify lint, tests, and build all pass.
 
+## Naming
+
+- **The project name is always lowercase: `vibeview`** — never "VibeView" or any other casing, anywhere it appears to users (docs, README, UI, CLI output, plugin/marketplace descriptions, comments). The one exception is where a language requires it, e.g. the Homebrew formula's Ruby class `Vibeview` (Ruby constants must be capitalized).
+
 ## Coding Principles
 
 - **Clarity over cleverness** — straightforward solutions, obvious naming, simple control flow.

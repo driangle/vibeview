@@ -12,7 +12,7 @@ created: "2026-03-31"
 
 ## Objective
 
-Make the VibeView web interface usable on mobile devices. The current layout assumes desktop-width viewports; on phones and small tablets, content overflows or is difficult to interact with. Add responsive styles and layout adjustments so the app is comfortable to use on screens down to 320px wide.
+Make the vibeview web interface usable on mobile devices. The current layout assumes desktop-width viewports; on phones and small tablets, content overflows or is difficult to interact with. Add responsive styles and layout adjustments so the app is comfortable to use on screens down to 320px wide.
 
 ## Tasks
 

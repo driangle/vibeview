@@ -19,7 +19,7 @@ context:
 ## Findings
 
 ### CRITICAL: Symlink following on session files (tailer.go:26-51)
-`NewTailer()` uses `os.Stat()` without resolving symlinks. An attacker who creates symlinks in `~/.claude/projects/` can cause VibeView to read arbitrary files (e.g., `~/.ssh/id_rsa`).
+`NewTailer()` uses `os.Stat()` without resolving symlinks. An attacker who creates symlinks in `~/.claude/projects/` can cause vibeview to read arbitrary files (e.g., `~/.ssh/id_rsa`).
 
 ### CRITICAL: Path traversal via SessionID (session.go:436-478)
 Session IDs derived from filenames are not validated. A malicious JSONL file with `../../../etc/passwd` as sessionID could bypass directory restrictions.
