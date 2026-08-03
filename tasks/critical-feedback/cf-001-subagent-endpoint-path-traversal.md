@@ -1,7 +1,7 @@
 ---
 id: "cf-001"
 title: "Validate and contain agentId in the subagent endpoint"
-status: pending
+status: completed
 priority: critical
 effort: small
 type: bug
@@ -13,6 +13,7 @@ created: 2026-08-03
 context:
   - "apps/cli/internal/server/server.go"
   - "apps/lib/pathutil/pathutil.go"
+completed_at: 2026-08-03
 ---
 
 # Validate and contain agentId in the subagent endpoint
@@ -39,10 +40,10 @@ exactly the defense-in-depth gap the existing helpers were built to close.
 
 ## Acceptance Criteria
 
-- [ ] Validate `agentId` format before use (e.g. reject anything outside `^[a-zA-Z0-9_-]+$`)
-- [ ] Resolve the final `agentPath`/`metaPath` with `pathutil.SafeResolve` against `claudeDir` and reject paths that escape the session's `subagents/` directory
-- [ ] Apply the same containment inside `resolveToolUseAgentID`
-- [ ] Add HTTP-layer tests covering traversal payloads (`..`, encoded `%2F`, symlink escape)
+- [x] Validate `agentId` format before use (e.g. reject anything outside `^[a-zA-Z0-9_-]+$`)
+- [x] Resolve the final `agentPath`/`metaPath` with `pathutil.SafeResolve` against `claudeDir` and reject paths that escape the session's `subagents/` directory
+- [x] Apply the same containment inside `resolveToolUseAgentID`
+- [x] Add HTTP-layer tests covering traversal payloads (`..`, encoded `%2F`, symlink escape)
 
 ## verify
 ```yaml

@@ -18,6 +18,7 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/insights"
+	"github.com/driangle/vibeview/apps/lib/pathutil"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
 	"github.com/driangle/vibeview/apps/lib/session"
@@ -538,6 +539,13 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	agentID := r.PathValue("agentId")
 
+	// Reject any agent ID that could walk outside the subagents directory before
+	// it is interpolated into a filesystem path.
+	if err := pathutil.ValidateAgentID(agentID); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid agent ID"})
+		return
+	}
+
 	meta := s.index.FindSession(id)
 	if meta == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
@@ -552,6 +560,7 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 
 	// Subagent files live at {session-dir}/subagents/agent-{agentId}.jsonl
 	sessionDir := strings.TrimSuffix(sessionPath, ".jsonl")
+	subagentsDir := filepath.Join(sessionDir, "subagents")
 
 	// If the agent ID is a synthetic tool_use_ prefix, resolve to the real file ID
 	// by matching the tool_use ID against the session's Agent tool_use blocks.
@@ -561,7 +570,13 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	agentPath := filepath.Join(sessionDir, "subagents", "agent-"+agentID+".jsonl")
+	// Resolve and contain the path so a symlink or crafted ID cannot escape the
+	// session's subagents directory.
+	agentPath, err := safeSubagentPath(subagentsDir, agentID, ".jsonl")
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "subagent session not found"})
+		return
+	}
 
 	f, err := os.Open(agentPath)
 	if err != nil {
@@ -581,17 +596,19 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 		msgResponses = append(msgResponses, toMessageResponse(msg))
 	}
 
-	// Read optional meta file for agent type and description.
+	// Read optional meta file for agent type and description. A missing or
+	// unsafe meta path is not fatal — the agent conversation still renders.
 	var agentType, description string
-	metaPath := filepath.Join(sessionDir, "subagents", "agent-"+agentID+".meta.json")
-	if metaBytes, err := os.ReadFile(metaPath); err == nil {
-		var metaData struct {
-			AgentType   string `json:"agentType"`
-			Description string `json:"description"`
-		}
-		if json.Unmarshal(metaBytes, &metaData) == nil {
-			agentType = metaData.AgentType
-			description = metaData.Description
+	if metaPath, err := safeSubagentPath(subagentsDir, agentID, ".meta.json"); err == nil {
+		if metaBytes, err := os.ReadFile(metaPath); err == nil {
+			var metaData struct {
+				AgentType   string `json:"agentType"`
+				Description string `json:"description"`
+			}
+			if json.Unmarshal(metaBytes, &metaData) == nil {
+				agentType = metaData.AgentType
+				description = metaData.Description
+			}
 		}
 	}
 
@@ -605,6 +622,18 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 		SkippedLines: parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// safeSubagentPath builds the path to a subagent file (agent-<id><suffix>) and
+// verifies it stays within subagentsDir, guarding against traversal and symlink
+// escape. It returns an error if the ID is malformed or the resolved path
+// escapes the directory (which also covers the file simply not existing).
+func safeSubagentPath(subagentsDir, agentID, suffix string) (string, error) {
+	if err := pathutil.ValidateAgentID(agentID); err != nil {
+		return "", err
+	}
+	path := filepath.Join(subagentsDir, "agent-"+agentID+suffix)
+	return pathutil.SafeResolve(path, subagentsDir)
 }
 
 // resolveToolUseAgentID resolves a synthetic "tool_use_<toolUseId>" agent ID
@@ -651,7 +680,13 @@ func resolveToolUseAgentID(sessionDir, syntheticID string) string {
 		if !strings.HasPrefix(name, "agent-") || !strings.HasSuffix(name, ".meta.json") {
 			continue
 		}
-		data, err := os.ReadFile(filepath.Join(subagentsDir, name))
+		// Contain each meta read within subagentsDir so a symlinked entry
+		// cannot redirect the read outside the directory.
+		metaPath, err := pathutil.SafeResolve(filepath.Join(subagentsDir, name), subagentsDir)
+		if err != nil {
+			continue
+		}
+		data, err := os.ReadFile(metaPath)
 		if err != nil {
 			continue
 		}

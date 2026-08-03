@@ -8,13 +8,25 @@ import (
 	"regexp"
 )
 
-var sessionIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,256}$`)
+// safeIDPattern matches identifiers that are safe to interpolate into file
+// paths: alphanumerics, underscore, and hyphen only. It rejects path traversal
+// sequences (`..`, `/`, `\`) and other unsafe characters.
+var safeIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,256}$`)
 
 // ValidateSessionID checks that a session ID contains only safe characters.
 // It rejects path traversal sequences and other unsafe characters.
 func ValidateSessionID(id string) error {
-	if !sessionIDPattern.MatchString(id) {
+	if !safeIDPattern.MatchString(id) {
 		return fmt.Errorf("invalid session ID %q: must match [a-zA-Z0-9_-]{1,256}", id)
+	}
+	return nil
+}
+
+// ValidateAgentID checks that a subagent ID contains only safe characters,
+// rejecting path traversal sequences before it is interpolated into a file path.
+func ValidateAgentID(id string) error {
+	if !safeIDPattern.MatchString(id) {
+		return fmt.Errorf("invalid agent ID %q: must match [a-zA-Z0-9_-]{1,256}", id)
 	}
 	return nil
 }

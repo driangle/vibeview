@@ -36,6 +36,22 @@ func TestValidateSessionID(t *testing.T) {
 	}
 }
 
+func TestValidateAgentID(t *testing.T) {
+	valid := []string{"agent-1", "tool_use_toolu_01ABC", "a", strings.Repeat("x", 256)}
+	for _, id := range valid {
+		if err := ValidateAgentID(id); err != nil {
+			t.Errorf("ValidateAgentID(%q) = %v, want nil", id, err)
+		}
+	}
+
+	invalid := []string{"", "../../../etc/passwd", "../secret", "foo/bar", "foo\\bar", "a.b", strings.Repeat("x", 257)}
+	for _, id := range invalid {
+		if err := ValidateAgentID(id); err == nil {
+			t.Errorf("ValidateAgentID(%q) = nil, want error", id)
+		}
+	}
+}
+
 func TestSafeResolve(t *testing.T) {
 	base := t.TempDir()
 	inside := filepath.Join(base, "projects", "sess.jsonl")
