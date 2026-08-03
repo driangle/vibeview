@@ -26,6 +26,7 @@ test: ## Run Go tests with coverage
 	cd apps/cli && go test ./... -coverprofile=coverage.out -count=1
 	@cd apps/cli && go tool cover -func=coverage.out | tail -1
 	@echo "Coverage report: apps/cli/coverage.out (use 'go tool cover -html=coverage.out' to view)"
+	cd apps/lib && go test ./... -count=1
 
 check-lite: lint ## Compile + lint across all projects (no tests)
 	cd apps/cli && go build ./cmd/vibeview
@@ -34,6 +35,7 @@ check-lite: lint ## Compile + lint across all projects (no tests)
 check: check-lite ## Full validation: check-lite + tests, docs build
 	cd apps/cli && go test ./... -coverprofile=coverage.out -count=1
 	@cd apps/cli && go tool cover -func=coverage.out | tail -1
+	cd apps/lib && go test ./... -count=1
 	cd apps/web && npm test --if-present
 	cd apps/docs && npm run build
 
