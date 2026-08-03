@@ -42,6 +42,14 @@ not protect the token or session contents from another device that can observe
 network traffic. Treat public Wi-Fi, shared office networks, and compromised
 home networks as hostile and use TLS or an encrypted tunnel.
 
+Vibeview applies best-effort redaction before session data is sent to the UI.
+It recognizes common provider credentials, JWTs, private-key blocks, connection
+strings, and high-entropy token-like values. Redaction is pattern-based, not a
+security boundary: novel formats, short secrets, credentials split across
+fields, and ordinary text that resembles a secret can be missed or masked by
+mistake. Review session contents before sharing them and do not rely on
+redaction to make an untrusted network safe.
+
 ```bash
 vibeview web --lan
 ```

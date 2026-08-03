@@ -1,6 +1,7 @@
 package redact
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -84,6 +85,62 @@ func TestRedactSecrets(t *testing.T) {
 				t.Errorf("RedactSecrets(%q)\n  got:  %q\n  want: %q", tt.input, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestRedactSecrets_ToolOutputFixtures(t *testing.T) {
+	tests := []struct {
+		name    string
+		fixture string
+		secrets []string
+	}{
+		{
+			name: "dotenv dump with standalone provider keys",
+			fixture: "OPENAI_KEY=sk-proj-aB3dE5fG7hJ9kL2mN4pQ6rS8tV0xYz\n" +
+				"ANTHROPIC_KEY=sk-ant-api03-aB3dE5fG7hJ9kL2mN4pQ6rS8\n" +
+				"GH_TOKEN=ghp_aB3dE5fG7hJ9kL2mN4pQ6rS8tV0xYz12\n" +
+				"AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE",
+			secrets: []string{
+				"sk-proj-aB3dE5fG7hJ9kL2mN4pQ6rS8tV0xYz",
+				"sk-ant-api03-aB3dE5fG7hJ9kL2mN4pQ6rS8",
+				"ghp_aB3dE5fG7hJ9kL2mN4pQ6rS8tV0xYz12",
+				"AKIAIOSFODNN7EXAMPLE",
+			},
+		},
+		{
+			name: "cat credentials file with bare secrets",
+			fixture: "[default]\naws_access_key_id = ASIAIOSFODNN7EXAMPLE\n" +
+				"aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\n" +
+				"session_token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\n" +
+				"private_key_id: 4f3c2b1a0987fedc6b5a49382716abcd",
+			secrets: []string{
+				"ASIAIOSFODNN7EXAMPLE",
+				"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+				"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+				"4f3c2b1a0987fedc6b5a49382716abcd",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := RedactSecrets(tt.fixture)
+			for _, secret := range tt.secrets {
+				if strings.Contains(got, secret) {
+					t.Errorf("secret remained in redacted output: %q", secret)
+				}
+			}
+			if !strings.Contains(got, placeholder) {
+				t.Errorf("redacted output contains no placeholder: %q", got)
+			}
+		})
+	}
+}
+
+func TestRedactSecrets_PreservesLowEntropyBlobs(t *testing.T) {
+	input := "checksum-like placeholders: 00000000000000000000000000000000 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+	if got := RedactSecrets(input); got != input {
+		t.Errorf("RedactSecrets(%q) = %q, want unchanged", input, got)
 	}
 }
 

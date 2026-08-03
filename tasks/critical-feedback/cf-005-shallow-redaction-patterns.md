@@ -1,7 +1,7 @@
 ---
 id: "cf-005"
 title: "Deepen secret redaction beyond narrow regex shapes"
-status: pending
+status: completed
 priority: medium
 effort: medium
 type: improvement
@@ -14,6 +14,7 @@ context:
   - "apps/lib/redact/redact.go"
   - "apps/lib/redact/message.go"
   - "apps/cli/internal/server/server.go"
+completed_at: 2026-08-03
 ---
 
 # Deepen secret redaction beyond narrow regex shapes
@@ -37,9 +38,9 @@ completeness of the pattern set.
 
 ## Acceptance Criteria
 
-- [ ] Add detectors for common standalone credential formats (AWS `AKIA`/`ASIA` + secret, `sk-ant-`/`sk-` API keys, GitHub `ghp_`/`gho_` tokens, bare JWTs, high-entropy hex/base64 blobs above a length/entropy threshold)
-- [ ] Add table-driven tests with realistic tool-output fixtures (a `.env` dump, a `cat` of a credentials file) asserting the secrets are masked
-- [ ] Document redaction as best-effort with its known limits in the LAN docs
+- [x] Add detectors for common standalone credential formats (AWS `AKIA`/`ASIA` + secret, `sk-ant-`/`sk-` API keys, GitHub `ghp_`/`gho_` tokens, bare JWTs, high-entropy hex/base64 blobs above a length/entropy threshold)
+- [x] Add table-driven tests with realistic tool-output fixtures (a `.env` dump, a `cat` of a credentials file) asserting the secrets are masked
+- [x] Document redaction as best-effort with its known limits in the LAN docs
 
 ## verify
 ```yaml
