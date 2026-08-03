@@ -221,6 +221,73 @@ func TestGetSessionNotFound(t *testing.T) {
 	}
 }
 
+// setupSymlinkedSession creates a claude directory holding a session whose file
+// is a symlink pointing at a real JSONL file OUTSIDE the claude directory, and
+// returns a server whose index knows about that session. It exercises the
+// symlink-containment guard on the read path.
+func setupSymlinkedSession(t *testing.T) *Server {
+	t.Helper()
+	claudeDir := t.TempDir()
+
+	// A real session file living outside the claude directory.
+	outside := t.TempDir()
+	outsideFile := filepath.Join(outside, "secret.jsonl")
+	line := `{"type":"user","uuid":"x","sessionId":"evil","timestamp":1700000000000,"message":{"role":"user","content":[{"type":"text","text":"secret"}]}}` + "\n"
+	if err := os.WriteFile(outsideFile, []byte(line), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// The session's file path is a symlink inside the claude directory that
+	// points outside it.
+	projDir := filepath.Join(claudeDir, "projects", "-users-me-evil")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	linkPath := filepath.Join(projDir, "evil.jsonl")
+	if err := os.Symlink(outsideFile, linkPath); err != nil {
+		t.Fatal(err)
+	}
+
+	idx := &session.Index{Sessions: []session.SessionMeta{{
+		SessionID: "evil",
+		Project:   "/users/me/evil",
+		FilePath:  linkPath,
+		Timestamp: 1700000000000,
+	}}}
+
+	srv, err := New(Config{ClaudeDir: claudeDir, Index: idx, Standalone: true})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	return srv
+}
+
+func TestGetSessionRejectsSymlinkOutsideClaudeDir(t *testing.T) {
+	srv := setupSymlinkedSession(t)
+
+	req := httptest.NewRequest("GET", "/api/sessions/evil", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for symlinked session outside claude dir, got %d", w.Code)
+	}
+}
+
+func TestGetSubagentRejectsSymlinkOutsideClaudeDir(t *testing.T) {
+	srv := setupSymlinkedSession(t)
+
+	// The subagent read path derives its directory from the session file path,
+	// so it must reject a symlinked session before touching the filesystem.
+	req := httptest.NewRequest("GET", "/api/sessions/evil/subagents/agent-1", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for symlinked session on subagent path, got %d", w.Code)
+	}
+}
+
 func TestCORSAllowsLocalhostOrigin(t *testing.T) {
 	srv := newTestServer(t)
 	handler := corsHandler(3000, false, srv.mux)

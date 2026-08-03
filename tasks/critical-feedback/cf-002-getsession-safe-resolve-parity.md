@@ -1,7 +1,7 @@
 ---
 id: "cf-002"
 title: "Apply SafeResolve on the session read path for symlink parity"
-status: pending
+status: completed
 priority: high
 effort: small
 type: bug
@@ -14,6 +14,7 @@ context:
   - "apps/cli/internal/server/server.go"
   - "apps/lib/session/session.go"
   - "apps/lib/pathutil/pathutil.go"
+completed_at: 2026-08-03
 ---
 
 # Apply SafeResolve on the session read path for symlink parity
@@ -32,9 +33,9 @@ HTTP read is not. A session entry whose file is a symlink would be followed on r
 
 ## Acceptance Criteria
 
-- [ ] Call `pathutil.SafeResolve(path, claudeDir)` in `handleGetSession` before `os.Open`, returning 400 on failure
-- [ ] Confirm the same guard covers any other handler that opens a session file directly
-- [ ] Add a test that a symlinked session file resolving outside `~/.claude` is rejected
+- [x] Call `pathutil.SafeResolve(path, claudeDir)` in `handleGetSession` before `os.Open`, returning 400 on failure
+- [x] Confirm the same guard covers any other handler that opens a session file directly
+- [x] Add a test that a symlinked session file resolving outside `~/.claude` is rejected
 
 ## verify
 ```yaml

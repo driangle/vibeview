@@ -504,6 +504,12 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
 		return
 	}
+	// Contain the resolved path so a session file that symlinks outside the
+	// Claude directory is not followed on read — parity with the tailer path.
+	if _, err := pathutil.SafeResolve(path, s.claudeDir); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		return
+	}
 	f, err := os.Open(path)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})
@@ -554,6 +560,13 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 
 	sessionPath, err := session.ResolveFilePath(s.claudeDir, *meta)
 	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		return
+	}
+	// Contain the resolved session path before deriving the subagents directory
+	// from it, so a symlinked session file cannot redirect reads outside the
+	// Claude directory.
+	if _, err := pathutil.SafeResolve(sessionPath, s.claudeDir); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
 		return
 	}
