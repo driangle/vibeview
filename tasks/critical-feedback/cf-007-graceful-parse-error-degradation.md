@@ -1,7 +1,7 @@
 ---
 id: "cf-007"
 title: "Return partial session content instead of a blanket 500 on parse error"
-status: pending
+status: completed
 priority: medium
 effort: small
 type: improvement
@@ -14,6 +14,7 @@ dependencies: ["cf-006"]
 context:
   - "apps/cli/internal/server/server.go"
   - "apps/lib/claude/claude.go"
+completed_at: 2026-08-03
 ---
 
 # Return partial session content instead of a blanket 500 on parse error
@@ -31,10 +32,10 @@ partial results end to end.
 
 ## Acceptance Criteria
 
-- [ ] Render whatever parsed successfully rather than 500-ing the whole request when a parse error is recoverable
-- [ ] Reserve 5xx for genuinely unreadable files (I/O error), and distinguish that from partial-parse cases
-- [ ] Ensure `SkippedLines` (and any oversized-line count from cf-006) is reported on the partial response
-- [ ] Add a handler test asserting partial content + skipped count on a session with a malformed line
+- [x] Render whatever parsed successfully rather than 500-ing the whole request when a parse error is recoverable
+- [x] Reserve 5xx for genuinely unreadable files (I/O error), and distinguish that from partial-parse cases
+- [x] Ensure `SkippedLines` (and any oversized-line count from cf-006) is reported on the partial response
+- [x] Add a handler test asserting partial content + skipped count on a session with a malformed line
 
 ## verify
 ```yaml

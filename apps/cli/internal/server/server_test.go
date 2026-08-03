@@ -221,6 +221,63 @@ func TestGetSessionNotFound(t *testing.T) {
 	}
 }
 
+// setupPartialSession registers a session whose file contains one valid line and
+// one malformed line, returning a server that knows about it. It exercises the
+// graceful-degradation path where the parser skips-and-counts a bad line.
+func setupPartialSession(t *testing.T) *Server {
+	t.Helper()
+	claudeDir := t.TempDir()
+
+	projDir := filepath.Join(claudeDir, "projects", "-users-me-partial")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	filePath := filepath.Join(projDir, "partial.jsonl")
+	content := `{"type":"user","uuid":"u1","sessionId":"partial","timestamp":1700000000000,"message":{"role":"user","content":[{"type":"text","text":"hello"}]}}
+{ this is not valid json
+`
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx := &session.Index{Sessions: []session.SessionMeta{{
+		SessionID: "partial",
+		Project:   "/users/me/partial",
+		FilePath:  filePath,
+		Timestamp: 1700000000000,
+	}}}
+
+	srv, err := New(Config{ClaudeDir: claudeDir, Index: idx, Standalone: true})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	return srv
+}
+
+// A malformed line must not sink the whole request: the handler should return
+// 200 with the messages that did parse and a non-zero skipped count.
+func TestGetSessionReturnsPartialContentOnMalformedLine(t *testing.T) {
+	srv := setupPartialSession(t)
+	req := httptest.NewRequest("GET", "/api/sessions/partial", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 with partial content, got %d", w.Code)
+	}
+
+	var detail SessionDetailResponse
+	if err := json.NewDecoder(w.Body).Decode(&detail); err != nil {
+		t.Fatal(err)
+	}
+	if len(detail.Messages) != 1 {
+		t.Fatalf("expected 1 parsed message, got %d", len(detail.Messages))
+	}
+	if detail.SkippedLines < 1 {
+		t.Errorf("expected non-zero skipped count, got %d", detail.SkippedLines)
+	}
+}
+
 // setupSymlinkedSession creates a claude directory holding a session whose file
 // is a symlink pointing at a real JSONL file OUTSIDE the claude directory, and
 // returns a server whose index knows about that session. It exercises the

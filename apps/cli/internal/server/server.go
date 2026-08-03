@@ -631,8 +631,14 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 
 	messages, parseResult, err := claude.ParseSessionFile(f)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse session"})
-		return
+		// A read error after some messages were parsed is recoverable: render the
+		// partial content rather than discarding it. Reserve 5xx for genuinely
+		// unreadable files where nothing could be parsed.
+		if len(messages) == 0 {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse session"})
+			return
+		}
+		log.Printf("session %s: read error after %d messages, rendering partial content: %v", id, len(messages), err)
 	}
 
 	msgResponses := make([]MessageResponse, 0, len(messages))
@@ -712,8 +718,13 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 
 	messages, parseResult, err := claude.ParseSessionFile(f)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse subagent session"})
-		return
+		// Render partial content on a recoverable read error; reserve 5xx for a
+		// genuinely unreadable file where nothing could be parsed.
+		if len(messages) == 0 {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse subagent session"})
+			return
+		}
+		log.Printf("subagent %s: read error after %d messages, rendering partial content: %v", agentID, len(messages), err)
 	}
 
 	msgResponses := make([]MessageResponse, 0, len(messages))
