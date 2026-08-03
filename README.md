@@ -25,33 +25,33 @@ Requires Go 1.22+ and Node.js.
 ## Usage
 
 ```sh
-vibeview              # start the web UI on port 4880
-vibeview --open       # start and open browser
-vibeview --port 8080  # custom port
+vibeview web              # start the web UI on port 4880
+vibeview web --open       # start and open browser
+vibeview web --port 8080  # custom port
 ```
 
 View a specific session file:
 
 ```sh
-vibeview /path/to/session.jsonl
+vibeview web /path/to/session.jsonl
 ```
 
 Filter to specific projects:
 
 ```sh
-vibeview --dirs myproject,another
+vibeview web --dirs myproject,another
 ```
 
 ### Commands
 
-#### `serve` (default)
+#### `web`
 
-Start the web interface. This is the default when no subcommand is given.
+Start the web interface.
 
 ```sh
-vibeview serve --port 8080 --open
-vibeview serve --lan              # bind to 0.0.0.0 with token auth
-vibeview serve /path/to/session.jsonl
+vibeview web --port 8080 --open
+vibeview web --lan              # bind to 0.0.0.0 with token auth
+vibeview web /path/to/session.jsonl
 ```
 
 #### `inspect`

@@ -4,13 +4,13 @@ vibeview is a single binary that serves the web interface and provides CLI tools
 
 ## Commands
 
-### `vibeview` / `vibeview serve`
+### `vibeview web`
 
-Starts the web server. This is the default when no subcommand is given.
+Starts the web server.
 
 ```bash
-vibeview
-vibeview serve --port 8080 --open
+vibeview web
+vibeview web --port 8080 --open
 ```
 
 | Flag | Default | Description |
@@ -25,8 +25,8 @@ vibeview serve --port 8080 --open
 You can also pass file paths or directories as positional arguments to run in standalone mode:
 
 ```bash
-vibeview session.jsonl
-vibeview /path/to/sessions/
+vibeview web session.jsonl
+vibeview web /path/to/sessions/
 ```
 
 #### LAN mode
@@ -37,7 +37,7 @@ network can reach it, and generates a random access token to guard against
 unauthorized access.
 
 ```bash
-vibeview serve --lan
+vibeview web --lan
 ```
 
 On startup, vibeview prints a warning and a ready-to-use URL that includes the

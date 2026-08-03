@@ -72,7 +72,7 @@ func main() {
 		Long: `vibeview provides a web interface for browsing Claude Code sessions,
 plus CLI tools for inspecting and searching session data.
 
-Running vibeview without a subcommand starts the web server.`,
+Run "vibeview web" to start the web interface.`,
 	}
 
 	// Add --version without -v shorthand so inspect can use -v for --verbose.
@@ -89,7 +89,7 @@ Running vibeview without a subcommand starts the web server.`,
 	root.PersistentFlags().StringVar(&claudeDir, "claude-dir", defaultClaudeDir, "path to claude data directory")
 	root.PersistentFlags().StringVar(&logLevel, "log-level", "warn", "log level: debug, warn, error")
 
-	root.AddCommand(serveCmd(home, &claudeDir, &logLevel))
+	root.AddCommand(webCmd(home, &claudeDir, &logLevel))
 	root.AddCommand(inspectCmd(&claudeDir, &logLevel))
 	root.AddCommand(searchCmd(&claudeDir, &logLevel))
 	root.AddCommand(statsCmd(&claudeDir, &logLevel))
@@ -98,55 +98,32 @@ Running vibeview without a subcommand starts the web server.`,
 	root.AddCommand(relatedCmd(&claudeDir, &logLevel))
 	root.AddCommand(selfCmd(&claudeDir, &logLevel))
 
-	// Make "serve" the default when no subcommand is given.
-	// Prepend "serve" for: bare invocation, positional file args, or
-	// serve-specific flags (--port, --open, --dirs).
-	// Do NOT prepend for --help, --version, or global flags alone.
-	if len(os.Args) <= 1 {
-		os.Args = append(os.Args, "serve")
-	} else {
-		knownCmds := map[string]bool{
-			"serve": true, "inspect": true, "search": true, "stats": true,
-			"show": true, "sessions": true, "related": true, "self": true, "help": true, "completion": true,
-		}
-		rootFlags := map[string]bool{
-			"--help": true, "-h": true, "--version": true,
-			"--claude-dir": true, "--log-level": true,
-		}
-		first := os.Args[1]
-		if !knownCmds[first] && !rootFlags[first] {
-			// Not a known subcommand or root flag — treat as serve.
-			os.Args = append([]string{os.Args[0], "serve"}, os.Args[1:]...)
-		}
-	}
-
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-// --- serve ---
+// --- web ---
 
-func serveCmd(home string, claudeDir *string, logLevel *string) *cobra.Command {
+func webCmd(home string, claudeDir *string, logLevel *string) *cobra.Command {
 	var port int
 	var open bool
 	var lan bool
 	var dirsFlag string
 
 	cmd := &cobra.Command{
-		Use:   "serve [files...]",
-		Short: "Start the web interface (default)",
-		Long: `Start the vibeview web server. This is the default command when no
-subcommand is specified.
+		Use:   "web [files...]",
+		Short: "Start the web interface",
+		Long: `Start the vibeview web server.
 
 Positional arguments are treated as standalone JSONL files or directories.
 
 Examples:
-  vibeview
-  vibeview --port 8080
-  vibeview serve --open
-  vibeview session.jsonl
-  vibeview --dirs myproject`,
+  vibeview web
+  vibeview web --port 8080
+  vibeview web --open
+  vibeview web session.jsonl
+  vibeview web --dirs myproject`,
 		Run: func(cmd *cobra.Command, args []string) {
 			logutil.SetLevel(logutil.ParseLevel(*logLevel))
 

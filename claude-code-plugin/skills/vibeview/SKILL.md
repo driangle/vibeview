@@ -73,10 +73,10 @@ vibeview stats /path/to/project
 Launch a local web UI for browsing sessions visually.
 
 ```
-vibeview                        # default port 4880
-vibeview serve --port 8080
-vibeview serve --open           # open browser automatically
-vibeview serve --lan            # bind to 0.0.0.0 with token auth
+vibeview web                    # default port 4880
+vibeview web --port 8080
+vibeview web --open             # open browser automatically
+vibeview web --lan              # bind to 0.0.0.0 with token auth
 ```
 
 ### Discover current session
