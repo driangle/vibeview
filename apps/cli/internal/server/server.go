@@ -422,6 +422,60 @@ func filterByDirs(sessions []session.SessionMeta, dirs []string) []session.Sessi
 	return filtered
 }
 
+// sortSessions orders the full filtered set in place by the given column and
+// direction. Sorting server-side (before pagination) keeps sort and pagination
+// consistent — the whole result set is ordered, not just the visible page.
+// The column/direction values mirror the web client's sort controls; unknown
+// values fall back to date descending (most-recent first), matching the index's
+// default order.
+func sortSessions(sessions []session.SessionMeta, column, direction string) {
+	less := sessionLess(column)
+	// Default to descending; the client sends "asc" explicitly when needed.
+	desc := direction != "asc"
+	sort.SliceStable(sessions, func(i, j int) bool {
+		if desc {
+			return less(sessions[j], sessions[i])
+		}
+		return less(sessions[i], sessions[j])
+	})
+}
+
+// sessionLess returns an ascending comparator for the given sort column,
+// mirroring the web client's getSortValue semantics.
+func sessionLess(column string) func(a, b session.SessionMeta) bool {
+	switch column {
+	case "name":
+		return func(a, b session.SessionMeta) bool { return sessionSortName(a) < sessionSortName(b) }
+	case "directory":
+		return func(a, b session.SessionMeta) bool {
+			return strings.ToLower(a.Project) < strings.ToLower(b.Project)
+		}
+	case "messages":
+		return func(a, b session.SessionMeta) bool { return a.MessageCount < b.MessageCount }
+	case "tokens":
+		return func(a, b session.SessionMeta) bool {
+			return a.Usage.InputTokens+a.Usage.OutputTokens < b.Usage.InputTokens+b.Usage.OutputTokens
+		}
+	case "cost":
+		return func(a, b session.SessionMeta) bool { return a.Usage.CostUSD < b.Usage.CostUSD }
+	default: // "date"
+		return func(a, b session.SessionMeta) bool { return a.Timestamp < b.Timestamp }
+	}
+}
+
+// sessionSortName resolves the display name used for name-column sorting:
+// custom title, then slug, then session ID — matching the web client.
+func sessionSortName(m session.SessionMeta) string {
+	name := m.CustomTitle
+	if name == "" {
+		name = m.Slug
+	}
+	if name == "" {
+		name = m.SessionID
+	}
+	return strings.ToLower(name)
+}
+
 func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	sessions := s.index.GetSessions()
 	if projectID := r.URL.Query().Get("project"); projectID != "" {
@@ -496,7 +550,20 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Sort the full filtered set server-side, before pagination, so sort and
+	// pagination agree across pages.
+	sortSessions(sessions, r.URL.Query().Get("sort"), r.URL.Query().Get("order"))
+
 	total := len(sessions)
+
+	// Aggregate token/cost totals over the full filtered set (before pagination)
+	// so the client's stat cards share scope with the total session count.
+	var totalTokens int
+	var totalCost float64
+	for _, sm := range sessions {
+		totalTokens += sm.Usage.InputTokens + sm.Usage.OutputTokens
+		totalCost += sm.Usage.CostUSD
+	}
 
 	// Apply limit/offset pagination.
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -528,8 +595,10 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		resp = append(resp, toSessionResponse(m))
 	}
 	writeJSON(w, http.StatusOK, PaginatedSessionsResponse{
-		Sessions: resp,
-		Total:    total,
+		Sessions:    resp,
+		Total:       total,
+		TotalTokens: totalTokens,
+		TotalCost:   totalCost,
 	})
 }
 
@@ -953,10 +1022,13 @@ type SessionResponse struct {
 	ActivityState string              `json:"activityState"`
 }
 
-// PaginatedSessionsResponse wraps a page of sessions with the total count.
+// PaginatedSessionsResponse wraps a page of sessions with the total count and
+// aggregate usage totals over the full filtered set (not just the returned page).
 type PaginatedSessionsResponse struct {
-	Sessions []SessionResponse `json:"sessions"`
-	Total    int               `json:"total"`
+	Sessions    []SessionResponse `json:"sessions"`
+	Total       int               `json:"total"`
+	TotalTokens int               `json:"totalTokens"`
+	TotalCost   float64           `json:"totalCost"`
 }
 
 // SearchResultResponse is a single content search result.

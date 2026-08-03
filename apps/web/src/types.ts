@@ -115,6 +115,9 @@ export interface MessageResponse {
 export interface PaginatedSessions {
   sessions: Session[];
   total: number;
+  // Aggregate usage over the full filtered set (server-computed), not just this page.
+  totalTokens: number;
+  totalCost: number;
 }
 
 export interface SessionInsights {

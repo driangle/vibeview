@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../api';
 import { Pagination } from '../components/Pagination';
@@ -11,8 +11,7 @@ import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSessionFilters } from '../hooks/useSessionFilters';
 import { useSessionSort } from '../hooks/useSessionSort';
-import { useSessionListData } from '../hooks/useSessionListData';
-import { formatStatTokens } from '../hooks/useSessionListData';
+import { useSessionListData, formatStatTokens } from '../hooks/useSessionListData';
 
 export function SessionList() {
   const navigate = useNavigate();
@@ -38,6 +37,8 @@ export function SessionList() {
     hasFilters,
   } = useSessionFilters();
 
+  const { sortColumn, sortDirection, toggleSort } = useSessionSort(settings.defaultSort);
+
   const {
     sessions,
     error,
@@ -53,31 +54,38 @@ export function SessionList() {
     totalCost,
     total,
   } = useSessionListData(
-    { dirFilter, debouncedSearch, fromFilter, toFilter, modelFilter, activityFilter, currentPage },
+    {
+      dirFilter,
+      debouncedSearch,
+      fromFilter,
+      toFilter,
+      modelFilter,
+      activityFilter,
+      sortColumn,
+      sortDirection,
+      currentPage,
+    },
     settings.pageSize,
     settings.refreshInterval,
     activeProjectId,
   );
 
-  const { sortColumn, sortDirection, sortedSessions, toggleSort } = useSessionSort(
-    sessions,
-    settings.defaultSort,
-  );
+  // Sessions arrive already ordered by the server, so pagination and sort agree.
+  const orderedSessions = useMemo(() => sessions ?? [], [sessions]);
 
   const onSelect = useCallback(
     (index: number) => {
-      const session = sortedSessions[index];
+      const session = orderedSessions[index];
       if (session) navigate(`/session/${session.id}`);
     },
-    [sortedSessions, navigate],
+    [orderedSessions, navigate],
   );
 
   const { selectedIndex } = useKeyboardNavigation({
-    itemCount: sortedSessions.length,
+    itemCount: orderedSessions.length,
     onSelect,
-    enabled: !isLoading && sortedSessions.length > 0,
+    enabled: !isLoading && orderedSessions.length > 0,
   });
-
   const loaded = !!sessions;
 
   return (
@@ -147,7 +155,7 @@ export function SessionList() {
         ) : (
           <>
             <SessionTable
-              sessions={loaded ? sortedSessions : []}
+              sessions={loaded ? orderedSessions : []}
               sortColumn={sortColumn}
               sortDirection={sortDirection}
               onToggleSort={toggleSort}
@@ -158,7 +166,7 @@ export function SessionList() {
               hasFilters={hasFilters}
               dateFormat={settings.dateFormat}
             />
-            {loaded && sortedSessions.length > 0 && (
+            {loaded && orderedSessions.length > 0 && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}

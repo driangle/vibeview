@@ -588,6 +588,176 @@ func TestListSessionsPagination(t *testing.T) {
 	}
 }
 
+// setupSortableServer builds a claude directory with three sessions whose token
+// and cost totals are deliberately distinct and ordered differently, so tests can
+// tell which sort column was applied. Slugs are distinct (apple/banana/cherry) so
+// name-sort is meaningful, and cost comes from a result message's total_cost_usd
+// (the only source the enricher reads for cost). Returns an enriched server.
+//
+//	session   slug     timestamp        tokens (in+out)   costUSD
+//	sess-a    apple    1700000000000    500               0.10
+//	sess-b    banana   1700001000000    100               0.30
+//	sess-c    cherry   1700002000000    300               0.20
+func setupSortableServer(t *testing.T) *Server {
+	t.Helper()
+	dir := t.TempDir()
+
+	history := `{"sessionId":"sess-a","project":"/users/me/proj","display":"apple","timestamp":1700000000000}
+{"sessionId":"sess-b","project":"/users/me/proj","display":"banana","timestamp":1700001000000}
+{"sessionId":"sess-c","project":"/users/me/proj","display":"cherry","timestamp":1700002000000}
+`
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	proj := filepath.Join(dir, "projects", "-users-me-proj")
+	if err := os.MkdirAll(proj, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Each session: a user message (its text becomes the slug used for name-sort),
+	// an assistant message carrying token usage, and a result message carrying cost.
+	sessions := map[string]struct {
+		slug    string
+		ts      int64
+		in, out int
+		cost    float64
+	}{
+		"sess-a": {"apple", 1700000000000, 500, 0, 0.10},
+		"sess-b": {"banana", 1700001000000, 100, 0, 0.30},
+		"sess-c": {"cherry", 1700002000000, 200, 100, 0.20},
+	}
+	for id, s := range sessions {
+		content := fmt.Sprintf(
+			`{"type":"user","uuid":"u-%s","sessionId":"%s","timestamp":%d,"message":{"role":"user","content":[{"type":"text","text":"%s"}]}}
+{"type":"assistant","uuid":"a-%s","sessionId":"%s","timestamp":%d,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"ok"}],"usage":{"input_tokens":%d,"output_tokens":%d}}}
+{"type":"result","uuid":"r-%s","sessionId":"%s","timestamp":%d,"total_cost_usd":%g}
+`,
+			id, id, s.ts, s.slug, id, id, s.ts+1000, s.in, s.out, id, id, s.ts+2000, s.cost)
+		if err := os.WriteFile(filepath.Join(proj, id+".jsonl"), []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	srv, err := New(Config{ClaudeDir: dir})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	srv.index.Enrich(srv.claudeDir)
+	return srv
+}
+
+// pageOrder fetches a sessions page for the given query and returns the session IDs.
+func pageOrder(t *testing.T, srv *Server, query string) []string {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/api/sessions?"+query, nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("query %q: expected 200, got %d", query, w.Code)
+	}
+	var page PaginatedSessionsResponse
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
+	ids := make([]string, 0, len(page.Sessions))
+	for _, s := range page.Sessions {
+		ids = append(ids, s.ID)
+	}
+	return ids
+}
+
+func TestListSessionsServerSort(t *testing.T) {
+	srv := setupSortableServer(t)
+
+	tests := []struct {
+		name  string
+		query string
+		want  []string
+	}{
+		{"cost desc", "sort=cost&order=desc", []string{"sess-b", "sess-c", "sess-a"}},
+		{"cost asc", "sort=cost&order=asc", []string{"sess-a", "sess-c", "sess-b"}},
+		{"tokens desc", "sort=tokens&order=desc", []string{"sess-a", "sess-c", "sess-b"}},
+		{"date desc", "sort=date&order=desc", []string{"sess-c", "sess-b", "sess-a"}},
+		{"date asc", "sort=date&order=asc", []string{"sess-a", "sess-b", "sess-c"}},
+		{"name asc", "sort=name&order=asc", []string{"sess-a", "sess-b", "sess-c"}},
+		{"default (no params) is date desc", "", []string{"sess-c", "sess-b", "sess-a"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := pageOrder(t, srv, tt.query)
+			if len(got) != len(tt.want) {
+				t.Fatalf("got %v, want %v", got, tt.want)
+			}
+			for i := range tt.want {
+				if got[i] != tt.want[i] {
+					t.Errorf("position %d: got %s, want %s (full: %v)", i, got[i], tt.want[i], got)
+				}
+			}
+		})
+	}
+}
+
+// Sorting must order the whole result set, not just the visible page: paging
+// through a cost-desc sort one row at a time must yield the global cost order.
+func TestListSessionsSortAcrossPages(t *testing.T) {
+	srv := setupSortableServer(t)
+
+	want := []string{"sess-b", "sess-c", "sess-a"} // cost desc
+	var got []string
+	for offset := 0; offset < 3; offset++ {
+		ids := pageOrder(t, srv, fmt.Sprintf("sort=cost&order=desc&limit=1&offset=%d", offset))
+		got = append(got, ids...)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("page offset %d: got %s, want %s (full: %v)", i, got[i], want[i], got)
+		}
+	}
+}
+
+// Aggregate token/cost totals cover the full filtered set, not just the page,
+// so they share scope with the reported Total.
+func TestListSessionsAggregateTotals(t *testing.T) {
+	srv := setupSortableServer(t)
+
+	// One-row page — totals must still reflect all three sessions.
+	req := httptest.NewRequest("GET", "/api/sessions?limit=1", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	var page PaginatedSessionsResponse
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
+	if len(page.Sessions) != 1 {
+		t.Fatalf("expected 1 session on page, got %d", len(page.Sessions))
+	}
+	if page.Total != 3 {
+		t.Errorf("expected total 3, got %d", page.Total)
+	}
+	if page.TotalTokens != 900 { // 500 + 100 + 300
+		t.Errorf("expected totalTokens 900, got %d", page.TotalTokens)
+	}
+	if page.TotalCost < 0.599 || page.TotalCost > 0.601 { // 0.10 + 0.30 + 0.20
+		t.Errorf("expected totalCost ~0.60, got %g", page.TotalCost)
+	}
+
+	// Totals must respect filters: restricting to a higher timestamp drops sess-a.
+	req = httptest.NewRequest("GET", "/api/sessions?from=1700000500000", nil)
+	w = httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+	if err := json.NewDecoder(w.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
+	if page.Total != 2 {
+		t.Errorf("expected total 2 after filter, got %d", page.Total)
+	}
+	if page.TotalTokens != 400 { // sess-b 100 + sess-c 300
+		t.Errorf("expected filtered totalTokens 400, got %d", page.TotalTokens)
+	}
+}
+
 func TestConfigEndpoint(t *testing.T) {
 	srv := newTestServer(t)
 	req := httptest.NewRequest("GET", "/api/config", nil)

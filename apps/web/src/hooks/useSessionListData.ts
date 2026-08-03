@@ -3,17 +3,34 @@ import useSWR from 'swr';
 import { fetcher } from '../api';
 import type { PaginatedSessions, SearchResponse, Session } from '../types';
 
-function buildSessionsUrl(
-  project: string,
-  q: string,
-  from: string,
-  to: string,
-  model: string,
-  activityState: string,
-  pageSize: number,
-  page?: number,
-  projectId?: string,
-): string {
+interface BuildSessionsUrlArgs {
+  project: string;
+  q: string;
+  from: string;
+  to: string;
+  model: string;
+  activityState: string;
+  sortColumn: string;
+  sortDirection: string;
+  pageSize: number;
+  page?: number;
+  projectId?: string;
+}
+
+function buildSessionsUrl(args: BuildSessionsUrlArgs): string {
+  const {
+    project,
+    q,
+    from,
+    to,
+    model,
+    activityState,
+    sortColumn,
+    sortDirection,
+    pageSize,
+    page,
+    projectId,
+  } = args;
   const params = new URLSearchParams();
   if (projectId) params.set('project', projectId);
   if (project) params.set('dir', project);
@@ -22,6 +39,8 @@ function buildSessionsUrl(
   if (to) params.set('to', to);
   if (model) params.set('model', model);
   if (activityState) params.set('activityState', activityState);
+  if (sortColumn) params.set('sort', sortColumn);
+  if (sortDirection) params.set('order', sortDirection);
   if (page !== undefined) {
     params.set('limit', String(pageSize));
     params.set('offset', String((page - 1) * pageSize));
@@ -43,6 +62,8 @@ interface SessionListFilters {
   toFilter: string;
   modelFilter: string;
   activityFilter: string;
+  sortColumn: string;
+  sortDirection: string;
   currentPage: number;
 }
 
@@ -59,20 +80,24 @@ export function useSessionListData(
     toFilter,
     modelFilter,
     activityFilter,
+    sortColumn,
+    sortDirection,
     currentPage,
   } = filters;
 
-  const apiUrl = buildSessionsUrl(
-    dirFilter,
-    debouncedSearch,
-    fromFilter,
-    toFilter,
-    modelFilter,
-    activityFilter,
+  const apiUrl = buildSessionsUrl({
+    project: dirFilter,
+    q: debouncedSearch,
+    from: fromFilter,
+    to: toFilter,
+    model: modelFilter,
+    activityState: activityFilter,
+    sortColumn,
+    sortDirection,
     pageSize,
-    currentPage,
-    activeProjectId,
-  );
+    page: currentPage,
+    projectId: activeProjectId,
+  });
   const {
     data: paginated,
     error,
@@ -123,13 +148,20 @@ export function useSessionListData(
 
   const statsTotal = isContentSearch ? searchData.total : total;
 
-  const totalTokens = useMemo(() => {
-    return displaySessions.reduce((sum, s) => sum + s.usage.inputTokens + s.usage.outputTokens, 0);
-  }, [displaySessions]);
+  // Keep the token/cost stat cards in the same scope as the "Sessions" count.
+  // - List view: use the server's aggregate over the full filtered set (statsTotal = total).
+  // - Content search: the search endpoint returns all matches it counts, so reducing over
+  //   the returned results matches searchData.total (statsTotal).
+  const searchTotals = useMemo(() => {
+    const results = isContentSearch ? searchData.results.map((r) => r.session) : [];
+    return {
+      tokens: results.reduce((sum, s) => sum + s.usage.inputTokens + s.usage.outputTokens, 0),
+      cost: results.reduce((sum, s) => sum + s.usage.costUSD, 0),
+    };
+  }, [isContentSearch, searchData]);
 
-  const totalCost = useMemo(() => {
-    return displaySessions.reduce((sum, s) => sum + s.usage.costUSD, 0);
-  }, [displaySessions]);
+  const totalTokens = isContentSearch ? searchTotals.tokens : (paginated?.totalTokens ?? 0);
+  const totalCost = isContentSearch ? searchTotals.cost : (paginated?.totalCost ?? 0);
 
   return {
     sessions,

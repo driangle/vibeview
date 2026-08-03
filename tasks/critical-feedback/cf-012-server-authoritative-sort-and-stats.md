@@ -1,7 +1,7 @@
 ---
 id: "cf-012"
 title: "Make session-list sort and aggregate stats server-authoritative"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: bug
@@ -15,6 +15,7 @@ context:
   - "apps/web/src/hooks/useSessionSort.ts"
   - "apps/web/src/pages/SessionList.tsx"
   - "apps/cli/internal/server/server.go"
+completed_at: 2026-08-03
 ---
 
 # Make session-list sort and aggregate stats server-authoritative
@@ -39,10 +40,10 @@ per-page token/cost totals.
 
 ## Acceptance Criteria
 
-- [ ] Add a sort parameter to the sessions API and `buildSessionsUrl`; sort server-side so pagination and sort agree
-- [ ] Compute aggregate token/cost totals over the full filtered set (server-provided), or clearly label the cards as page-scoped
-- [ ] Ensure the "Sessions" count and the token/cost totals share the same scope
-- [ ] Tests: server sort ordering across pages; stat totals match the labeled scope
+- [x] Add a sort parameter to the sessions API and `buildSessionsUrl`; sort server-side so pagination and sort agree
+- [x] Compute aggregate token/cost totals over the full filtered set (server-provided), or clearly label the cards as page-scoped
+- [x] Ensure the "Sessions" count and the token/cost totals share the same scope
+- [x] Tests: server sort ordering across pages; stat totals match the labeled scope
 
 ## verify
 ```yaml
