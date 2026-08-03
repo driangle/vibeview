@@ -104,7 +104,7 @@ List sessions in a formatted table.
 
 ```sh
 vibeview sessions
-vibeview sessions --limit 10 --sort cost
+vibeview sessions --limit 10 --sort messages
 vibeview sessions --dir myproject --json
 ```
 
@@ -123,10 +123,11 @@ Live sessions update in real time via SSE.
 vibeview includes a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that adds a `/vibeview` skill to Claude Code. This lets you search, inspect, and analyze your sessions directly from a conversation.
 
 ```sh
-claude plugin add driangle/vibeview
+claude plugin marketplace add driangle/vibeview
+claude plugin install vibeview@vibeview-marketplace --scope user
 ```
 
-Once installed, you can ask Claude Code things like "how much have I spent this week?" or "find the session where I worked on auth" and it will use the vibeview CLI to answer.
+Once installed, you can ask Claude Code things like "find the session where I worked on auth" or "which tools did I use on my last project?" and it will use the vibeview CLI to answer.
 
 ## Configuration
 

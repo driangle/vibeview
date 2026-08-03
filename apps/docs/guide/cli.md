@@ -116,8 +116,6 @@ Session
 
 Conversation
   Messages     698 total, 120 user, 340 assistant, 238 progress
-  Tokens       In: 246  Out: 60,415  Cache: 10,937,546
-  Cost         $22.95
 
 Tool Usage
   Tool                  Calls     Errors
@@ -146,7 +144,7 @@ scripting.
 vibeview sessions
 vibeview sessions --json
 vibeview sessions --dir myproject --limit 10
-vibeview sessions --sort cost
+vibeview sessions --sort messages
 vibeview sessions --limit 10 --offset 20
 ```
 
@@ -287,8 +285,8 @@ Subagents (2)
   aec4c3c310e017380   Explore           Explore TS server code      52     31
 
 Sibling sessions (4)
-  ID        TITLE                        DATE               MSGS   COST
-  b3c400c9  websocket-server-handshake   2026-07-10 15:47   135    $0.00
+  ID        TITLE                        DATE               MSGS
+  b3c400c9  websocket-server-handshake   2026-07-10 15:47   135
   ...
 ```
 

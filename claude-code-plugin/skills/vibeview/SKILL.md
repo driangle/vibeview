@@ -27,7 +27,7 @@ Browse all sessions in a table format.
 
 ```
 vibeview sessions
-vibeview sessions --sort cost          # sort by: timestamp, cost, messages, model, dir
+vibeview sessions --sort messages      # sort by message count
 vibeview sessions --dir myproject      # filter by project directory
 vibeview sessions --limit 10 --offset 20
 vibeview sessions --json
@@ -113,11 +113,11 @@ All commands accept:
 ## Usage guidance
 
 - Use `vibeview search` when the user wants to find a past conversation by topic or keyword.
-- Use `vibeview sessions --sort cost` to help users identify their most expensive sessions.
+- Use `vibeview sessions --sort messages` to help users identify their longest sessions.
 - Use `vibeview inspect` to get detailed metadata about a specific session (tokens, cost, tools, files).
 - Use `vibeview related` to pull together a multi-agent episode — a session's subagents and its sibling sessions from the same project.
 - Use `vibeview show` to read back the actual conversation content.
 - Use `vibeview self` when running inside Claude Code to discover the current session ID.
-- Use `vibeview stats` for aggregate usage reporting and cost tracking.
+- Use `vibeview stats` for aggregate session and project activity reporting.
 - Prefer `--json` output when you need to parse or process the results programmatically.
 - Session IDs support prefix matching — a 6-character prefix is usually sufficient.
