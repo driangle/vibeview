@@ -1,7 +1,7 @@
 ---
 id: "cf-003"
 title: "Harden LAN token: constant-time compare and header-only transport"
-status: pending
+status: completed
 priority: high
 effort: medium
 type: improvement
@@ -13,6 +13,7 @@ created: 2026-08-03
 context:
   - "apps/cli/internal/server/server.go"
   - "apps/cli/cmd/vibeview/main.go"
+completed_at: 2026-08-03
 ---
 
 # Harden LAN token: constant-time compare and header-only transport
@@ -39,10 +40,10 @@ cookie set after a header-authenticated handshake, or a one-time stream ticket).
 
 ## Acceptance Criteria
 
-- [ ] Replace `==` token checks with `subtle.ConstantTimeCompare`
-- [ ] Prefer the `Authorization: Bearer` header; provide a header-compatible auth path for the SSE stream that does not require the token in the URL
-- [ ] Update the printed URL/QR and docs so the raw token is not placed in a shareable URL
-- [ ] Tests cover header auth, the stream auth path, and rejection of a wrong token
+- [x] Replace `==` token checks with `subtle.ConstantTimeCompare`
+- [x] Prefer the `Authorization: Bearer` header; provide a header-compatible auth path for the SSE stream that does not require the token in the URL
+- [x] Update the printed URL/QR and docs so the raw token is not placed in a shareable URL
+- [x] Tests cover header auth, the stream auth path, and rejection of a wrong token
 
 ## verify
 ```yaml

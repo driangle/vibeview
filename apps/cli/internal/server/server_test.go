@@ -1158,7 +1158,9 @@ func TestTokenAuthSkipsNonAPIRoutes(t *testing.T) {
 	}
 }
 
-func TestTokenAuthViaQueryParam(t *testing.T) {
+func TestTokenAuthRejectsQueryParam(t *testing.T) {
+	// The query-param path was removed so the token never lives in a URL; a
+	// token supplied only via ?token= must now be rejected.
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -1168,8 +1170,86 @@ func TestTokenAuthViaQueryParam(t *testing.T) {
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for query-param token, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthViaStreamCookie(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	req := httptest.NewRequest("GET", "/api/sessions/sess-1/stream", nil)
+	req.AddCookie(&http.Cookie{Name: streamAuthCookie, Value: "secret-token"})
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
 	if w.Code != http.StatusOK {
-		t.Errorf("expected 200 with valid query token, got %d", w.Code)
+		t.Errorf("expected 200 with valid stream cookie, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthRejectsWrongStreamCookie(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := tokenAuthMiddleware("secret-token", inner)
+
+	req := httptest.NewRequest("GET", "/api/sessions/sess-1/stream", nil)
+	req.AddCookie(&http.Cookie{Name: streamAuthCookie, Value: "wrong-token"})
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 with wrong stream cookie, got %d", w.Code)
+	}
+}
+
+func TestTokenAuthStreamHandshakeSetsCookie(t *testing.T) {
+	// A header-authenticated handshake hands back the HttpOnly cookie that
+	// authorizes the SSE stream without a token in the URL.
+	s := &Server{token: "secret-token"}
+	req := httptest.NewRequest("POST", "/api/auth/stream", nil)
+	w := httptest.NewRecorder()
+	s.handleAuthStream(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d", w.Code)
+	}
+	var cookie *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == streamAuthCookie {
+			cookie = c
+		}
+	}
+	if cookie == nil {
+		t.Fatal("expected stream auth cookie to be set")
+	}
+	if cookie.Value != "secret-token" {
+		t.Errorf("expected cookie value to match token, got %q", cookie.Value)
+	}
+	if !cookie.HttpOnly {
+		t.Error("expected stream auth cookie to be HttpOnly")
+	}
+	if cookie.SameSite != http.SameSiteStrictMode {
+		t.Error("expected stream auth cookie to be SameSite=Strict")
+	}
+}
+
+func TestTokensEqualConstantTime(t *testing.T) {
+	if !tokensEqual("abc123", "abc123") {
+		t.Error("expected equal tokens to compare true")
+	}
+	if tokensEqual("abc123", "abc124") {
+		t.Error("expected different tokens to compare false")
+	}
+	if tokensEqual("abc123", "abc1234") {
+		t.Error("expected tokens of different length to compare false")
+	}
+	if tokensEqual("", "secret") {
+		t.Error("expected empty token to compare false against a real token")
 	}
 }
 
@@ -1210,12 +1290,13 @@ func TestTokenAuthRejectsWrongToken(t *testing.T) {
 	})
 	handler := tokenAuthMiddleware("secret-token", inner)
 
-	req := httptest.NewRequest("GET", "/api/health?token=wrong-token", nil)
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	req.Header.Set("Authorization", "Bearer wrong-token")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	if w.Code != http.StatusUnauthorized {
-		t.Errorf("expected 401 with wrong token, got %d", w.Code)
+		t.Errorf("expected 401 with wrong bearer token, got %d", w.Code)
 	}
 }
 

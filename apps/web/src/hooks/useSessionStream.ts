@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { withToken } from '../api';
+import { ensureStreamAuth } from '../api';
 import type { ActivityState, MessageResponse } from '../types';
 
 type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
@@ -23,11 +23,15 @@ export function useSessionStream(sessionId: string | undefined) {
     let eventSource: EventSource | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    function connect() {
+    async function connect() {
       if (disposed) return;
 
       setStatus('connecting');
-      const es = new EventSource(withToken(`/api/sessions/${sessionId}/stream`));
+      // Establish the auth cookie before opening the stream: EventSource cannot
+      // send the Authorization header, so the token is not placed in the URL.
+      await ensureStreamAuth();
+      if (disposed) return;
+      const es = new EventSource(`/api/sessions/${sessionId}/stream`);
       eventSource = es;
 
       es.onopen = () => {

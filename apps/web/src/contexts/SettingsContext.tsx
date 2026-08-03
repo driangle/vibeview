@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { fetcher, withToken } from '../api';
+import { fetcher, authHeaders } from '../api';
 import type { Settings } from '../settings-types';
 import { defaults, SettingsContext } from './useSettings';
 
@@ -24,9 +24,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const merged = { ...settings, ...partial };
       setOptimistic(partial);
       try {
-        const res = await fetch(withToken('/api/settings'), {
+        const res = await fetch('/api/settings', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(merged),
         });
         if (res.ok) {

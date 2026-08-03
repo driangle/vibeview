@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { fetcher, withToken } from '../api';
+import { fetcher, authHeaders } from '../api';
 import { Footer } from '../components/Footer';
 import { useSettings } from '../contexts/useSettings';
 import type { AppConfig } from '../types';
@@ -45,9 +45,9 @@ export function Settings() {
     setStatus(null);
     setFieldErrors({});
     try {
-      const res = await fetch(withToken('/api/settings'), {
+      const res = await fetch('/api/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(form),
       });
       const body = await res.json();

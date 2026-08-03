@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -127,6 +128,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
 	s.mux.HandleFunc("GET /api/activity", s.handleActivity)
 	s.mux.HandleFunc("GET /api/search", s.handleSearch)
+	s.mux.HandleFunc("POST /api/auth/stream", s.handleAuthStream)
 
 	// Serve embedded SPA for all other routes.
 	s.mux.Handle("/", spa.Handler())
@@ -228,27 +230,68 @@ func corsHandler(port int, lanMode bool, next http.Handler) http.Handler {
 	})
 }
 
-// tokenAuthMiddleware validates access tokens on API requests.
-// Accepts the token via ?token= query parameter or Authorization: Bearer header.
-// Non-API routes (static assets, SPA) are served without auth so the page can load.
+// streamAuthCookie names the HttpOnly cookie that authenticates the SSE stream.
+// EventSource cannot set request headers, so the stream is authorized by a cookie
+// issued from a header-authenticated handshake — keeping the token out of URLs.
+const streamAuthCookie = "vibeview_stream_token"
+
+// tokenAuthMiddleware validates access tokens on API requests using a
+// constant-time comparison. The token is taken from the Authorization: Bearer
+// header (preferred) or, for the SSE stream that cannot set headers, the stream
+// auth cookie. Non-API routes (static assets, SPA) are served without auth so
+// the page can load.
 func tokenAuthMiddleware(token string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, "/api/") {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if t := r.URL.Query().Get("token"); t == token {
+		if requestHasValidToken(r, token) {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
-			if strings.TrimPrefix(auth, "Bearer ") == token {
-				next.ServeHTTP(w, r)
-				return
-			}
-		}
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 	})
+}
+
+// requestHasValidToken reports whether the request carries the access token via
+// the Authorization: Bearer header or the stream auth cookie.
+func requestHasValidToken(r *http.Request, token string) bool {
+	if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+		if tokensEqual(strings.TrimPrefix(auth, "Bearer "), token) {
+			return true
+		}
+	}
+	if c, err := r.Cookie(streamAuthCookie); err == nil {
+		if tokensEqual(c.Value, token) {
+			return true
+		}
+	}
+	return false
+}
+
+// tokensEqual compares two tokens in constant time to avoid a timing side channel.
+func tokensEqual(a, b string) bool {
+	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
+}
+
+// handleAuthStream issues the cookie that authenticates the SSE stream. It is
+// reached only after tokenAuthMiddleware validates the Bearer header, so the
+// client proves possession of the token via a header before the server hands
+// back an HttpOnly cookie — the token itself never appears in a URL.
+func (s *Server) handleAuthStream(w http.ResponseWriter, r *http.Request) {
+	if s.token == "" {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     streamAuthCookie,
+		Value:    s.token,
+		Path:     "/api/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // --- Handlers ---

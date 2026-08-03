@@ -184,7 +184,11 @@ Examples:
 
 			if lan {
 				lanIP := localLANIP()
-				lanURL := fmt.Sprintf("http://%s:%d?token=%s", lanIP, port, cfg.Token)
+				// Carry the token in the URL fragment, not the query string: a
+				// fragment is never sent to the server, so it stays out of access
+				// logs and Referer headers. The SPA reads it and switches to
+				// header/cookie auth.
+				lanURL := fmt.Sprintf("http://%s:%d/#token=%s", lanIP, port, cfg.Token)
 				fmt.Println()
 				fmt.Printf("\033[33mWARNING: LAN mode enabled — sessions are exposed on the local network\033[0m\n")
 				fmt.Printf("listening on 0.0.0.0:%d\n", port)

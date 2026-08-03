@@ -46,12 +46,17 @@ token:
 ```
 WARNING: LAN mode enabled — sessions are exposed on the local network
 listening on 0.0.0.0:4880
-  http://192.168.1.42:4880?token=<generated-token>
+  http://192.168.1.42:4880/#token=<generated-token>
 ```
 
-The token may be supplied either as a `?token=` query parameter or an
-`Authorization: Bearer <token>` header. Because LAN mode exposes your session
-data to every device on the network, only enable it on networks you trust.
+The token travels in the URL **fragment** (`#token=`), which browsers never send
+to the server — keeping it out of access logs and `Referer` headers. On load, the
+web app reads the token, removes it from the visible URL, and then authenticates
+with an `Authorization: Bearer <token>` header. The live session stream (which
+cannot send headers) is authorized by a short handshake that sets an `HttpOnly`
+cookie, so the token is never placed in a request URL. Because LAN mode exposes
+your session data to every device on the network, only enable it on networks you
+trust.
 
 ### `vibeview inspect`
 
