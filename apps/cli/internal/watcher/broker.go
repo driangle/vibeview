@@ -11,8 +11,8 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/logutil"
+	"github.com/driangle/vibeview/apps/lib/messagedto"
 	"github.com/driangle/vibeview/apps/lib/pathutil"
-	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/session"
 	"github.com/fsnotify/fsnotify"
 )
@@ -450,37 +450,11 @@ func (b *Broker) pingLoop() {
 	}
 }
 
-// messageEvent matches the MessageResponse type from the server package.
-type messageEvent struct {
-	UUID          string             `json:"uuid"`
-	Type          string             `json:"type"`
-	Timestamp     string             `json:"timestamp"`
-	IsMeta        bool               `json:"isMeta,omitempty"`
-	IsSidechain   bool               `json:"isSidechain,omitempty"`
-	ActivityState string             `json:"activityState,omitempty"`
-	Message       *claude.APIMessage `json:"message,omitempty"`
-	Data          map[string]any     `json:"data,omitempty"`
-	Snapshot      map[string]any     `json:"snapshot,omitempty"`
-	CustomTitle   string             `json:"customTitle,omitempty"`
-	AiTitle       string             `json:"aiTitle,omitempty"`
-}
-
-func toMessageEvent(msg claude.Message, activityState string) messageEvent {
-	var ts string
-	if msg.Timestamp.Int64() != 0 {
-		ts = time.UnixMilli(msg.Timestamp.Int64()).UTC().Format(time.RFC3339)
-	}
-	return messageEvent{
-		UUID:          msg.UUID,
-		Type:          string(msg.Type),
-		Timestamp:     ts,
-		IsMeta:        msg.IsMeta,
-		IsSidechain:   msg.IsSidechain,
-		ActivityState: activityState,
-		Message:       redact.RedactAPIMessage(msg.Message),
-		Data:          redact.RedactMapValues(msg.Data),
-		Snapshot:      redact.RedactMapValues(msg.Snapshot),
-		CustomTitle:   msg.CustomTitle,
-		AiTitle:       msg.AiTitle,
-	}
+// toMessageEvent builds the live-stream representation of a message. It reuses
+// messagedto.From — the exact builder the fetch path uses — and layers on the
+// derived ActivityState, so the SSE and fetch payloads cannot drift.
+func toMessageEvent(msg claude.Message, activityState string) messagedto.Message {
+	m := messagedto.From(msg)
+	m.ActivityState = activityState
+	return m
 }

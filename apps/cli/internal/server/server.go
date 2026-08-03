@@ -19,6 +19,7 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/insights"
+	"github.com/driangle/vibeview/apps/lib/messagedto"
 	"github.com/driangle/vibeview/apps/lib/pathutil"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
@@ -641,9 +642,9 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		log.Printf("session %s: read error after %d messages, rendering partial content: %v", id, len(messages), err)
 	}
 
-	msgResponses := make([]MessageResponse, 0, len(messages))
+	msgResponses := make([]messagedto.Message, 0, len(messages))
 	for _, msg := range messages {
-		msgResponses = append(msgResponses, toMessageResponse(msg))
+		msgResponses = append(msgResponses, messagedto.From(msg))
 	}
 
 	extracted := insights.Extract(messages)
@@ -727,9 +728,9 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 		log.Printf("subagent %s: read error after %d messages, rendering partial content: %v", agentID, len(messages), err)
 	}
 
-	msgResponses := make([]MessageResponse, 0, len(messages))
+	msgResponses := make([]messagedto.Message, 0, len(messages))
 	for _, msg := range messages {
-		msgResponses = append(msgResponses, toMessageResponse(msg))
+		msgResponses = append(msgResponses, messagedto.From(msg))
 	}
 
 	// Read optional meta file for agent type and description. A missing or
@@ -1059,7 +1060,7 @@ type SubagentDetailResponse struct {
 	AgentID      string                    `json:"agentId"`
 	AgentType    string                    `json:"agentType,omitempty"`
 	Description  string                    `json:"description,omitempty"`
-	Messages     []MessageResponse         `json:"messages"`
+	Messages     []messagedto.Message      `json:"messages"`
 	Insights     *insights.SessionInsights `json:"insights,omitempty"`
 	SkippedLines int                       `json:"skippedLines,omitempty"`
 }
@@ -1068,28 +1069,9 @@ type SubagentDetailResponse struct {
 type SessionDetailResponse struct {
 	SessionResponse
 	FilePath     string                    `json:"filePath"`
-	Messages     []MessageResponse         `json:"messages"`
+	Messages     []messagedto.Message      `json:"messages"`
 	Insights     *insights.SessionInsights `json:"insights,omitempty"`
 	SkippedLines int                       `json:"skippedLines,omitempty"`
-}
-
-// MessageResponse is the API representation of a single message.
-type MessageResponse struct {
-	UUID           string                `json:"uuid"`
-	Type           string                `json:"type"`
-	Timestamp      string                `json:"timestamp"`
-	IsMeta         bool                  `json:"isMeta,omitempty"`
-	IsSidechain    bool                  `json:"isSidechain,omitempty"`
-	MessageKind    string                `json:"messageKind,omitempty"`
-	ChannelInfo    *insights.ChannelInfo `json:"channelInfo,omitempty"`
-	Message        *claude.APIMessage    `json:"message,omitempty"`
-	Content        string                `json:"content,omitempty"`
-	Data           map[string]any        `json:"data,omitempty"`
-	Snapshot       map[string]any        `json:"snapshot,omitempty"`
-	CustomTitle    string                `json:"customTitle,omitempty"`
-	AiTitle        string                `json:"aiTitle,omitempty"`
-	PermissionMode string                `json:"permissionMode,omitempty"`
-	Attachment     map[string]any        `json:"attachment,omitempty"`
 }
 
 // --- Helpers ---
@@ -1106,30 +1088,6 @@ func toSessionResponse(m session.SessionMeta) SessionResponse {
 		Usage:         m.Usage,
 		ActivityState: m.ActivityState,
 	}
-}
-
-func toMessageResponse(msg claude.Message) MessageResponse {
-	kind := insights.ClassifyMessageKind(msg)
-	resp := MessageResponse{
-		UUID:           msg.UUID,
-		Type:           string(msg.Type),
-		Timestamp:      msToISO(msg.Timestamp.Int64()),
-		IsMeta:         msg.IsMeta,
-		IsSidechain:    msg.IsSidechain,
-		MessageKind:    kind,
-		Message:        redact.RedactAPIMessage(msg.Message),
-		Content:        redact.RedactSecrets(msg.Content),
-		Data:           redact.RedactMapValues(msg.Data),
-		Snapshot:       redact.RedactMapValues(msg.Snapshot),
-		CustomTitle:    msg.CustomTitle,
-		AiTitle:        msg.AiTitle,
-		PermissionMode: msg.PermissionMode,
-		Attachment:     redact.RedactMapValues(msg.Attachment),
-	}
-	if kind == "channel-message" {
-		resp.ChannelInfo = insights.ExtractChannelInfo(msg)
-	}
-	return resp
 }
 
 func msToISO(ms int64) string {

@@ -1,5 +1,5 @@
 ---
-title: "Extract response types and middleware from server.go"
+title: "Split server.go into focused files (under 200 lines)"
 id: "01kpy105f"
 status: pending
 priority: medium
@@ -8,23 +8,27 @@ tags: ["refactor"]
 created: "2026-04-23"
 ---
 
-# Extract response types and middleware from server.go
+# Split server.go into focused files (under 200 lines)
 
 ## Objective
 
-Split `apps/cli/internal/server/server.go` (971 lines) into focused files by extracting two independent concerns: response types and middleware.
+Split `apps/cli/internal/server/server.go` (1137 lines) so no resulting file exceeds 200 lines. A single extraction is not enough at this size — the file needs to break into several cohesive files grouped by concern: the server core, middleware, response types, and handlers grouped by domain.
 
 ## Tasks
 
-- [ ] Create `responses.go` — move all response structs (`ConfigResponse`, `SessionResponse`, `PaginatedSessionsResponse`, `SearchResultResponse`, `SearchResponse`, `SubagentDetailResponse`, `SessionDetailResponse`, `MessageResponse`, `ActivityDayResponse`, `ActivityHourResponse`, `ActivityResponse`) plus conversion helpers (`toSessionResponse`, `toMessageResponse`, `msToISO`, `writeJSON`)
-- [ ] Create `middleware.go` — move CORS and auth middleware (`localhostOrigins`, `isPrivateIP`, `isAllowedOrigin`, `corsHandler`, `tokenAuthMiddleware`)
-- [ ] Verify `server.go` is under 500 lines after extraction
+- [ ] Keep in `server.go` — server core only: `Config`, `Server`, `New`, `routes`, `ListenAndServe`, `Shutdown`
+- [ ] Create `middleware.go` — CORS and auth: `localhostOrigins`, `isPrivateIP`, `isAllowedOrigin`, `corsHandler`, `tokenAuthMiddleware`, `requestHasValidToken`, `tokensEqual`
+- [ ] Create `responses.go` — all response structs (`ConfigResponse`, `ActivityDayResponse`, `ActivityHourResponse`, `ActivityResponse`, `SessionResponse`, `PaginatedSessionsResponse`, `SearchResultResponse`, `SearchResponse`, `SubagentDetailResponse`, `SessionDetailResponse`, `MessageResponse`) plus converters (`toSessionResponse`, `toMessageResponse`, `msToISO`, `writeJSON`)
+- [ ] Create `handlers_config.go` — config/health/settings/projects handlers: `handleAuthStream`, `handleConfig`, `handleHealth`, `handleGetSettings`, `handleUpdateSettings`, `handleGetProjects`, `handleUpdateProjects`, `resolveProjectDirs`
+- [ ] Create `handlers_sessions.go` — session listing/filter/sort: `filterByDirs`, `sortSessions`, `sessionLess`, `sessionSortName`, `handleListSessions`
+- [ ] Create `handlers_session.go` — single-session handlers: `handleGetSession`, `handleSessionStream`
+- [ ] Create `subagent.go` — subagent resolution: `handleGetSubagent`, `safeSubagentPath`, `resolveToolUseAgentID`
+- [ ] Create `handlers_search.go` — `handleSearch`, `handleActivity`
 - [ ] Run `make check` to confirm everything compiles and tests pass
 
 ## Acceptance Criteria
 
-- `server.go` contains only the `Server` struct, constructor, routes, and HTTP handlers
-- `responses.go` contains all response types and conversion helpers
-- `middleware.go` contains CORS and auth middleware
-- No new files exceed 500 lines
+- No non-test `.go` file in `apps/cli/internal/server/` exceeds 200 lines
+- `server.go` contains only the `Server` struct, constructor, routes, and lifecycle
+- Handlers are grouped by domain; middleware and response types are in their own files
 - `make check` passes

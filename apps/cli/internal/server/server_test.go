@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/session"
 )
 
@@ -1235,33 +1234,6 @@ func TestToSessionResponse(t *testing.T) {
 	}
 	if resp.ActivityState != "idle" {
 		t.Errorf("ActivityState = %q, want %q", resp.ActivityState, "idle")
-	}
-}
-
-func TestToMessageResponse(t *testing.T) {
-	msg := claude.Message{
-		UUID:      "msg-1",
-		Type:      claude.MessageTypeUser,
-		Timestamp: claude.Timestamp(1700000000000),
-		IsMeta:    false,
-		Message: &claude.APIMessage{
-			Role:    "user",
-			Content: []claude.ContentBlock{{Type: "text", Text: "hello"}},
-		},
-	}
-	resp := toMessageResponse(msg)
-
-	if resp.UUID != "msg-1" {
-		t.Errorf("UUID = %q, want %q", resp.UUID, "msg-1")
-	}
-	if resp.Type != "user" {
-		t.Errorf("Type = %q, want %q", resp.Type, "user")
-	}
-	if resp.Timestamp == "" {
-		t.Error("expected non-empty timestamp")
-	}
-	if resp.Message == nil {
-		t.Error("expected non-nil message")
 	}
 }
 

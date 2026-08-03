@@ -5,7 +5,7 @@ status: pending
 priority: medium
 type: chore
 tags: ["lint", "ci"]
-depends-on: ["01kpy105f", "01kpy1068", "01kpy106r"]
+depends-on: ["01kpy105f", "01kpy1068", "01kpy106r", "01kz462an", "01kz462ap", "01kz462j6", "01kz462aq", "01kz462nt", "01kz462re", "01kz462ar", "01kz462vm", "01kz462as"]
 created: "2026-04-23"
 ---
 

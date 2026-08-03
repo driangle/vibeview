@@ -1,11 +1,14 @@
 package watcher
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/driangle/vibeview/apps/lib/claude"
+	"github.com/driangle/vibeview/apps/lib/messagedto"
 	"github.com/driangle/vibeview/apps/lib/session"
 )
 
@@ -190,4 +193,76 @@ func TestBrokerProjectsPoller(t *testing.T) {
 	if found == nil {
 		t.Error("expected sdk-sess-1 to be in the index")
 	}
+}
+
+// TestSSEFetchFieldParity guards against the SSE and fetch representations of a
+// message drifting apart. messagedto.From is the exact builder the server's
+// fetch path (/api/sessions/{id}) uses, and toMessageEvent is the live SSE
+// path. A message serialized over SSE must carry every field the fetched
+// message carries — the only permitted difference is the live-only
+// activityState.
+func TestSSEFetchFieldParity(t *testing.T) {
+	// Populate the fields that previously diverged between the two paths
+	// (content, permissionMode, attachment) alongside the common ones.
+	msg := claude.Message{
+		UUID:           "msg-1",
+		Type:           claude.MessageTypeSystem,
+		Timestamp:      claude.Timestamp(1700000000000),
+		IsMeta:         true,
+		IsSidechain:    true,
+		Content:        "system notice",
+		PermissionMode: "acceptEdits",
+		Attachment:     map[string]any{"kind": "skill"},
+		CustomTitle:    "My Title",
+		AiTitle:        "Auto Title",
+		Data:           map[string]any{"progress": "1/2"},
+		Snapshot:       map[string]any{"files": 3},
+	}
+
+	fetchKeys := jsonKeys(t, messagedto.From(msg))
+	sseKeys := jsonKeys(t, toMessageEvent(msg, "working"))
+
+	// Every field the fetch path emits must also be present over SSE.
+	for k, want := range fetchKeys {
+		got, ok := sseKeys[k]
+		if !ok {
+			t.Errorf("SSE payload is missing field %q present in fetch payload", k)
+			continue
+		}
+		if got != want {
+			t.Errorf("field %q differs: fetch=%s sse=%s", k, want, got)
+		}
+	}
+
+	// The only field SSE may add on top of the fetch payload is activityState.
+	for k := range sseKeys {
+		if k == "activityState" {
+			continue
+		}
+		if _, ok := fetchKeys[k]; !ok {
+			t.Errorf("SSE payload has unexpected extra field %q", k)
+		}
+	}
+	if _, ok := sseKeys["activityState"]; !ok {
+		t.Error("expected live SSE payload to carry activityState")
+	}
+}
+
+// jsonKeys marshals v and returns a map of top-level JSON field name to its
+// serialized value, so two payloads can be compared field by field.
+func jsonKeys(t *testing.T, v any) map[string]string {
+	t.Helper()
+	data, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	keys := make(map[string]string, len(raw))
+	for k, val := range raw {
+		keys[k] = string(val)
+	}
+	return keys
 }

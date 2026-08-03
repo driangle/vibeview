@@ -1,7 +1,7 @@
 ---
 id: "cf-008"
 title: "Unify messageEvent and MessageResponse to stop SSE/fetch field drift"
-status: pending
+status: completed
 priority: medium
 effort: small
 type: improvement
@@ -13,6 +13,7 @@ created: 2026-08-03
 context:
   - "apps/cli/internal/watcher/broker.go"
   - "apps/cli/internal/server/server.go"
+completed_at: 2026-08-03
 ---
 
 # Unify messageEvent and MessageResponse to stop SSE/fetch field drift
@@ -32,9 +33,9 @@ purely by the type duplication.
 
 ## Acceptance Criteria
 
-- [ ] Collapse the two DTOs into a single shared type (and a single `toMessageResponse`/`toMessageEvent` builder) so SSE and fetch cannot diverge
-- [ ] Confirm the SSE payload now carries the same fields as the fetch payload
-- [ ] Add a test asserting field parity between the live and fetched representations of a message
+- [x] Collapse the two DTOs into a single shared type (and a single `toMessageResponse`/`toMessageEvent` builder) so SSE and fetch cannot diverge
+- [x] Confirm the SSE payload now carries the same fields as the fetch payload
+- [x] Add a test asserting field parity between the live and fetched representations of a message
 
 ## verify
 ```yaml
