@@ -57,6 +57,19 @@ vibeview inspect --yaml <session-id>
 vibeview inspect /path/to/session.jsonl
 ```
 
+### Find related sessions
+
+Reconstruct a whole multi-agent work episode from one session ID: its subagent transcripts plus time-clustered sibling sessions from the same project.
+
+```
+vibeview related <session-id>
+vibeview related --gap 1h <session-id>      # widen sibling clustering window (default 30m)
+vibeview related --no-subagents <session-id>
+vibeview related --no-siblings <session-id>
+vibeview related --json <session-id>
+vibeview related --no-color <session-id>
+```
+
 ### Aggregate usage stats
 
 Show usage summary across all sessions or filtered by project.
@@ -102,6 +115,7 @@ All commands accept:
 - Use `vibeview search` when the user wants to find a past conversation by topic or keyword.
 - Use `vibeview sessions --sort cost` to help users identify their most expensive sessions.
 - Use `vibeview inspect` to get detailed metadata about a specific session (tokens, cost, tools, files).
+- Use `vibeview related` to pull together a multi-agent episode — a session's subagents and its sibling sessions from the same project.
 - Use `vibeview show` to read back the actual conversation content.
 - Use `vibeview self` when running inside Claude Code to discover the current session ID.
 - Use `vibeview stats` for aggregate usage reporting and cost tracking.
