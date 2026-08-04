@@ -209,6 +209,138 @@ func TestGetSession(t *testing.T) {
 	}
 }
 
+// The single-session response should carry a timeline with per-exchange rows and
+// session-level insights derived from the same messages.
+func TestGetSessionIncludesTimeline(t *testing.T) {
+	srv := newTestServer(t)
+	req := httptest.NewRequest("GET", "/api/sessions/sess-1", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	var detail SessionDetailResponse
+	if err := json.NewDecoder(w.Body).Decode(&detail); err != nil {
+		t.Fatal(err)
+	}
+
+	if detail.Timeline == nil {
+		t.Fatal("expected a timeline in the response")
+	}
+	// The fixture's one prompt + reply forms exactly one exchange.
+	if len(detail.Timeline.Exchanges) != 1 {
+		t.Fatalf("expected 1 exchange, got %d", len(detail.Timeline.Exchanges))
+	}
+	ex := detail.Timeline.Exchanges[0]
+	if ex.PromptPreview != "hello world" {
+		t.Errorf("expected prompt preview %q, got %q", "hello world", ex.PromptPreview)
+	}
+	if ex.Tokens != 15 {
+		t.Errorf("expected 15 tokens (10 in + 5 out), got %d", ex.Tokens)
+	}
+	// Insights are aggregated from the exchanges.
+	if detail.Timeline.Insights.TotalTokens != 15 {
+		t.Errorf("expected insights totalTokens 15, got %d", detail.Timeline.Insights.TotalTokens)
+	}
+	if detail.Timeline.Insights.LongestExchangeIndex != 0 {
+		t.Errorf("expected longest exchange index 0, got %d", detail.Timeline.Insights.LongestExchangeIndex)
+	}
+}
+
+// A session whose prompt contains a secret must have it redacted in the timeline,
+// consistent with the rest of the payload.
+func TestGetSessionTimelineRedactsSecrets(t *testing.T) {
+	claudeDir := t.TempDir()
+	projDir := filepath.Join(claudeDir, "projects", "-users-me-secret")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	secret := "sk-ant-abcdefghijklmnopqrstuvwxyz012345"
+	filePath := filepath.Join(projDir, "secret.jsonl")
+	line := fmt.Sprintf(`{"type":"user","uuid":"u1","sessionId":"secret","timestamp":1700000000000,"message":{"role":"user","content":[{"type":"text","text":"my key is %s"}]}}`+"\n", secret)
+	if err := os.WriteFile(filePath, []byte(line), 0644); err != nil {
+		t.Fatal(err)
+	}
+	idx := &session.Index{Sessions: []session.SessionMeta{{
+		SessionID: "secret",
+		Project:   "/users/me/secret",
+		FilePath:  filePath,
+		Timestamp: 1700000000000,
+	}}}
+	srv, err := New(Config{ClaudeDir: claudeDir, Index: idx, Standalone: true})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/api/sessions/secret", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	body := w.Body.String()
+	if strings.Contains(body, secret) {
+		t.Errorf("timeline leaked the raw secret in the response body")
+	}
+	if !strings.Contains(body, "[REDACTED]") {
+		t.Errorf("expected the secret to be redacted to [REDACTED]")
+	}
+}
+
+// An empty session (no parseable messages) must still return a well-formed
+// timeline: an empty exchange list rather than a null or an error.
+func TestGetSessionEmptyTimelineIsValid(t *testing.T) {
+	claudeDir := t.TempDir()
+	projDir := filepath.Join(claudeDir, "projects", "-users-me-empty")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	filePath := filepath.Join(projDir, "empty.jsonl")
+	if err := os.WriteFile(filePath, []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
+	idx := &session.Index{Sessions: []session.SessionMeta{{
+		SessionID: "empty",
+		Project:   "/users/me/empty",
+		FilePath:  filePath,
+		Timestamp: 1700000000000,
+	}}}
+	srv, err := New(Config{ClaudeDir: claudeDir, Index: idx, Standalone: true})
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/api/sessions/empty", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	body := w.Body.String()
+	var detail SessionDetailResponse
+	if err := json.Unmarshal([]byte(body), &detail); err != nil {
+		t.Fatal(err)
+	}
+	if detail.Timeline == nil {
+		t.Fatal("expected a timeline even for an empty session")
+	}
+	if len(detail.Timeline.Exchanges) != 0 {
+		t.Errorf("expected 0 exchanges, got %d", len(detail.Timeline.Exchanges))
+	}
+	// An empty session has no longest exchange.
+	if detail.Timeline.Insights.LongestExchangeIndex != -1 {
+		t.Errorf("expected longest exchange index -1, got %d", detail.Timeline.Insights.LongestExchangeIndex)
+	}
+	// The exchanges field must serialize as [] rather than null.
+	if !strings.Contains(body, `"exchanges":[]`) {
+		t.Errorf("expected exchanges to serialize as [], got body: %s", body)
+	}
+}
+
 func TestGetSessionNotFound(t *testing.T) {
 	srv := newTestServer(t)
 	req := httptest.NewRequest("GET", "/api/sessions/nonexistent", nil)

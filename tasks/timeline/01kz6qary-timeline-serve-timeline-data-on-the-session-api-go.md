@@ -1,13 +1,14 @@
 ---
 id: "01kz6qary"
 title: "Timeline: serve timeline data on the session API (Go)"
-status: pending
+status: completed
 priority: high
 effort: small
 phase: timeline
 dependencies: ["01kz6qarv"]
 tags: ["backend", "timeline", "go", "api"]
 created_at: 2026-08-04
+completed_at: 2026-08-04
 ---
 
 # Timeline: serve timeline data on the session API (Go)
@@ -34,12 +35,12 @@ Field shapes should match what the client renders per the Track design:
 
 ## Tasks
 
-- [ ] Add `Timeline *timeline.TimelineResponse` (exchanges + insights) to
+- [x] Add `Timeline *timeline.TimelineResponse` (exchanges + insights) to
       `SessionDetailResponse` with a `json:"timeline,omitempty"` tag.
-- [ ] Populate it in `handleGetSession` from the already-parsed `messages`.
-- [ ] Apply redaction consistently with the rest of the response (prompt previews,
+- [x] Populate it in `handleGetSession` from the already-parsed `messages`.
+- [x] Apply redaction consistently with the rest of the response (prompt previews,
       commands, file paths) — reuse the `redact` helpers used elsewhere in the handler.
-- [ ] Handler/server test: a fixture session returns a non-empty `timeline` with exchanges
+- [x] Handler/server test: a fixture session returns a non-empty `timeline` with exchanges
       and insights; an empty session returns an empty-but-valid structure.
 
 ## Acceptance Criteria

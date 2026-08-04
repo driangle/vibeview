@@ -23,6 +23,7 @@ import (
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/apps/lib/timeline"
 	"github.com/driangle/vibeview/internal/pidcheck"
 	"github.com/driangle/vibeview/internal/projects"
 	"github.com/driangle/vibeview/internal/settings"
@@ -625,11 +626,15 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	extracted := insights.Extract(messages)
 	sessionDir := strings.TrimSuffix(path, ".jsonl")
 	insights.ResolveSubagentIDs(extracted.Subagents, sessionDir)
+	// Timeline strings (prompt previews, commands, file paths) are redacted at
+	// the source by timeline.Build, matching the rest of the payload.
+	tl := timeline.Build(messages)
 	resp := SessionDetailResponse{
 		SessionResponse: toSessionResponse(*meta),
 		FilePath:        redact.MaskHomePath(path),
 		Messages:        msgResponses,
 		Insights:        &extracted,
+		Timeline:        &tl,
 		SkippedLines:    parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -1082,10 +1087,11 @@ type SubagentDetailResponse struct {
 // SessionDetailResponse is the API representation of a single session with messages.
 type SessionDetailResponse struct {
 	SessionResponse
-	FilePath     string                    `json:"filePath"`
-	Messages     []messagedto.Message      `json:"messages"`
-	Insights     *insights.SessionInsights `json:"insights,omitempty"`
-	SkippedLines int                       `json:"skippedLines,omitempty"`
+	FilePath     string                     `json:"filePath"`
+	Messages     []messagedto.Message       `json:"messages"`
+	Insights     *insights.SessionInsights  `json:"insights,omitempty"`
+	Timeline     *timeline.TimelineResponse `json:"timeline,omitempty"`
+	SkippedLines int                        `json:"skippedLines,omitempty"`
 }
 
 // --- Helpers ---
