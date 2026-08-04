@@ -1,13 +1,14 @@
 ---
 id: "01kz6qarv"
 title: "Timeline: session insights aggregation (Go)"
-status: pending
+status: completed
 priority: high
 effort: medium
 phase: timeline
 dependencies: ["01kz6qarr"]
 tags: ["backend", "timeline", "go"]
 created_at: 2026-08-04
+completed_at: 2026-08-04
 ---
 
 # Timeline: session insights aggregation (Go)
@@ -44,14 +45,14 @@ The `renderVals()` script is the authoritative spec for each aggregate:
 
 ## Tasks
 
-- [ ] Add a `TimelineInsights` struct (+ nested types) to `apps/lib/timeline` and an
+- [x] Add a `TimelineInsights` struct (+ nested types) to `apps/lib/timeline` and an
       aggregator, e.g. `BuildInsights(exchanges []Exchange, messages []claude.Message) TimelineInsights`.
-- [ ] Implement: `timeSplit`, `models` (per-model tokens/duration/cost/exchanges/switches),
+- [x] Implement: `timeSplit`, `models` (per-model tokens/duration/cost/exchanges/switches),
       `modelBands`, `overviewBuckets` (tokens + errorLevel), `busiestFiles`, `topCommands`,
       `skills`, `toolMix`, `errorCount`, `longestExchangeIndex`, `top5TokenSharePct`,
       plus session totals (`totalTokens`, `totalCostUSD`, `totalDurationMs`).
-- [ ] Document the time-split heuristic and bucket count as constants.
-- [ ] Table-driven tests: single-model vs. multi-model sessions (band/switch counts),
+- [x] Document the time-split heuristic and bucket count as constants.
+- [x] Table-driven tests: single-model vs. multi-model sessions (band/switch counts),
       empty session (no divide-by-zero), file/command tallies, top-5 share math.
 
 ## Acceptance Criteria
