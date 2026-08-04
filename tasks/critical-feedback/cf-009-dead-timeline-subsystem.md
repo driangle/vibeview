@@ -18,6 +18,14 @@ context:
 
 # Remove or wire up the dead timeline subsystem (~1,800 LOC)
 
+## Resolution
+
+Decision made: **wire it up** as a real, routed feature using the designer's Timeline Track
+view, with the domain logic moved to Go (per cf-011). The work is decomposed into the
+`timeline` task group (`tasks/timeline/`), phases backend → web → cleanup. This task is
+closed by [[01kz6qash]] (removes the dead SVG subsystem after the new Track view ships).
+Design handoff: `~/Downloads/Timeline view design directions-handoff.zip`.
+
 ## Findings
 
 The entire `timeline/` subsystem is imported by **no mounted component**. Verified: a grep

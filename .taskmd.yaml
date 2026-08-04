@@ -21,3 +21,6 @@ phases:
   - id: memory-explorer
     name: "Memory Explorer"
     description: "Browse, search, and understand Claude's per-project auto-memory and CLAUDE.md instruction files"
+  - id: timeline
+    name: "Timeline Track"
+    description: "Revive cf-009: replace the dead SVG timeline with the designer's row-based Timeline Track view, with per-exchange metrics and insights computed in Go"
