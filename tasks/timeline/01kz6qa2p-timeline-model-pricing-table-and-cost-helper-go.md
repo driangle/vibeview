@@ -1,13 +1,14 @@
 ---
 id: "01kz6qa2p"
 title: "Timeline: model pricing table and cost helper (Go)"
-status: pending
+status: completed
 priority: high
 effort: small
 phase: timeline
 dependencies: []
 tags: ["backend", "timeline", "go"]
 created_at: 2026-08-04
+completed_at: 2026-08-04
 ---
 
 # Timeline: model pricing table and cost helper (Go)
@@ -37,14 +38,14 @@ are illustrative only — use realistic Anthropic per-token rates.
 
 ## Tasks
 
-- [ ] Add a `pricing` package (e.g. `apps/lib/pricing/pricing.go`) with a table mapping
+- [x] Add a `pricing` package (e.g. `apps/lib/pricing/pricing.go`) with a table mapping
       model id → per-token rates (input, output, and cache-read/creation if modeled).
-- [ ] Provide `CostUSD(model string, usage claude.Usage) float64` (and/or a tokens-based
+- [x] Provide `CostUSD(model string, usage claude.Usage) float64` (and/or a tokens-based
       variant) that returns the computed cost, with a sensible fallback for unknown models
       (match by family prefix e.g. `opus`/`sonnet`/`haiku`; document the fallback).
-- [ ] Keep the table in one obvious place so rates are easy to update; cite the source of
+- [x] Keep the table in one obvious place so rates are easy to update; cite the source of
       the rates in a comment.
-- [ ] Table-driven tests: known models, family-prefix fallback, unknown model, zero usage.
+- [x] Table-driven tests: known models, family-prefix fallback, unknown model, zero usage.
 
 ## Acceptance Criteria
 
