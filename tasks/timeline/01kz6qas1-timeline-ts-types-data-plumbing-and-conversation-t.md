@@ -1,13 +1,14 @@
 ---
 id: "01kz6qas1"
 title: "Timeline: TS types, data plumbing, and Conversation|Timeline tab (web)"
-status: pending
+status: completed
 priority: high
 effort: medium
 phase: timeline
 dependencies: ["01kz6qary"]
 tags: ["frontend", "timeline", "web"]
 created_at: 2026-08-04
+completed_at: 2026-08-04
 ---
 
 # Timeline: TS types, data plumbing, and Conversation|Timeline tab (web)
@@ -47,13 +48,13 @@ container are added.
 
 ## Tasks
 
-- [ ] Add the timeline TS types to `types.ts`, matching the Go JSON tags exactly.
-- [ ] Thread `timeline` through `useSessionData` (and the subagent path if applicable).
-- [ ] Add a `Conversation | Timeline` tab switch to `SessionView`; Conversation renders the
+- [x] Add the timeline TS types to `types.ts`, matching the Go JSON tags exactly.
+- [x] Thread `timeline` through `useSessionData` (and the subagent path if applicable).
+- [x] Add a `Conversation | Timeline` tab switch to `SessionView`; Conversation renders the
       untouched `ConversationFlow`; Timeline renders a new placeholder container that
       receives the `timeline` data.
-- [ ] Add a shared duration/clock formatter util with a unit test.
-- [ ] Vitest for the tab switch (renders the right pane) and the new formatter.
+- [x] Add a shared duration/clock formatter util with a unit test.
+- [x] Vitest for the tab switch (renders the right pane) and the new formatter.
 
 ## Acceptance Criteria
 

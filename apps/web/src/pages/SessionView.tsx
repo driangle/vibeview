@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ConversationFlow } from '../components/ConversationFlow';
-import { TimelineView } from '../components/timeline/TimelineView';
+import { SessionTabs, type SessionTab } from '../components/SessionTabs';
+import { TimelineTrack } from '../components/timeline/TimelineTrack';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/useSettings';
 import { ApiError } from '../api';
@@ -21,8 +22,7 @@ export function SessionView() {
   const printing = usePrintMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusedAgentId, setFocusedAgentId] = useState<string | null>(null);
-  // TEMPORARY (cf-009 preview): toggle between the conversation flow and the timeline view.
-  const [showTimeline, setShowTimeline] = useState(false);
+  const [tab, setTab] = useState<SessionTab>('conversation');
 
   const {
     session,
@@ -38,6 +38,7 @@ export function SessionView() {
     liveActivityState,
     displayMessages,
     insights,
+    timeline,
     agentGroups,
     agentGroupFirstIds,
   } = useSessionData(id);
@@ -157,24 +158,11 @@ export function SessionView() {
           focusedAgentPrompt={focusedAgentPrompt}
         />
 
-        {/* TEMPORARY (cf-009 preview): toggle between conversation flow and timeline */}
-        <div className="flex justify-end px-4 pt-2">
-          <button
-            onClick={() => setShowTimeline((v) => !v)}
-            className="rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-fg hover:bg-muted transition-colors"
-          >
-            {showTimeline ? 'Show conversation' : 'Show timeline (preview)'}
-          </button>
-        </div>
+        <SessionTabs value={tab} onChange={setTab} />
 
-        {showTimeline ? (
+        {tab === 'timeline' ? (
           <div className="flex flex-1 flex-col overflow-hidden">
-            <TimelineView
-              messages={activeMessages}
-              toolResults={activeToolResults}
-              agentGroups={agentGroups}
-              agentGroupFirstIds={agentGroupFirstIds}
-            />
+            <TimelineTrack timeline={timeline} />
           </div>
         ) : (
           <ConversationFlow

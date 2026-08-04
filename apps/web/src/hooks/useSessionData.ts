@@ -102,6 +102,9 @@ export function useSessionData(id: string | undefined) {
   // Use API-provided insights when available.
   const insights = session?.insights ?? null;
 
+  // Server-computed Timeline Track payload (exchanges + session insights).
+  const timeline = session?.timeline ?? null;
+
   // Keep agentGroups/agentGroupFirstIds for AgentProgressWidget (old-format rendering).
   const { agentGroups, agentGroupFirstIds } = useMemo(() => {
     const groups = new Map<string, MessageResponse[]>();
@@ -143,6 +146,7 @@ export function useSessionData(id: string | undefined) {
     liveActivityState,
     displayMessages,
     insights,
+    timeline,
     agentGroups,
     agentGroupFirstIds,
   };

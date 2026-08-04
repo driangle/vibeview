@@ -1,18 +1,10 @@
 import type { TimelineCycle } from '../../lib/timeline/types';
 import { getPhaseTheme } from '../../lib/timeline/phaseTheme';
+import { formatDurationMs } from '../../utils';
 
 interface TimelineTooltipProps {
   cycle: TimelineCycle;
   position: { x: number; y: number };
-}
-
-function formatDuration(ms: number): string {
-  if (ms < 1000) return '<1s';
-  const seconds = Math.floor(ms / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remaining = seconds % 60;
-  return remaining > 0 ? `${minutes}m ${remaining}s` : `${minutes}m`;
 }
 
 export function TimelineTooltip({ cycle, position }: TimelineTooltipProps) {
@@ -37,7 +29,7 @@ export function TimelineTooltip({ cycle, position }: TimelineTooltipProps) {
             {toolCount} tool{toolCount !== 1 ? 's' : ''}
           </span>
         )}
-        {cycle.durationMs > 0 && <span>{formatDuration(cycle.durationMs)}</span>}
+        {cycle.durationMs > 0 && <span>{formatDurationMs(cycle.durationMs)}</span>}
       </div>
 
       {/* Files touched */}

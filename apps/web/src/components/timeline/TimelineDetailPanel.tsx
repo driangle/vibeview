@@ -3,6 +3,7 @@ import type { TimelineCycle, TimelinePhase } from '../../lib/timeline/types';
 import type { ContentBlock } from '../../types';
 import { getPhaseTheme } from '../../lib/timeline/phaseTheme';
 import { MessageBubble } from '../MessageBubble';
+import { formatDurationMs, formatTokenCount } from '../../utils';
 
 interface CycleDetailProps {
   type: 'cycle';
@@ -21,20 +22,6 @@ interface PhaseDetailProps {
 type TimelineDetailPanelProps = {
   onClose: () => void;
 } & (CycleDetailProps | PhaseDetailProps);
-
-function formatDuration(ms: number): string {
-  if (ms < 1000) return '<1s';
-  const seconds = Math.floor(ms / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}m`;
-}
-
-function formatTokens(tokens: number): string {
-  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
-  if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(1)}k`;
-  return String(tokens);
-}
 
 function PhaseSummary({ phase, cycles }: { phase: TimelinePhase; cycles: TimelineCycle[] }) {
   const theme = getPhaseTheme(phase.phase);
@@ -67,11 +54,11 @@ function PhaseSummary({ phase, cycles }: { phase: TimelinePhase; cycles: Timelin
           <div className="text-xs text-fg/60">cycles</div>
         </div>
         <div className="rounded-lg bg-fg/8 p-2">
-          <div className="text-lg font-semibold text-fg">{formatTokens(totalTokens)}</div>
+          <div className="text-lg font-semibold text-fg">{formatTokenCount(totalTokens)}</div>
           <div className="text-xs text-fg/60">tokens</div>
         </div>
         <div className="rounded-lg bg-fg/8 p-2">
-          <div className="text-lg font-semibold text-fg">{formatDuration(totalDuration)}</div>
+          <div className="text-lg font-semibold text-fg">{formatDurationMs(totalDuration)}</div>
           <div className="text-xs text-fg/60">duration</div>
         </div>
       </div>

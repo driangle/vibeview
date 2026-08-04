@@ -50,6 +50,39 @@ export function formatDuration(messages: MessageResponse[]): string | null {
   return `${secs}s`;
 }
 
+/**
+ * Format a millisecond duration as a compact human label: "<1s", "45s",
+ * "3m 20s", "1h 5m". Shared by the timeline components that render an
+ * exchange's active duration. For durations built from a message list use
+ * {@link formatDuration} instead.
+ */
+export function formatDurationMs(ms: number): string {
+  if (ms < 1000) return '<1s';
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    const remaining = seconds % 60;
+    return remaining > 0 ? `${minutes}m ${remaining}s` : `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+}
+
+/**
+ * Format a millisecond offset as an elapsed clock: "mm:ss", or "h:mm:ss" once
+ * past an hour. Used to label positions along the timeline axis.
+ */
+export function formatClock(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+  return `${pad(minutes)}:${pad(seconds)}`;
+}
+
 export function formatTime(timestamp: string): string {
   const date = new Date(timestamp);
   const now = new Date();
