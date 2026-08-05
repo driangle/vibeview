@@ -1,13 +1,14 @@
-import type { ComponentProps } from 'react';
-import { SessionSidebar } from './SessionSidebar';
+import type { ReactNode } from 'react';
 
 interface MobileSidebarProps {
   open: boolean;
   onToggle: () => void;
-  sidebarProps: ComponentProps<typeof SessionSidebar>;
+  /** The sidebar content to host in the bottom sheet (per-tab). */
+  children: ReactNode;
 }
 
-export function MobileSidebar({ open, onToggle, sidebarProps }: MobileSidebarProps) {
+/** A mobile bottom-sheet shell that hosts the active tab's sidebar content. */
+export function MobileSidebar({ open, onToggle, children }: MobileSidebarProps) {
   return (
     <div
       className={`lg:hidden fixed inset-x-0 bottom-0 z-30 flex flex-col transition-transform duration-300 ease-in-out print:hidden ${
@@ -30,9 +31,7 @@ export function MobileSidebar({ open, onToggle, sidebarProps }: MobileSidebarPro
         </span>
         Details
       </button>
-      <div className="flex-1 overflow-y-auto">
-        <SessionSidebar {...sidebarProps} />
-      </div>
+      <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }

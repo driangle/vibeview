@@ -51,7 +51,7 @@ interface SessionViewHeaderProps {
   displayMessages: MessageResponse[];
   navigateToMessage: (uuid: string) => void;
   onExportPdf: () => void;
-  onToggleSidebar: () => void;
+  onToggleSidebar?: () => void;
   focusedAgentId: string | null;
   onExitAgent: () => void;
   subagentData: SubagentDetail | undefined;
@@ -96,10 +96,7 @@ export function SessionViewHeader({
             <div className="flex items-center gap-2 sm:gap-4">
               {liveUsage && <InlineMetrics usage={liveUsage} />}
               {!focusedAgentId && (
-                <ConversationSearch
-                  sessionId={sessionId}
-                  onNavigateToMessage={navigateToMessage}
-                />
+                <ConversationSearch sessionId={sessionId} onNavigateToMessage={navigateToMessage} />
               )}
               <button
                 onClick={onExportPdf}
@@ -108,13 +105,15 @@ export function SessionViewHeader({
               >
                 <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
               </button>
-              <button
-                onClick={onToggleSidebar}
-                className="lg:hidden text-muted-fg hover:text-fg transition-colors print:hidden"
-                title="Toggle sidebar"
-              >
-                <span className="material-symbols-outlined text-xl">info</span>
-              </button>
+              {onToggleSidebar && (
+                <button
+                  onClick={onToggleSidebar}
+                  className="lg:hidden text-muted-fg hover:text-fg transition-colors print:hidden"
+                  title="Toggle sidebar"
+                >
+                  <span className="material-symbols-outlined text-xl">info</span>
+                </button>
+              )}
             </div>
           </div>
           <h1 className="text-base sm:text-xl font-headline font-medium tracking-tight text-fg font-mono truncate">

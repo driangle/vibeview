@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import type { Exchange, TimelineInsights } from '../../types';
-import { SessionInsightsPopover } from './SessionInsightsPopover';
+import { SessionInsightsContent } from './SessionInsightsContent';
 
 const insights: TimelineInsights = {
   timeSplit: [
@@ -73,9 +73,9 @@ function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchang
 
 const noop = () => {};
 
-function renderPopover(overrides: Partial<Parameters<typeof SessionInsightsPopover>[0]> = {}) {
+function renderContent(overrides: Partial<Parameters<typeof SessionInsightsContent>[0]> = {}) {
   return render(
-    <SessionInsightsPopover
+    <SessionInsightsContent
       insights={insights}
       exchanges={[makeExchange({ index: 2, durationMs: 240_000 })]}
       onSearch={noop}
@@ -87,9 +87,9 @@ function renderPopover(overrides: Partial<Parameters<typeof SessionInsightsPopov
   );
 }
 
-describe('SessionInsightsPopover', () => {
+describe('SessionInsightsContent', () => {
   it('renders every section from the insights fixture', () => {
-    renderPopover();
+    renderContent();
 
     // Time-split legend: all four segments.
     expect(screen.getByText('Model generation')).toBeInTheDocument();
@@ -118,7 +118,7 @@ describe('SessionInsightsPopover', () => {
   it('sets the search query to a file name when its row is clicked', async () => {
     const user = userEvent.setup();
     const onSearch = vi.fn();
-    renderPopover({ onSearch });
+    renderContent({ onSearch });
 
     await user.click(screen.getByText('apps/web/src/App.tsx'));
     expect(onSearch).toHaveBeenCalledWith('apps/web/src/App.tsx');
@@ -127,7 +127,7 @@ describe('SessionInsightsPopover', () => {
   it('sets the search query to a tool name when its chip is clicked', async () => {
     const user = userEvent.setup();
     const onSearch = vi.fn();
-    renderPopover({ onSearch });
+    renderContent({ onSearch });
 
     await user.click(screen.getByText('Read'));
     expect(onSearch).toHaveBeenCalledWith('Read');
@@ -136,14 +136,14 @@ describe('SessionInsightsPopover', () => {
   it('jumps to the first error when the errors tile is clicked', async () => {
     const user = userEvent.setup();
     const onJumpToFirstError = vi.fn();
-    renderPopover({ onJumpToFirstError });
+    renderContent({ onJumpToFirstError });
 
     await user.click(screen.getByText('errors · jump to first'));
     expect(onJumpToFirstError).toHaveBeenCalledTimes(1);
   });
 
   it('hides a section when its list is empty', () => {
-    renderPopover({ insights: { ...insights, skills: [], topCommands: [] } });
+    renderContent({ insights: { ...insights, skills: [], topCommands: [] } });
     expect(screen.queryByText('Skills loaded')).toBeNull();
     expect(screen.queryByText('Most-run commands')).toBeNull();
     // Sections with data still render.

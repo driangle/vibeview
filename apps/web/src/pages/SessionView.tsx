@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ConversationFlow } from '../components/ConversationFlow';
 import { SessionTabs, type SessionTab } from '../components/SessionTabs';
 import { TimelineTab } from '../components/timeline-track/TimelineTab';
+import { TimelineSidebar } from '../components/timeline-track/TimelineSidebar';
+import { useTimeline } from '../components/timeline-track/useTimeline';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/useSettings';
 import { ApiError } from '../api';
@@ -57,6 +59,12 @@ export function SessionView() {
 
   const handleFocusAgent = useCallback((agentId: string) => setFocusedAgentId(agentId), []);
   const handleExitAgent = useCallback(() => setFocusedAgentId(null), []);
+
+  const timelineController = useTimeline({
+    timeline,
+    selectedIndex: selectedExchangeIndex,
+    onSelectIndex: setSelectedExchangeIndex,
+  });
 
   const {
     page,
@@ -133,6 +141,13 @@ export function SessionView() {
     onFocusAgent: focusedAgentId ? undefined : handleFocusAgent,
   };
 
+  const sidebarContent =
+    tab === 'timeline' ? (
+      <TimelineSidebar timeline={timeline} controller={timelineController} />
+    ) : (
+      <SessionSidebar {...sidebarProps} />
+    );
+
   return (
     <div className="flex flex-col lg:flex-row h-full overflow-hidden">
       <div
@@ -162,25 +177,26 @@ export function SessionView() {
         <SessionTabs value={tab} onChange={setTab} />
 
         {tab === 'timeline' ? (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <TimelineTab
-              timeline={timeline}
-              selectedIndex={selectedExchangeIndex}
-              onSelectIndex={setSelectedExchangeIndex}
-              onClose={() => setSelectedExchangeIndex(null)}
-              onOpenInConversation={(exchange) => {
-                setTab('conversation');
-                const firstUuid = exchange.messageUuids[0];
-                if (firstUuid) navigateToMessage(firstUuid);
-              }}
-              messageContext={{
-                messages: displayMessages,
-                toolResults,
-                agentGroups,
-                agentGroupFirstIds,
-                onFocusAgent: focusedAgentId ? undefined : handleFocusAgent,
-              }}
-            />
+          <div className="flex flex-1 flex-col overflow-hidden px-4 sm:px-8">
+            <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
+              <TimelineTab
+                timeline={timeline}
+                controller={timelineController}
+                onClose={() => setSelectedExchangeIndex(null)}
+                onOpenInConversation={(exchange) => {
+                  setTab('conversation');
+                  const firstUuid = exchange.messageUuids[0];
+                  if (firstUuid) navigateToMessage(firstUuid);
+                }}
+                messageContext={{
+                  messages: displayMessages,
+                  toolResults,
+                  agentGroups,
+                  agentGroupFirstIds,
+                  onFocusAgent: focusedAgentId ? undefined : handleFocusAgent,
+                }}
+              />
+            </div>
           </div>
         ) : (
           <ConversationFlow
@@ -215,14 +231,10 @@ export function SessionView() {
         )}
         <Footer />
       </div>
-      <div className="hidden lg:block h-full overflow-y-auto">
-        <SessionSidebar {...sidebarProps} />
-      </div>
-      <MobileSidebar
-        open={sidebarOpen}
-        onToggle={() => setSidebarOpen((v) => !v)}
-        sidebarProps={sidebarProps}
-      />
+      <div className="hidden lg:block h-full overflow-y-auto">{sidebarContent}</div>
+      <MobileSidebar open={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)}>
+        {sidebarContent}
+      </MobileSidebar>
     </div>
   );
 }

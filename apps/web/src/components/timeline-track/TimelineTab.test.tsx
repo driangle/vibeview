@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 import type { Exchange, TimelineResponse } from '../../types';
 import { TimelineTab } from './TimelineTab';
+import { useTimeline } from './useTimeline';
 
 const emptyInsights: TimelineResponse['insights'] = {
   timeSplit: [],
@@ -49,10 +50,15 @@ function withErrors(index: number, prompt: string): Exchange {
   return { ...ex, flags: { ...ex.flags, hasErrors: true } };
 }
 
-/** Controlled harness: TimelineTab takes selection from its parent. */
+/** Controlled harness: selection lives in the parent, wired via the shared controller. */
 function Harness({ timeline }: { timeline: TimelineResponse }) {
   const [selected, setSelected] = useState<number | null>(null);
-  return <TimelineTab timeline={timeline} selectedIndex={selected} onSelectIndex={setSelected} />;
+  const controller = useTimeline({
+    timeline,
+    selectedIndex: selected,
+    onSelectIndex: setSelected,
+  });
+  return <TimelineTab timeline={timeline} controller={controller} />;
 }
 
 function makeTimeline(
@@ -132,31 +138,6 @@ describe('TimelineTab', () => {
       'aria-current',
       'true',
     );
-  });
-
-  it('filters the track when a busiest-file row is clicked in the insights popover', async () => {
-    const user = userEvent.setup();
-    const timeline = makeTimeline(
-      [
-        makeExchange({ index: 0, promptPreview: 'Edit config', files: ['config.ts'] }),
-        makeExchange({ index: 1, promptPreview: 'Edit app', files: ['App.tsx'] }),
-      ],
-      { busiestFiles: [{ name: 'App.tsx', count: 1 }] },
-    );
-    render(<Harness timeline={timeline} />);
-
-    expect(trackRows()).toHaveLength(2);
-
-    await user.click(screen.getByRole('button', { name: /Session insights/ }));
-    const popover = screen.getByTestId('session-insights-popover');
-    await user.click(within(popover).getByText('App.tsx'));
-
-    // The popover closed and the track narrowed to the file's exchange.
-    expect(screen.queryByTestId('session-insights-popover')).toBeNull();
-    expect(trackRows()).toHaveLength(1);
-    expect(screen.getByText('Edit app')).toBeInTheDocument();
-    expect(screen.queryByText('Edit config')).toBeNull();
-    expect(screen.getByLabelText('Search session')).toHaveValue('App.tsx');
   });
 
   it('clears filters and search via the empty-state reset link', async () => {
