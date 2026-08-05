@@ -1,7 +1,7 @@
 ---
 id: "cf-009"
 title: "Remove or wire up the dead timeline subsystem (~1,800 LOC)"
-status: pending
+status: completed
 priority: high
 effort: large
 type: chore
@@ -14,6 +14,7 @@ context:
   - "apps/web/src/lib/timeline/"
   - "apps/web/src/components/timeline/"
   - "apps/web/src/lib/extractors/"
+completed_at: 2026-08-05
 ---
 
 # Remove or wire up the dead timeline subsystem (~1,800 LOC)

@@ -1,13 +1,14 @@
 ---
 id: "01kz6qash"
 title: "Timeline: remove dead SVG timeline subsystem and close cf-009 (web)"
-status: pending
+status: completed
 priority: medium
 effort: small
 phase: timeline
 dependencies: ["01kz6qas6", "01kz6qas9", "01kz6qasc", "01kz6qase"]
 tags: ["frontend", "timeline", "web", "dead-code"]
 created_at: 2026-08-04
+completed_at: 2026-08-05
 ---
 
 # Timeline: remove dead SVG timeline subsystem and close cf-009 (web)
@@ -39,11 +40,11 @@ the SVG view). No new UI in this task — it is cleanup after the new view ships
 
 ## Tasks
 
-- [ ] Delete the old SVG timeline components and SVG-only lib code + types.
-- [ ] Audit `lib/extractors/*`, `lib/timeline/{buildTimeline,cycleMetrics,classifyPhase,
+- [x] Delete the old SVG timeline components and SVG-only lib code + types.
+- [x] Audit `lib/extractors/*`, `lib/timeline/{buildTimeline,cycleMetrics,classifyPhase,
       phaseTheme}.ts`: remove what is now unreferenced; keep what the new view/tests use.
-- [ ] Grep to confirm no remaining imports of removed modules; update the barrel `index.ts`.
-- [ ] Run the cf-009 verify checks; mark cf-009 completed.
+- [x] Grep to confirm no remaining imports of removed modules; update the barrel `index.ts`.
+- [x] Run the cf-009 verify checks; mark cf-009 completed.
 
 ## Acceptance Criteria
 

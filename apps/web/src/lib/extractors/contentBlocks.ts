@@ -1,12 +1,4 @@
-import type { MessageResponse, ContentBlock } from '../../types';
-
-/** Safely extract content blocks from a message. */
-export function getContentBlocks(msg: MessageResponse): ContentBlock[] {
-  if (!msg.message) return [];
-  const content = msg.message.content;
-  if (!Array.isArray(content)) return [];
-  return content;
-}
+import type { ContentBlock } from '../../types';
 
 /** Extract text from a tool_result content field. */
 export function resolveResultText(result: ContentBlock | undefined): string | null {
