@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
 import type { Exchange } from '../../types';
 import { CHIP_SPECS, type FilterState, type TimelineFilterKey } from './chips';
-import { TimelineSearch } from './TimelineSearch';
 
 interface TimelineToolbarProps {
   /** The full exchange set, used for the per-chip counts (independent of filters). */
@@ -10,14 +8,6 @@ interface TimelineToolbarProps {
   onToggleFilter: (key: TimelineFilterKey) => void;
   /** e.g. `"42 exchanges"` or `"7 of 42"`. */
   shownLabel: string;
-  query: string;
-  onQueryChange: (value: string) => void;
-  matchLabel: string;
-  onSearchPrev: () => void;
-  onSearchNext: () => void;
-  onClearSearch: () => void;
-  /** The Session insights control, rendered at the start of the right cluster. */
-  insightsMenu?: ReactNode;
 }
 
 /** A single keyboard-hint key cap, e.g. `j`, `e`, `↵`. */
@@ -73,22 +63,16 @@ function FilterChip({
 
 /**
  * The Timeline Track toolbar: the five filter chips (with live counts and active
- * styling) on the left, and on the right the search box, the shown/total label,
- * and the keyboard-hint legend. Purely presentational — filtering and counting
- * are done by the parent from the server-provided exchanges.
+ * styling) on the left, and on the right the shown/total label and the
+ * keyboard-hint legend. Purely presentational — filtering and counting are done
+ * by the parent from the server-provided exchanges. Session search lives in the
+ * shared header (see {@link ../SessionViewHeader}), not here.
  */
 export function TimelineToolbar({
   exchanges,
   filters,
   onToggleFilter,
   shownLabel,
-  query,
-  onQueryChange,
-  matchLabel,
-  onSearchPrev,
-  onSearchNext,
-  onClearSearch,
-  insightsMenu,
 }: TimelineToolbarProps) {
   return (
     <div className="flex flex-none flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-border bg-surface-dim px-5 py-2.5">
@@ -105,15 +89,6 @@ export function TimelineToolbar({
       </div>
 
       <div className="ml-auto flex items-center gap-3 text-[11px] text-muted-fg">
-        {insightsMenu}
-        <TimelineSearch
-          query={query}
-          onQueryChange={onQueryChange}
-          matchLabel={matchLabel}
-          onPrev={onSearchPrev}
-          onNext={onSearchNext}
-          onClear={onClearSearch}
-        />
         <span className="font-mono font-medium whitespace-nowrap">{shownLabel}</span>
         <span className="h-3.5 w-px bg-border" aria-hidden />
         <div className="flex items-center gap-1.5 whitespace-nowrap">

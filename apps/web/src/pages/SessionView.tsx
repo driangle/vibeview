@@ -4,7 +4,9 @@ import { ConversationFlow } from '../components/ConversationFlow';
 import { SessionTabs, type SessionTab } from '../components/SessionTabs';
 import { TimelineTab } from '../components/timeline-track/TimelineTab';
 import { TimelineSidebar } from '../components/timeline-track/TimelineSidebar';
+import { TimelineSearch } from '../components/timeline-track/TimelineSearch';
 import { useTimeline } from '../components/timeline-track/useTimeline';
+import { ConversationSearch } from '../components/ConversationSearch';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/useSettings';
 import { ApiError } from '../api';
@@ -148,6 +150,22 @@ export function SessionView() {
       <SessionSidebar {...sidebarProps} />
     );
 
+  // A single search control lives in the header and scopes to the active view:
+  // the timeline filter on the Timeline tab, the message search on Conversation.
+  const searchSlot =
+    tab === 'timeline' ? (
+      <TimelineSearch
+        query={timelineController.query}
+        onQueryChange={timelineController.setQuery}
+        matchLabel={timelineController.matchLabel}
+        onPrev={() => timelineController.step(-1)}
+        onNext={() => timelineController.step(1)}
+        onClear={timelineController.clearSearch}
+      />
+    ) : focusedAgentId ? null : (
+      <ConversationSearch sessionId={session.id} onNavigateToMessage={navigateToMessage} />
+    );
+
   return (
     <div className="flex flex-col lg:flex-row h-full overflow-hidden">
       <div
@@ -163,7 +181,7 @@ export function SessionView() {
           activityState={activityState}
           liveUsage={liveUsage}
           displayMessages={displayMessages}
-          navigateToMessage={navigateToMessage}
+          search={searchSlot}
           onExportPdf={handleExportPdf}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
           focusedAgentId={focusedAgentId}

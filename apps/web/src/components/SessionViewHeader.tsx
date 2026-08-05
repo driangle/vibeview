@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ActivityBadge } from './ActivityBadge';
-import { ConversationSearch } from './ConversationSearch';
 import { CopyableText } from './CopyableText';
 import { TokenBreakdownPopover } from './TokenBreakdownPopover';
 import { formatDate, formatTokenCount, formatCost, formatDuration } from '../utils';
@@ -49,7 +49,8 @@ interface SessionViewHeaderProps {
   activityState: ActivityState | undefined;
   liveUsage: UsageTotals | null;
   displayMessages: MessageResponse[];
-  navigateToMessage: (uuid: string) => void;
+  /** The single view-scoped search control, rendered in the header's right cluster. */
+  search?: ReactNode;
   onExportPdf: () => void;
   onToggleSidebar?: () => void;
   focusedAgentId: string | null;
@@ -68,7 +69,7 @@ export function SessionViewHeader({
   activityState,
   liveUsage,
   displayMessages,
-  navigateToMessage,
+  search,
   onExportPdf,
   onToggleSidebar,
   focusedAgentId,
@@ -95,9 +96,7 @@ export function SessionViewHeader({
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               {liveUsage && <InlineMetrics usage={liveUsage} />}
-              {!focusedAgentId && (
-                <ConversationSearch sessionId={sessionId} onNavigateToMessage={navigateToMessage} />
-              )}
+              {search}
               <button
                 onClick={onExportPdf}
                 className="text-muted-fg hover:text-fg transition-colors print:hidden"

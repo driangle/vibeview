@@ -44,15 +44,12 @@ export function TimelineTab({
   const {
     allExchanges,
     visible,
-    query,
     filters,
-    setQuery,
     toggleFilter,
     clearSearch,
     reset,
     step,
     shownLabel,
-    matchLabel,
     matched,
     matchPos,
     showIdleGaps,
@@ -78,12 +75,6 @@ export function TimelineTab({
         filters={filters}
         onToggleFilter={toggleFilter}
         shownLabel={shownLabel}
-        query={query}
-        onQueryChange={setQuery}
-        matchLabel={matchLabel}
-        onSearchPrev={() => step(-1)}
-        onSearchNext={() => step(1)}
-        onClearSearch={clearSearch}
       />
       {timeline && (
         <OverviewStrip

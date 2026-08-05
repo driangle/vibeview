@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import type { Exchange, TimelineResponse } from '../../types';
 import { TimelineTab } from './TimelineTab';
 import { TimelineSidebar } from './TimelineSidebar';
+import { TimelineSearch } from './TimelineSearch';
 import { useTimeline } from './useTimeline';
 
 const emptyInsights: TimelineResponse['insights'] = {
@@ -66,6 +67,14 @@ function Harness({ timeline }: { timeline: TimelineResponse }) {
   });
   return (
     <>
+      <TimelineSearch
+        query={controller.query}
+        onQueryChange={controller.setQuery}
+        matchLabel={controller.matchLabel}
+        onPrev={() => controller.step(-1)}
+        onNext={() => controller.step(1)}
+        onClear={controller.clearSearch}
+      />
       <TimelineTab timeline={timeline} controller={controller} />
       <TimelineSidebar timeline={timeline} controller={controller} />
     </>

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 import type { Exchange, TimelineResponse } from '../../types';
 import { TimelineTab } from './TimelineTab';
+import { TimelineSearch } from './TimelineSearch';
 import { useTimeline } from './useTimeline';
 
 const emptyInsights: TimelineResponse['insights'] = {
@@ -50,7 +51,10 @@ function withErrors(index: number, prompt: string): Exchange {
   return { ...ex, flags: { ...ex.flags, hasErrors: true } };
 }
 
-/** Controlled harness: selection lives in the parent, wired via the shared controller. */
+/**
+ * Controlled harness mirroring SessionView: selection lives in the parent, and
+ * the header search shares the tab's controller (search moved out of the toolbar).
+ */
 function Harness({ timeline }: { timeline: TimelineResponse }) {
   const [selected, setSelected] = useState<number | null>(null);
   const controller = useTimeline({
@@ -58,7 +62,19 @@ function Harness({ timeline }: { timeline: TimelineResponse }) {
     selectedIndex: selected,
     onSelectIndex: setSelected,
   });
-  return <TimelineTab timeline={timeline} controller={controller} />;
+  return (
+    <>
+      <TimelineSearch
+        query={controller.query}
+        onQueryChange={controller.setQuery}
+        matchLabel={controller.matchLabel}
+        onPrev={() => controller.step(-1)}
+        onNext={() => controller.step(1)}
+        onClear={controller.clearSearch}
+      />
+      <TimelineTab timeline={timeline} controller={controller} />
+    </>
+  );
 }
 
 function makeTimeline(
@@ -106,6 +122,8 @@ describe('TimelineTab', () => {
     ]);
     render(<Harness timeline={timeline} />);
 
+    // The search collapses to an icon; open it before typing.
+    await user.click(screen.getByRole('button', { name: 'Search session' }));
     await user.type(screen.getByLabelText('Search session'), 'add');
 
     expect(trackRows()).toHaveLength(2);
@@ -149,6 +167,7 @@ describe('TimelineTab', () => {
     render(<Harness timeline={timeline} />);
 
     // A query that matches nothing surfaces the empty state + reset link.
+    await user.click(screen.getByRole('button', { name: 'Search session' }));
     await user.type(screen.getByLabelText('Search session'), 'zzz-no-match');
     expect(screen.getByTestId('track-empty-state')).toBeInTheDocument();
 
