@@ -1,13 +1,14 @@
 ---
 id: "01kz6qas3"
 title: "Timeline: track table with rows, idle-gap dividers, and empty state (web)"
-status: pending
+status: completed
 priority: high
 effort: medium
 phase: timeline
 dependencies: ["01kz6qas1"]
 tags: ["frontend", "timeline", "web"]
 created_at: 2026-08-04
+completed_at: 2026-08-04
 ---
 
 # Timeline: track table with rows, idle-gap dividers, and empty state (web)
@@ -46,11 +47,11 @@ of phase/metrics.
 
 ## Tasks
 
-- [ ] Create the Timeline Track components (new dir, e.g. `components/timeline-track/`):
+- [x] Create the Timeline Track components (new dir, e.g. `components/timeline-track/`):
       column header, row, idle divider, empty state, and the scrolling container.
-- [ ] Wire row click → selected exchange state (shared with the detail panel task).
-- [ ] Support the density prop (compact/comfortable) from the mock; comfortable default.
-- [ ] Vitest: rows render from a fixture `Exchange[]`; idle dividers appear only between
+- [x] Wire row click → selected exchange state (shared with the detail panel task).
+- [x] Support the density prop (compact/comfortable) from the mock; comfortable default.
+- [x] Vitest: rows render from a fixture `Exchange[]`; idle dividers appear only between
       gapped exchanges; long exchanges get the amber bar; empty list renders the empty state.
 
 ## Acceptance Criteria

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ConversationFlow } from '../components/ConversationFlow';
 import { SessionTabs, type SessionTab } from '../components/SessionTabs';
-import { TimelineTrack } from '../components/timeline/TimelineTrack';
+import { TimelineTrack } from '../components/timeline-track/TimelineTrack';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/useSettings';
 import { ApiError } from '../api';
@@ -23,6 +23,7 @@ export function SessionView() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusedAgentId, setFocusedAgentId] = useState<string | null>(null);
   const [tab, setTab] = useState<SessionTab>('conversation');
+  const [selectedExchangeIndex, setSelectedExchangeIndex] = useState<number | null>(null);
 
   const {
     session,
@@ -162,7 +163,11 @@ export function SessionView() {
 
         {tab === 'timeline' ? (
           <div className="flex flex-1 flex-col overflow-hidden">
-            <TimelineTrack timeline={timeline} />
+            <TimelineTrack
+              timeline={timeline}
+              selectedIndex={selectedExchangeIndex}
+              onSelectIndex={setSelectedExchangeIndex}
+            />
           </div>
         ) : (
           <ConversationFlow
