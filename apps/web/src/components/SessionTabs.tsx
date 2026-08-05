@@ -16,26 +16,30 @@ const TABS: { id: SessionTab; label: string }[] = [
  */
 export function SessionTabs({ value, onChange }: SessionTabsProps) {
   return (
-    <div role="tablist" className="flex items-center gap-1 border-b border-border px-4">
-      {TABS.map((tab) => {
-        const active = tab.id === value;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(tab.id)}
-            className={`-mb-px border-b-2 px-3 py-2.5 text-sm transition-colors ${
-              active
-                ? 'border-fg font-semibold text-fg'
-                : 'border-transparent font-medium text-muted-fg hover:text-fg'
-            }`}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
+    <div className="border-b border-border px-4 sm:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div role="tablist" className="-ml-3 flex items-center gap-1">
+          {TABS.map((tab) => {
+            const active = tab.id === value;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onChange(tab.id)}
+                className={`-mb-px border-b-2 px-3 py-2.5 text-sm transition-colors ${
+                  active
+                    ? 'border-fg font-semibold text-fg'
+                    : 'border-transparent font-medium text-muted-fg hover:text-fg'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
