@@ -1,8 +1,28 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>vibeview development placeholder</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vibeview</title>
+    <script>
+      (function () {
+        var stored = localStorage.getItem('vibeview:theme');
+        var dark =
+          stored === '"dark"' ||
+          (stored !== '"light"' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-B29INrRc.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/chunk-DECur_0Z.js">
+    <link rel="modulepreload" crossorigin href="/assets/Footer-C_Kalya6.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-LFPYN7LY-CYVr2sBZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/useProjects-BK_yceXc.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-DciEUXaJ.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-xVpkNKag.css">
   </head>
-  <body></body>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
