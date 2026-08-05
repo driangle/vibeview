@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { TimelineResponse } from '../../types';
+import type { Exchange, TimelineResponse } from '../../types';
 import { TimelineToolbar } from './TimelineToolbar';
 import { TimelineTrack } from './TimelineTrack';
+import { ExchangeDetailPanel } from './ExchangeDetailPanel';
 import { useTimelineKeyboard } from './useTimelineKeyboard';
 import { filterExchanges } from './filterExchanges';
 import { EMPTY_FILTERS, anyFilterActive, type FilterState, type TimelineFilterKey } from './chips';
+import type { SessionMessageContext } from './exchangeData';
 import type { Density } from './TrackRow';
 
 interface TimelineTabProps {
@@ -12,8 +14,15 @@ interface TimelineTabProps {
   /** The selected exchange index (owned by the parent for the detail panel), or null. */
   selectedIndex: number | null;
   onSelectIndex: (index: number) => void;
-  /** Open the detail panel for an exchange (↵) — wired by the detail-panel task. */
-  onOpen?: (index: number) => void;
+  /** Clears the selection, closing the detail panel. */
+  onClose?: () => void;
+  /** Switch to the Conversation tab, jumping to the given exchange (best-effort). */
+  onOpenInConversation?: (exchange: Exchange) => void;
+  /**
+   * Session messages + maps threaded into the detail panel's `MessageBubble`s.
+   * When omitted, the detail panel is not rendered (e.g. before data loads).
+   */
+  messageContext?: SessionMessageContext;
   density?: Density;
 }
 
@@ -27,7 +36,9 @@ export function TimelineTab({
   timeline,
   selectedIndex,
   onSelectIndex,
-  onOpen,
+  onClose,
+  onOpenInConversation,
+  messageContext,
   density,
 }: TimelineTabProps) {
   const [query, setQuery] = useState('');
@@ -75,9 +86,12 @@ export function TimelineTab({
     visibleExchanges: visible,
     selectedIndex,
     onSelectIndex,
-    onOpen,
     onClearSearch: clearSearch,
   });
+
+  const selectedExchange =
+    selectedIndex === null ? undefined : allExchanges.find((e) => e.index === selectedIndex);
+  const showPanel = selectedExchange !== undefined && messageContext !== undefined;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -93,15 +107,27 @@ export function TimelineTab({
         onSearchNext={() => step(1)}
         onClearSearch={clearSearch}
       />
-      <TimelineTrack
-        timeline={timeline}
-        visibleExchanges={visible}
-        showIdleGaps={showIdleGaps}
-        selectedIndex={selectedIndex}
-        onSelectIndex={onSelectIndex}
-        density={density}
-        onReset={reset}
-      />
+      <div className="flex min-h-0 flex-1">
+        <TimelineTrack
+          timeline={timeline}
+          visibleExchanges={visible}
+          showIdleGaps={showIdleGaps}
+          selectedIndex={selectedIndex}
+          onSelectIndex={onSelectIndex}
+          density={density}
+          onReset={reset}
+        />
+        {showPanel && (
+          <ExchangeDetailPanel
+            exchange={selectedExchange}
+            context={messageContext}
+            onPrev={matchPos > 0 ? () => step(-1) : undefined}
+            onNext={matchPos >= 0 && matchPos < matched - 1 ? () => step(1) : undefined}
+            onClose={onClose ?? (() => undefined)}
+            onOpenInConversation={() => onOpenInConversation?.(selectedExchange)}
+          />
+        )}
+      </div>
     </div>
   );
 }

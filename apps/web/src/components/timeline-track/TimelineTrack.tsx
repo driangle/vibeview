@@ -47,7 +47,7 @@ export function TimelineTrack({
   const maxTokens = Math.max(0, ...allExchanges.map((e) => e.tokens));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-card" data-testid="timeline-track">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-card" data-testid="timeline-track">
       <TrackColumnHeader />
       <div className="flex-1 overflow-y-auto">
         {rows.length === 0 ? (

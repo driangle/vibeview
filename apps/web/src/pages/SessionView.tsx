@@ -167,6 +167,19 @@ export function SessionView() {
               timeline={timeline}
               selectedIndex={selectedExchangeIndex}
               onSelectIndex={setSelectedExchangeIndex}
+              onClose={() => setSelectedExchangeIndex(null)}
+              onOpenInConversation={(exchange) => {
+                setTab('conversation');
+                const firstUuid = exchange.messageUuids[0];
+                if (firstUuid) navigateToMessage(firstUuid);
+              }}
+              messageContext={{
+                messages: displayMessages,
+                toolResults,
+                agentGroups,
+                agentGroupFirstIds,
+                onFocusAgent: focusedAgentId ? undefined : handleFocusAgent,
+              }}
             />
           </div>
         ) : (

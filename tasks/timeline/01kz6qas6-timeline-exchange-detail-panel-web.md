@@ -1,13 +1,14 @@
 ---
 id: "01kz6qas6"
 title: "Timeline: exchange detail panel (web)"
-status: pending
+status: completed
 priority: medium
 effort: medium
 phase: timeline
 dependencies: ["01kz6qas3"]
 tags: ["frontend", "timeline", "web"]
 created_at: 2026-08-04
+completed_at: 2026-08-05
 ---
 
 # Timeline: exchange detail panel (web)
@@ -40,12 +41,12 @@ thinking / tool calls / assistant, and the footer buttons).
 
 ## Tasks
 
-- [ ] Build the detail panel component with header, summary tiles, badges, commands,
+- [x] Build the detail panel component with header, summary tiles, badges, commands,
       files-touched, inline messages, and footer.
-- [ ] Wire prev/next to move selection through the (filtered) exchange list; close clears
+- [x] Wire prev/next to move selection through the (filtered) exchange list; close clears
       selection; keyboard prev/next integrates with [[01kz6qas9]].
-- [ ] "Open in conversation" switches tabs; "Raw JSON" reveals the raw exchange/messages.
-- [ ] Vitest: renders selected exchange fields; prev/next changes selection; messages
+- [x] "Open in conversation" switches tabs; "Raw JSON" reveals the raw exchange/messages.
+- [x] Vitest: renders selected exchange fields; prev/next changes selection; messages
       resolve from `messageUuids`.
 
 ## Acceptance Criteria
