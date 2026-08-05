@@ -1,13 +1,14 @@
 ---
 id: "01kz6qase"
 title: "Timeline: session insights popover (web)"
-status: pending
+status: completed
 priority: medium
 effort: medium
 phase: timeline
 dependencies: ["01kz6qas1", "01kz6qas9"]
 tags: ["frontend", "timeline", "web"]
 created_at: 2026-08-04
+completed_at: 2026-08-05
 ---
 
 # Timeline: session insights popover (web)
@@ -38,11 +39,11 @@ chips, and `Tool mix` chips). "click a row to filter the track" is the interacti
 
 ## Tasks
 
-- [ ] Build the insights popover with all sections from the mock.
-- [ ] Wire the time-split hatched "Waiting on you" segment and the legend values.
-- [ ] Make rows/tiles/chips filter or jump the track via the [[01kz6qas9]] controls.
-- [ ] Toggle button in the toolbar (insights on/off) with chevron state.
-- [ ] Vitest: sections render from a fixture `TimelineInsights`; a row click sets the
+- [x] Build the insights popover with all sections from the mock.
+- [x] Wire the time-split hatched "Waiting on you" segment and the legend values.
+- [x] Make rows/tiles/chips filter or jump the track via the [[01kz6qas9]] controls.
+- [x] Toggle button in the toolbar (insights on/off) with chevron state.
+- [x] Vitest: sections render from a fixture `TimelineInsights`; a row click sets the
       expected filter/search; popover opens/closes.
 
 ## Acceptance Criteria

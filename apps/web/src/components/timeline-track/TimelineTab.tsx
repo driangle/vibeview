@@ -3,6 +3,7 @@ import type { Exchange, TimelineResponse } from '../../types';
 import { TimelineToolbar } from './TimelineToolbar';
 import { TimelineTrack } from './TimelineTrack';
 import { OverviewStrip } from './OverviewStrip';
+import { SessionInsightsMenu } from './SessionInsightsMenu';
 import { ExchangeDetailPanel } from './ExchangeDetailPanel';
 import { useTimelineKeyboard } from './useTimelineKeyboard';
 import { filterExchanges } from './filterExchanges';
@@ -74,6 +75,39 @@ export function TimelineTab({
     setFilters(EMPTY_FILTERS);
   }, []);
 
+  /** Clear the query and filters, then select `index` (a track jump). */
+  const jumpTo = useCallback(
+    (index: number | undefined) => {
+      setQuery('');
+      setFilters(EMPTY_FILTERS);
+      if (index !== undefined && index >= 0) onSelectIndex(index);
+    },
+    [onSelectIndex],
+  );
+
+  /** Insights: activate the error filter and jump to the first error exchange. */
+  const jumpToFirstError = useCallback(() => {
+    setQuery('');
+    setFilters({ ...EMPTY_FILTERS, errors: true });
+    const first = allExchanges.find((e) => e.flags.hasErrors);
+    if (first) onSelectIndex(first.index);
+  }, [allExchanges, onSelectIndex]);
+
+  /** Insights: jump to the server-identified longest-running exchange. */
+  const jumpToLongest = useCallback(
+    () => jumpTo(timeline?.insights.longestExchangeIndex),
+    [jumpTo, timeline],
+  );
+
+  /** Insights: jump to the heaviest (most tokens) exchange. */
+  const jumpToCostliest = useCallback(() => {
+    const costliest = allExchanges.reduce<Exchange | undefined>(
+      (max, e) => (max === undefined || e.tokens > max.tokens ? e : max),
+      undefined,
+    );
+    jumpTo(costliest?.index);
+  }, [allExchanges, jumpTo]);
+
   /** Move the selection `delta` steps through the visible list (search prev/next). */
   const step = useCallback(
     (delta: number) => {
@@ -110,6 +144,18 @@ export function TimelineTab({
         onSearchPrev={() => step(-1)}
         onSearchNext={() => step(1)}
         onClearSearch={clearSearch}
+        insightsMenu={
+          timeline && (
+            <SessionInsightsMenu
+              insights={timeline.insights}
+              exchanges={allExchanges}
+              onSearch={setQuery}
+              onJumpToFirstError={jumpToFirstError}
+              onJumpToLongest={jumpToLongest}
+              onJumpToCostliest={jumpToCostliest}
+            />
+          )
+        }
       />
       {timeline && (
         <OverviewStrip

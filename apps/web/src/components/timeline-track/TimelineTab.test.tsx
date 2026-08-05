@@ -55,8 +55,11 @@ function Harness({ timeline }: { timeline: TimelineResponse }) {
   return <TimelineTab timeline={timeline} selectedIndex={selected} onSelectIndex={setSelected} />;
 }
 
-function makeTimeline(exchanges: Exchange[]): TimelineResponse {
-  return { exchanges, insights: emptyInsights };
+function makeTimeline(
+  exchanges: Exchange[],
+  insights: Partial<TimelineResponse['insights']> = {},
+): TimelineResponse {
+  return { exchanges, insights: { ...emptyInsights, ...insights } };
 }
 
 /** The clickable exchange rows, excluding the toolbar chip/search buttons. */
@@ -129,6 +132,31 @@ describe('TimelineTab', () => {
       'aria-current',
       'true',
     );
+  });
+
+  it('filters the track when a busiest-file row is clicked in the insights popover', async () => {
+    const user = userEvent.setup();
+    const timeline = makeTimeline(
+      [
+        makeExchange({ index: 0, promptPreview: 'Edit config', files: ['config.ts'] }),
+        makeExchange({ index: 1, promptPreview: 'Edit app', files: ['App.tsx'] }),
+      ],
+      { busiestFiles: [{ name: 'App.tsx', count: 1 }] },
+    );
+    render(<Harness timeline={timeline} />);
+
+    expect(trackRows()).toHaveLength(2);
+
+    await user.click(screen.getByRole('button', { name: /Session insights/ }));
+    const popover = screen.getByTestId('session-insights-popover');
+    await user.click(within(popover).getByText('App.tsx'));
+
+    // The popover closed and the track narrowed to the file's exchange.
+    expect(screen.queryByTestId('session-insights-popover')).toBeNull();
+    expect(trackRows()).toHaveLength(1);
+    expect(screen.getByText('Edit app')).toBeInTheDocument();
+    expect(screen.queryByText('Edit config')).toBeNull();
+    expect(screen.getByLabelText('Search session')).toHaveValue('App.tsx');
   });
 
   it('clears filters and search via the empty-state reset link', async () => {

@@ -34,10 +34,12 @@ export function bucketColorClass(errorLevel: number): string {
 }
 
 /**
- * A fixed palette for the model-band ribbon. Semantic accent colours with no
- * theme token, so these values are the single source of truth (as in `flags.ts`).
+ * A fixed palette for the model bands and the insights "Models used" rows.
+ * Semantic accent colours with no theme token, so these values are the single
+ * source of truth (as in `flags.ts`). Shared so a model keeps a consistent
+ * accent across the overview strip and the insights popover.
  */
-const BAND_PALETTE = [
+export const MODEL_BAND_PALETTE = [
   'hsl(220 100% 55% / 0.7)', // blue
   'hsl(270 70% 60% / 0.75)', // purple
   'hsl(188 75% 45% / 0.8)', // cyan
@@ -56,7 +58,7 @@ export function assignBandColors(bands: ModelBand[]): string[] {
   return bands.map((band) => {
     let color = byModel.get(band.model);
     if (!color) {
-      color = BAND_PALETTE[byModel.size % BAND_PALETTE.length];
+      color = MODEL_BAND_PALETTE[byModel.size % MODEL_BAND_PALETTE.length];
       byModel.set(band.model, color);
     }
     return color;

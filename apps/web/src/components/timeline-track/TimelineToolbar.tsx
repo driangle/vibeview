@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Exchange } from '../../types';
 import { CHIP_SPECS, type FilterState, type TimelineFilterKey } from './chips';
 import { TimelineSearch } from './TimelineSearch';
@@ -15,6 +16,8 @@ interface TimelineToolbarProps {
   onSearchPrev: () => void;
   onSearchNext: () => void;
   onClearSearch: () => void;
+  /** The Session insights control, rendered at the start of the right cluster. */
+  insightsMenu?: ReactNode;
 }
 
 /** A single keyboard-hint key cap, e.g. `j`, `e`, `↵`. */
@@ -85,6 +88,7 @@ export function TimelineToolbar({
   onSearchPrev,
   onSearchNext,
   onClearSearch,
+  insightsMenu,
 }: TimelineToolbarProps) {
   return (
     <div className="flex flex-none flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-border bg-surface-dim px-5 py-2.5">
@@ -101,6 +105,7 @@ export function TimelineToolbar({
       </div>
 
       <div className="ml-auto flex items-center gap-3 text-[11px] text-muted-fg">
+        {insightsMenu}
         <TimelineSearch
           query={query}
           onQueryChange={onQueryChange}
