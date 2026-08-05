@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { Exchange, TimelineResponse } from '../../types';
 import { TimelineToolbar } from './TimelineToolbar';
 import { TimelineTrack } from './TimelineTrack';
+import { OverviewStrip } from './OverviewStrip';
 import { ExchangeDetailPanel } from './ExchangeDetailPanel';
 import { useTimelineKeyboard } from './useTimelineKeyboard';
 import { filterExchanges } from './filterExchanges';
@@ -24,6 +25,8 @@ interface TimelineTabProps {
    */
   messageContext?: SessionMessageContext;
   density?: Density;
+  /** Show the overview strip above the track. Defaults to on. */
+  showOverview?: boolean;
 }
 
 /**
@@ -40,6 +43,7 @@ export function TimelineTab({
   onOpenInConversation,
   messageContext,
   density,
+  showOverview = true,
 }: TimelineTabProps) {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
@@ -107,6 +111,15 @@ export function TimelineTab({
         onSearchNext={() => step(1)}
         onClearSearch={clearSearch}
       />
+      {timeline && (
+        <OverviewStrip
+          insights={timeline.insights}
+          exchanges={allExchanges}
+          selectedIndex={selectedIndex}
+          onSelectIndex={onSelectIndex}
+          show={showOverview}
+        />
+      )}
       <div className="flex min-h-0 flex-1">
         <TimelineTrack
           timeline={timeline}

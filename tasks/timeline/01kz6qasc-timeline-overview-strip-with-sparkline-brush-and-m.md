@@ -1,13 +1,14 @@
 ---
 id: "01kz6qasc"
 title: "Timeline: overview strip with sparkline, brush, and model bands (web)"
-status: pending
+status: completed
 priority: medium
 effort: medium
 phase: timeline
 dependencies: ["01kz6qas1"]
 tags: ["frontend", "timeline", "web"]
 created_at: 2026-08-04
+completed_at: 2026-08-05
 ---
 
 # Timeline: overview strip with sparkline, brush, and model bands (web)
@@ -36,10 +37,10 @@ clock range). Show/hide behind the `showOverview` prop from the mock.
 
 ## Tasks
 
-- [ ] Build the overview strip component (sparkline + brush + model bands + clock range).
-- [ ] Wire band clicks to selection; color buckets by error level.
-- [ ] Respect a `showOverview` toggle (default on).
-- [ ] Vitest: buckets render with correct error coloring; band click selects the right
+- [x] Build the overview strip component (sparkline + brush + model bands + clock range).
+- [x] Wire band clicks to selection; color buckets by error level.
+- [x] Respect a `showOverview` toggle (default on).
+- [x] Vitest: buckets render with correct error coloring; band click selects the right
       exchange; hidden when `showOverview` is off.
 
 ## Acceptance Criteria
