@@ -1,13 +1,14 @@
 ---
 id: "01kz6qas9"
 title: "Timeline: filter chips, search, and keyboard navigation (web)"
-status: pending
+status: completed
 priority: medium
 effort: medium
 phase: timeline
 dependencies: ["01kz6qas3"]
 tags: ["frontend", "timeline", "web"]
 created_at: 2026-08-04
+completed_at: 2026-08-05
 ---
 
 # Timeline: filter chips, search, and keyboard navigation (web)
@@ -38,12 +39,12 @@ counter/up-down/clear; the filtering/counter logic is in its `renderVals()`).
 
 ## Tasks
 
-- [ ] Build the toolbar: five filter chips with live counts and active styling, search box
+- [x] Build the toolbar: five filter chips with live counts and active styling, search box
       with match counter + prev/next + clear, and the shown/total label.
-- [ ] Implement the pure filter + search over `Exchange[]`; feed the result to the track.
-- [ ] Add keyboard navigation (j/k/arrows/e/↵/Esc) scoped to the Timeline tab; clean up
+- [x] Implement the pure filter + search over `Exchange[]`; feed the result to the track.
+- [x] Add keyboard navigation (j/k/arrows/e/↵/Esc) scoped to the Timeline tab; clean up
       listeners on unmount.
-- [ ] Vitest: chip toggles filter the list; search narrows + counts; `e` selects the next
+- [x] Vitest: chip toggles filter the list; search narrows + counts; `e` selects the next
       error; reset clears everything.
 
 ## Acceptance Criteria

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ConversationFlow } from '../components/ConversationFlow';
 import { SessionTabs, type SessionTab } from '../components/SessionTabs';
-import { TimelineTrack } from '../components/timeline-track/TimelineTrack';
+import { TimelineTab } from '../components/timeline-track/TimelineTab';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSettings } from '../contexts/useSettings';
 import { ApiError } from '../api';
@@ -88,7 +88,7 @@ export function SessionView() {
     onBack,
     onPrevPage: totalPages > 1 ? onPrevPage : undefined,
     onNextPage: totalPages > 1 ? onNextPage : undefined,
-    enabled: !isLoading && paginatedMessages.length > 0,
+    enabled: tab === 'conversation' && !isLoading && paginatedMessages.length > 0,
   });
   const handleExportPdf = useCallback(() => window.print(), []);
 
@@ -163,7 +163,7 @@ export function SessionView() {
 
         {tab === 'timeline' ? (
           <div className="flex flex-1 flex-col overflow-hidden">
-            <TimelineTrack
+            <TimelineTab
               timeline={timeline}
               selectedIndex={selectedExchangeIndex}
               onSelectIndex={setSelectedExchangeIndex}
