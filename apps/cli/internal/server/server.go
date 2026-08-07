@@ -128,6 +128,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("PUT /api/projects", s.handleUpdateProjects)
 	s.mux.HandleFunc("GET /api/sessions", s.handleListSessions)
 	s.mux.HandleFunc("GET /api/sessions/{id}/subagents/{agentId}", s.handleGetSubagent)
+	s.mux.HandleFunc("GET /api/sessions/{id}/raw", s.handleGetSessionRaw)
 	s.mux.HandleFunc("GET /api/sessions/{id}/stream", s.handleSessionStream)
 	s.mux.HandleFunc("GET /api/sessions/{id}", s.handleGetSession)
 	s.mux.HandleFunc("GET /api/activity", s.handleActivity)
@@ -638,6 +639,57 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		SkippedLines:    parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// maxRawSessionBytes caps the raw session content returned to the client so a
+// multi-megabyte JSONL cannot freeze the browser rendering it.
+const maxRawSessionBytes = 2 << 20 // 2 MiB
+
+// handleGetSessionRaw streams a session's raw JSONL content, redacted for
+// consistency with the rest of the payload and capped at maxRawSessionBytes.
+func (s *Server) handleGetSessionRaw(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	meta := s.index.FindSession(id)
+	if meta == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+		return
+	}
+
+	path, err := session.ResolveFilePath(s.claudeDir, *meta)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		return
+	}
+	// Contain the resolved path so a symlinked session file is not followed
+	// outside the Claude directory — parity with handleGetSession.
+	if _, err := pathutil.SafeResolve(path, s.claudeDir); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		return
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})
+		return
+	}
+	defer f.Close()
+
+	// Read one byte past the cap so we can distinguish a truncated file.
+	buf, err := io.ReadAll(io.LimitReader(f, maxRawSessionBytes+1))
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to read session"})
+		return
+	}
+	truncated := len(buf) > maxRawSessionBytes
+	if truncated {
+		buf = buf[:maxRawSessionBytes]
+	}
+
+	content := redact.MaskHomePath(redact.RedactSecrets(string(buf)))
+	writeJSON(w, http.StatusOK, map[string]any{
+		"content":   content,
+		"truncated": truncated,
+	})
 }
 
 func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {

@@ -1689,3 +1689,41 @@ func TestCORSAllowsAuthorizationHeader(t *testing.T) {
 		t.Errorf("expected Authorization in allowed headers, got %q", allowHeaders)
 	}
 }
+
+func TestGetSessionRawReturnsContent(t *testing.T) {
+	srv := newTestServer(t)
+
+	req := httptest.NewRequest("GET", "/api/sessions/sess-1/raw", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d; body: %s", w.Code, w.Body.String())
+	}
+
+	var resp struct {
+		Content   string `json:"content"`
+		Truncated bool   `json:"truncated"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(resp.Content, "hello world") {
+		t.Errorf("expected raw content to contain session text, got %q", resp.Content)
+	}
+	if resp.Truncated {
+		t.Errorf("expected small fixture not to be truncated")
+	}
+}
+
+func TestGetSessionRawNotFound(t *testing.T) {
+	srv := newTestServer(t)
+
+	req := httptest.NewRequest("GET", "/api/sessions/does-not-exist/raw", nil)
+	w := httptest.NewRecorder()
+	srv.mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}

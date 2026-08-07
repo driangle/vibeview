@@ -1,54 +1,28 @@
 import { useEffect, useState } from 'react';
 import { CodeBlock } from './CodeBlock';
 import { EditDiffView } from './FileViewerDiff';
+import { detectLanguage } from './fileLanguage';
 
 export type FileOperation =
   | { type: 'read'; content: string; timestamp: string }
   | { type: 'write'; content: string; timestamp: string }
+  | { type: 'image'; content: string; timestamp: string }
   | { type: 'edit'; oldString: string; newString: string; timestamp: string };
 
 interface FileViewerProps {
   filePath: string;
   operations: FileOperation[];
   onClose: () => void;
-}
-
-const EXT_TO_LANGUAGE: Record<string, string> = {
-  ts: 'typescript',
-  tsx: 'tsx',
-  js: 'javascript',
-  jsx: 'jsx',
-  json: 'json',
-  css: 'css',
-  scss: 'scss',
-  html: 'html',
-  md: 'markdown',
-  py: 'python',
-  rs: 'rust',
-  go: 'go',
-  yaml: 'yaml',
-  yml: 'yaml',
-  toml: 'toml',
-  sh: 'bash',
-  bash: 'bash',
-  zsh: 'bash',
-  sql: 'sql',
-  xml: 'xml',
-  svg: 'xml',
-  graphql: 'graphql',
-  dockerfile: 'docker',
-};
-
-function detectLanguage(filePath: string): string | undefined {
-  const fileName = filePath.split('/').pop() || '';
-  const lower = fileName.toLowerCase();
-
-  if (lower === 'dockerfile') return 'docker';
-  if (lower === 'makefile') return 'makefile';
-
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  if (!ext) return undefined;
-  return EXT_TO_LANGUAGE[ext];
+  /** Render as plain text instead of syntax-highlighted — used for large raw files. */
+  plain?: boolean;
+  /**
+   * Show the per-operation badge/timestamp row. On for real tool operations
+   * (Files Touched); off for synthetic single-content views like the raw
+   * session file or a command's output, where a "Read" badge is meaningless.
+   */
+  showOperationMeta?: boolean;
+  /** Show a header button that copies the viewed content to the clipboard. */
+  showCopy?: boolean;
 }
 
 function formatTime(timestamp: string): string {
@@ -62,6 +36,7 @@ function formatTime(timestamp: string): string {
 const OP_LABELS: Record<FileOperation['type'], { label: string; icon: string }> = {
   read: { label: 'Read', icon: 'visibility' },
   write: { label: 'Write', icon: 'edit_document' },
+  image: { label: 'Read', icon: 'image' },
   edit: { label: 'Edit', icon: 'edit_note' },
 };
 
@@ -75,10 +50,40 @@ function OperationBadge({ type }: { type: FileOperation['type'] }) {
   );
 }
 
-export function FileViewer({ filePath, operations, onClose }: FileViewerProps) {
-  const [raw, setRaw] = useState(false);
+// Above this many characters, syntax highlighting is skipped: tokenizing very
+// large content (e.g. a full session JSONL) can hang or crash the highlighter,
+// so we always render it as a plain <pre>.
+const MAX_HIGHLIGHT_CHARS = 50_000;
+
+export function FileViewer({
+  filePath,
+  operations,
+  onClose,
+  plain = false,
+  showOperationMeta = true,
+  showCopy = false,
+}: FileViewerProps) {
+  const [copied, setCopied] = useState(false);
   const fileName = filePath.split('/').pop() || filePath;
   const language = detectLanguage(filePath);
+
+  // Always render as plain text when told to, or when any operation is too large
+  // to highlight safely — tokenizing very large content can hang or crash the
+  // highlighter.
+  const tooLargeToHighlight = operations.some(
+    (op) => 'content' in op && op.type !== 'image' && op.content.length > MAX_HIGHLIGHT_CHARS,
+  );
+  const plainView = plain || tooLargeToHighlight;
+
+  const handleCopy = async () => {
+    const text = operations
+      .map((op) => ('content' in op ? op.content : ''))
+      .filter(Boolean)
+      .join('\n');
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -107,16 +112,17 @@ export function FileViewer({ filePath, operations, onClose }: FileViewerProps) {
             <span className="text-[11px] text-muted-fg font-mono truncate">{filePath}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setRaw(!raw)}
-              className={`text-[11px] font-headline uppercase tracking-wide px-2.5 py-1 rounded-md border transition-colors ${
-                raw
-                  ? 'bg-primary text-primary-fg border-primary'
-                  : 'bg-transparent text-muted-fg border-border hover:bg-muted'
-              }`}
-            >
-              Raw
-            </button>
+            {showCopy && (
+              <button
+                onClick={handleCopy}
+                className="inline-flex items-center gap-1 text-[11px] font-headline px-2.5 py-1 rounded-md border border-border bg-transparent text-muted-fg hover:bg-muted transition-colors"
+              >
+                <span className="material-symbols-outlined text-xs">
+                  {copied ? 'check' : 'content_copy'}
+                </span>
+                {copied ? 'Copied' : 'Copy File Contents'}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-1 rounded-md text-muted-fg hover:text-fg hover:bg-muted transition-colors"
@@ -137,17 +143,27 @@ export function FileViewer({ filePath, operations, onClose }: FileViewerProps) {
             <div className="divide-y divide-border">
               {operations.map((op, i) => (
                 <div key={i}>
-                  <div className="px-4 pt-3 pb-1 flex items-center gap-2">
-                    <OperationBadge type={op.type} />
-                    {op.timestamp && (
-                      <span className="text-[10px] text-muted-fg font-mono">
-                        {formatTime(op.timestamp)}
-                      </span>
-                    )}
-                  </div>
+                  {showOperationMeta && (
+                    <div className="px-4 pt-3 pb-1 flex items-center gap-2">
+                      <OperationBadge type={op.type} />
+                      {op.timestamp && (
+                        <span className="text-[10px] text-muted-fg font-mono">
+                          {formatTime(op.timestamp)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {op.type === 'edit' ? (
                     <EditDiffView oldString={op.oldString} newString={op.newString} />
-                  ) : raw ? (
+                  ) : op.type === 'image' ? (
+                    <div className="p-4 flex justify-center bg-surface-dim">
+                      <img
+                        src={op.content}
+                        alt={fileName}
+                        className="max-w-full h-auto rounded-md border border-border"
+                      />
+                    </div>
+                  ) : plainView ? (
                     <pre className="p-4 text-xs font-mono text-fg whitespace-pre overflow-auto">
                       {op.content}
                     </pre>

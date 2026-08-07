@@ -49,6 +49,8 @@ func ExtractFiles(messages []claude.Message, toolResults map[string]claude.Conte
 					if result, ok := toolResults[block.ID]; ok {
 						if content := ResolveResultText(result); content != "" {
 							operation = &FileOperation{Type: "read", Content: catLineNumberPrefix.ReplaceAllString(content, ""), Timestamp: timestamp}
+						} else if img, ok := ResolveResultImage(result); ok {
+							operation = &FileOperation{Type: "image", Content: img, Timestamp: timestamp}
 						}
 					}
 				case "Edit":

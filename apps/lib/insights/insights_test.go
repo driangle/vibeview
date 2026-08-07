@@ -195,6 +195,38 @@ func TestExtractFiles(t *testing.T) {
 	}
 }
 
+func TestExtractFiles_ImageRead(t *testing.T) {
+	imageContent := []any{
+		map[string]any{
+			"type": "image",
+			"source": map[string]any{
+				"type":       "base64",
+				"media_type": "image/png",
+				"data":       "iVBORw0KGgo=",
+			},
+		},
+	}
+	messages := []claude.Message{
+		assistantMsg("m1", 1711000000000,
+			toolUse("tu-1", "Read", map[string]any{"file_path": "/tmp/chart.png"}),
+		),
+		userMsg("m2", 1711000001000, toolResult("tu-1", imageContent, false)),
+	}
+
+	result := ExtractFiles(messages, BuildToolResultMap(messages))
+
+	if len(result.Categories.Read) != 1 || result.Categories.Read[0] != "/tmp/chart.png" {
+		t.Errorf("unexpected read files: %v", result.Categories.Read)
+	}
+	op := result.Entries[0].Operation
+	if op == nil || op.Type != "image" {
+		t.Fatalf("expected image operation, got %+v", op)
+	}
+	if op.Content != "data:image/png;base64,iVBORw0KGgo=" {
+		t.Errorf("unexpected image data URI: %q", op.Content)
+	}
+}
+
 func TestExtractFiles_SkipsMissingFilePath(t *testing.T) {
 	messages := []claude.Message{
 		assistantMsg("m1", 1000,

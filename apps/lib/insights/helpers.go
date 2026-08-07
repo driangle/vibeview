@@ -53,3 +53,30 @@ func ResolveResultText(block claude.ContentBlock) string {
 	}
 	return ""
 }
+
+// ResolveResultImage extracts a base64 image from a tool_result content block
+// (e.g. the result of reading an image file) and returns it as a data URI.
+// Returns ok=false when the block carries no embedded image.
+func ResolveResultImage(block claude.ContentBlock) (string, bool) {
+	arr, ok := block.Content.([]any)
+	if !ok {
+		return "", false
+	}
+	for _, item := range arr {
+		m, ok := item.(map[string]any)
+		if !ok || m["type"] != "image" {
+			continue
+		}
+		source, ok := m["source"].(map[string]any)
+		if !ok {
+			continue
+		}
+		data, _ := source["data"].(string)
+		mediaType, _ := source["media_type"].(string)
+		if data == "" || mediaType == "" {
+			continue
+		}
+		return "data:" + mediaType + ";base64," + data, true
+	}
+	return "", false
+}

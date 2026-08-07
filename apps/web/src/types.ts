@@ -134,7 +134,7 @@ export interface SessionInsights {
       timestamp: string;
       messageUuid: string;
       operation?:
-        | { type: 'read' | 'write'; content: string; timestamp: string }
+        | { type: 'read' | 'write' | 'image'; content: string; timestamp: string }
         | { type: 'edit'; oldString: string; newString: string; timestamp: string };
     }[];
   };
