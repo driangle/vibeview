@@ -13,6 +13,7 @@ import (
 	"github.com/driangle/vibeview/apps/lib/claude"
 	"github.com/driangle/vibeview/apps/lib/logutil"
 	"github.com/driangle/vibeview/apps/lib/pathutil"
+	"github.com/driangle/vibeview/apps/lib/usage"
 )
 
 // UsageTotals holds aggregated token and cost data for a session.
@@ -26,18 +27,52 @@ type UsageTotals struct {
 	CostUSD                  float64 `json:"costUSD"`
 }
 
+// applyUsage populates meta.Usage (collapsed session total) and meta.PerModel
+// (per-model breakdown) from the usage records extracted for a session. It does
+// not touch meta.Usage.CostUSD, which is sourced separately from the result
+// message. Called during enrichment so callers get per-model attribution
+// without re-scanning JSONL.
+func applyUsage(meta *SessionMeta, records []usage.Record) {
+	total := usage.Sum(records)
+	meta.Usage.InputTokens = total.InputTokens
+	meta.Usage.OutputTokens = total.OutputTokens
+	meta.Usage.CacheCreationInputTokens = total.CacheCreationInputTokens
+	meta.Usage.CacheReadInputTokens = total.CacheReadInputTokens
+
+	byModel := usage.ByModel(records)
+	if len(byModel) == 0 {
+		return
+	}
+	meta.PerModel = make(map[string]UsageTotals, len(byModel))
+	for _, g := range byModel {
+		meta.PerModel[g.Key] = UsageTotals{
+			InputTokens:              g.Totals.InputTokens,
+			OutputTokens:             g.Totals.OutputTokens,
+			CacheCreationInputTokens: g.Totals.CacheCreationInputTokens,
+			CacheReadInputTokens:     g.Totals.CacheReadInputTokens,
+		}
+	}
+}
+
 // SessionMeta holds metadata extracted from a session's history entry and JSONL file.
 type SessionMeta struct {
-	SessionID     string      `json:"sessionId"`
-	Project       string      `json:"project"`
-	CustomTitle   string      `json:"customTitle"`
-	Timestamp     int64       `json:"timestamp"` // epoch millis
-	MessageCount  int         `json:"messageCount"`
-	Model         string      `json:"model"`
-	Slug          string      `json:"slug"`
-	Usage         UsageTotals `json:"usage"`
-	ActivityState string      `json:"activityState"`
-	DurationMs    int64       `json:"durationMs"` // last message timestamp - first message timestamp
+	SessionID    string      `json:"sessionId"`
+	Project      string      `json:"project"`
+	CustomTitle  string      `json:"customTitle"`
+	Timestamp    int64       `json:"timestamp"` // epoch millis
+	MessageCount int         `json:"messageCount"`
+	Model        string      `json:"model"`
+	Slug         string      `json:"slug"`
+	Usage        UsageTotals `json:"usage"`
+
+	// PerModel breaks token usage down by the model that produced each message,
+	// preserving attribution for mixed-model sessions where usage would
+	// otherwise collapse under the session's first-seen model. Keyed by model
+	// name; omitted when the session has no per-message usage.
+	PerModel map[string]UsageTotals `json:"perModel,omitempty"`
+
+	ActivityState string `json:"activityState"`
+	DurationMs    int64  `json:"durationMs"` // last message timestamp - first message timestamp
 
 	// StartTime and EndTime are the first and last message timestamps (epoch
 	// millis), populated during enrichment. They enable reliable time-based
@@ -462,13 +497,6 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 			if meta.Model == "" && msg.Message.Model != "" {
 				meta.Model = msg.Message.Model
 			}
-			if msg.Message.Usage != nil {
-				u := msg.Message.Usage
-				meta.Usage.InputTokens += u.InputTokens
-				meta.Usage.OutputTokens += u.OutputTokens
-				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
-				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
-			}
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
 			meta.CustomTitle = msg.CustomTitle
@@ -477,6 +505,11 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
 	}
+	applyUsage(&meta, usage.Extract(usage.ExtractParams{
+		Messages:  messages,
+		SessionID: meta.SessionID,
+		Project:   meta.Project,
+	}))
 	if firstTS > 0 {
 		meta.StartTime = firstTS
 		meta.EndTime = lastTS
@@ -748,13 +781,6 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 			if meta.Model == "" && msg.Message.Model != "" {
 				meta.Model = msg.Message.Model
 			}
-			if msg.Message.Usage != nil {
-				u := msg.Message.Usage
-				meta.Usage.InputTokens += u.InputTokens
-				meta.Usage.OutputTokens += u.OutputTokens
-				meta.Usage.CacheCreationInputTokens += u.CacheCreationInputTokens
-				meta.Usage.CacheReadInputTokens += u.CacheReadInputTokens
-			}
 		}
 		if msg.Type == claude.MessageTypeCustomTitle && msg.CustomTitle != "" {
 			meta.CustomTitle = msg.CustomTitle
@@ -763,6 +789,11 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 			meta.Usage.CostUSD = msg.TotalCostUSD
 		}
 	}
+	applyUsage(&meta, usage.Extract(usage.ExtractParams{
+		Messages:  messages,
+		SessionID: meta.SessionID,
+		Project:   meta.Project,
+	}))
 	if firstTS > 0 {
 		meta.StartTime = firstTS
 		meta.EndTime = lastTS

@@ -1,7 +1,7 @@
 ---
 title: "Retain per-message usage and add dimension aggregation in lib"
 id: "01kz3q60q"
-status: pending
+status: completed
 priority: critical
 type: feature
 phase: "usage-improvements"
@@ -9,6 +9,7 @@ dependencies: []
 tags: ["usage", "analytics", "backend"]
 created: "2026-08-03"
 parent: 01kz3q22m
+completed_at: 2026-08-06
 ---
 
 # Retain per-message usage and add dimension aggregation in lib
@@ -34,17 +35,17 @@ page, and cost estimation.
 
 ## Tasks
 
-- [ ] Introduce a per-message usage record (timestamp, model, input/output/cache
+- [x] Introduce a per-message usage record (timestamp, model, input/output/cache
       tokens, session id, project/dir) — either in `apps/lib/session` or a new
       `apps/lib/usage` package. Aggregate while scanning; do not hold all messages
       in memory.
-- [ ] Fix per-model attribution: sum tokens keyed by each message's own `model`,
+- [x] Fix per-model attribution: sum tokens keyed by each message's own `model`,
       not the session's first-seen model.
-- [ ] Add aggregation functions: by time-bucket (hour / day / arbitrary rolling
+- [x] Add aggregation functions: by time-bucket (hour / day / arbitrary rolling
       window), by model, by project/dir, by session.
-- [ ] Expose a small, explicit API surface (inputs/outputs documented) so the CLI
+- [x] Expose a small, explicit API surface (inputs/outputs documented) so the CLI
       and server can consume it without re-parsing.
-- [ ] Unit tests for each aggregation (behavior-focused): multi-model session
+- [x] Unit tests for each aggregation (behavior-focused): multi-model session
       splits correctly, rolling-window bucketing is correct at boundaries, empty
       input is handled.
 

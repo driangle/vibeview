@@ -225,6 +225,56 @@ func TestUsageTotalsMultipleAssistantMessages(t *testing.T) {
 	}
 }
 
+func TestPerModelAttributionForMixedModelSession(t *testing.T) {
+	dir := t.TempDir()
+
+	history := `{"sessionId":"sess-mixed","project":"/Users/me/proj","display":"mixed","timestamp":4000}
+`
+	if err := os.WriteFile(filepath.Join(dir, "history.jsonl"), []byte(history), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Two assistant messages from two different models. Attribution must key on
+	// each message's own model, not collapse to the first-seen one.
+	sess := `{"type":"user","uuid":"u1","sessionId":"sess-mixed","timestamp":4000,"message":{"role":"user","content":[{"type":"text","text":"hi"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-mixed","timestamp":4001,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"hello"}],"usage":{"input_tokens":100,"output_tokens":50,"cache_creation_input_tokens":5,"cache_read_input_tokens":10}}}
+{"type":"assistant","uuid":"a2","sessionId":"sess-mixed","timestamp":4002,"message":{"role":"assistant","model":"claude-opus-4-20250514","content":[{"type":"text","text":"sure"}],"usage":{"input_tokens":200,"output_tokens":100,"cache_creation_input_tokens":15,"cache_read_input_tokens":30}}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sess-mixed.jsonl"), []byte(sess), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+	idx.Enrich(dir)
+
+	meta := idx.Sessions[0]
+
+	// Collapsed session total is unchanged (sum across both models).
+	if meta.Usage.InputTokens != 300 || meta.Usage.OutputTokens != 150 {
+		t.Errorf("Usage = %+v, want input 300 / output 150", meta.Usage)
+	}
+
+	if len(meta.PerModel) != 2 {
+		t.Fatalf("PerModel has %d entries, want 2: %+v", len(meta.PerModel), meta.PerModel)
+	}
+	sonnet := meta.PerModel["claude-sonnet-4-20250514"]
+	if sonnet.InputTokens != 100 || sonnet.OutputTokens != 50 || sonnet.CacheCreationInputTokens != 5 || sonnet.CacheReadInputTokens != 10 {
+		t.Errorf("sonnet PerModel = %+v, want input 100 / output 50 / cc 5 / cr 10", sonnet)
+	}
+	opus := meta.PerModel["claude-opus-4-20250514"]
+	if opus.InputTokens != 200 || opus.OutputTokens != 100 || opus.CacheCreationInputTokens != 15 || opus.CacheReadInputTokens != 30 {
+		t.Errorf("opus PerModel = %+v, want input 200 / output 100 / cc 15 / cr 30", opus)
+	}
+}
+
 func TestResultMessageCostTakesPrecedence(t *testing.T) {
 	dir := t.TempDir()
 
