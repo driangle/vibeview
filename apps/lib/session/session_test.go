@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -451,6 +452,39 @@ func TestSlugExtractedWhenNonUserMessagesFirst(t *testing.T) {
 	}
 	if idx.Sessions[0].Slug != "Fix the login bug" {
 		t.Errorf("slug: got %q, want %q", idx.Sessions[0].Slug, "Fix the login bug")
+	}
+}
+
+func TestSlugSkipsLeadingClearCommand(t *testing.T) {
+	dir := t.TempDir()
+
+	projDir := filepath.Join(dir, "projects", "-Users-me-proj")
+	if err := os.MkdirAll(projDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Session starts with a /clear command (used to reset the previous
+	// session); the slug should come from the following real prompt.
+	clearMsg := "<command-name>/clear</command-name>\n            <command-message>clear</command-message>\n            <command-args></command-args>"
+	sessData := `{"type":"user","uuid":"u1","sessionId":"sess-c","timestamp":3000,"message":{"role":"user","content":[{"type":"text","text":` + strconv.Quote(clearMsg) + `}]}}
+{"type":"user","uuid":"u2","sessionId":"sess-c","timestamp":3001,"message":{"role":"user","content":[{"type":"text","text":"Add a dark mode toggle"}]}}
+{"type":"assistant","uuid":"a1","sessionId":"sess-c","timestamp":3002,"message":{"role":"assistant","model":"claude-sonnet-4-20250514","content":[{"type":"text","text":"Sure."}],"usage":{"input_tokens":10,"output_tokens":5}}}
+`
+	if err := os.WriteFile(filepath.Join(projDir, "sess-c.jsonl"), []byte(sessData), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := Discover(dir, nil)
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+	idx.Enrich(dir)
+
+	if len(idx.Sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(idx.Sessions))
+	}
+	if idx.Sessions[0].Slug != "Add a dark mode toggle" {
+		t.Errorf("slug: got %q, want %q", idx.Sessions[0].Slug, "Add a dark mode toggle")
 	}
 }
 

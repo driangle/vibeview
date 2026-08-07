@@ -542,17 +542,7 @@ func enrichSession(claudeDir string, meta SessionMeta, checker ProcessChecker) S
 		}
 	}
 
-	for _, msg := range messages {
-		if msg.Type == claude.MessageTypeUser && msg.Message != nil && !msg.IsMeta {
-			for _, block := range msg.Message.Content {
-				if block.Type == "text" && block.Text != "" {
-					meta.Slug = truncateSlug(block.Text, 80)
-					break
-				}
-			}
-			break
-		}
-	}
+	meta.Slug = deriveSlug(messages)
 
 	meta.ActivityState = DeriveActivityState(messages)
 
@@ -802,18 +792,7 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 		meta.DurationMs = lastTS - firstTS
 	}
 
-	// Derive slug from first user message.
-	for _, msg := range messages {
-		if msg.Type == claude.MessageTypeUser && msg.Message != nil && !msg.IsMeta {
-			for _, block := range msg.Message.Content {
-				if block.Type == "text" && block.Text != "" {
-					meta.Slug = truncateSlug(block.Text, 80)
-					break
-				}
-			}
-			break
-		}
-	}
+	meta.Slug = deriveSlug(messages)
 
 	meta.ActivityState = DeriveActivityState(messages)
 
@@ -824,7 +803,31 @@ var (
 	// Strip redundant command-name elements entirely (content duplicates command-message).
 	commandNamePattern = regexp.MustCompile(`<command-name>[^<]*</command-name>`)
 	xmlTagPattern      = regexp.MustCompile(`<[^>]+>`)
+	// Matches a /clear slash command message. /clear resets the previous
+	// session, so its message is noise when used as the first prompt — the
+	// real intent is the message that follows it.
+	clearCommandPattern = regexp.MustCompile(`<command-name>\s*/?clear\s*</command-name>`)
 )
+
+// deriveSlug picks the session title from the first meaningful user message.
+// A leading /clear command is skipped so the following message becomes the
+// title, since /clear is used only to reset the previous session.
+func deriveSlug(messages []claude.Message) string {
+	for _, msg := range messages {
+		if msg.Type != claude.MessageTypeUser || msg.Message == nil || msg.IsMeta {
+			continue
+		}
+		for _, block := range msg.Message.Content {
+			if block.Type == "text" && block.Text != "" {
+				if clearCommandPattern.MatchString(block.Text) {
+					break // skip this message; try the next user message
+				}
+				return truncateSlug(block.Text, 80)
+			}
+		}
+	}
+	return ""
+}
 
 // truncateSlug shortens text to maxLen, breaking at a word boundary.
 // It strips XML/HTML tags before truncating.
