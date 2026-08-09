@@ -5,13 +5,14 @@ import { Pagination } from '../components/Pagination';
 import { SearchResults } from '../components/SearchResults';
 import { SessionFilters } from '../components/SessionFilters';
 import { SessionTable } from '../components/SessionTable';
+import { SessionStats } from '../components/SessionStats';
 import { useSettings } from '../contexts/useSettings';
 import { Footer } from '../components/Footer';
 import { useActiveProject } from '../hooks/useActiveProject';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useSessionFilters } from '../hooks/useSessionFilters';
 import { useSessionSort } from '../hooks/useSessionSort';
-import { useSessionListData, formatStatTokens } from '../hooks/useSessionListData';
+import { useSessionListData } from '../hooks/useSessionListData';
 import { useCostUIEnabled } from '../hooks/useCostUIEnabled';
 
 export function SessionList() {
@@ -110,28 +111,12 @@ export function SessionList() {
 
         {/* Stats */}
         {loaded && (
-          <div
-            className={`grid gap-4 grid-cols-1 ${showCost ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}
-          >
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="text-xs text-muted-fg uppercase tracking-wider">Sessions</div>
-              <div className="mt-1 text-2xl font-bold text-fg font-sans">{statsTotal}</div>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="text-xs text-muted-fg uppercase tracking-wider">Total Tokens</div>
-              <div className="mt-1 text-2xl font-bold text-fg font-sans">
-                {formatStatTokens(totalTokens)}
-              </div>
-            </div>
-            {showCost && (
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="text-xs text-muted-fg uppercase tracking-wider">Total Cost</div>
-                <div className="mt-1 text-2xl font-bold text-fg font-sans">
-                  {totalCost > 0 ? `$${totalCost.toFixed(2)}` : '—'}
-                </div>
-              </div>
-            )}
-          </div>
+          <SessionStats
+            statsTotal={statsTotal}
+            totalTokens={totalTokens}
+            totalCost={totalCost}
+            showCost={showCost}
+          />
         )}
 
         <SessionFilters
