@@ -32,14 +32,17 @@ Everything needed for rich attribution already exists at the parse layer.
 This is the umbrella/spec. The phased plan below is now tracked as five child tasks
 (execute in dependency order):
 
-1. `01kz3q60q` — Retain per-message usage and add dimension aggregation in lib *(foundation, blocks the rest)*
-2. `01kz3q6a3` — Add `vibeview usage` CLI command with rolling-window views
-3. `01kz3q6a4` — Attribute tokens to tools, MCP, skills, subagents, and files
-4. `01kz3q7hb` — Per-turn usage drill-down API and web Usage analytics page
-5. `01kz3q6a5` — Estimate cost from tokens using a model pricing table *(optional)*
+1. `01kz3q60q` — Retain per-message usage and add dimension aggregation in lib *(foundation — completed)*
+2. `01kz3q6a5` — Estimate cost from tokens using a model pricing table *(accurate costs — do this next; blocks 3–5)*
+3. `01kz3q6a3` — Add `vibeview usage` CLI command with rolling-window views
+4. `01kz3q6a4` — Attribute tokens to tools, MCP, skills, subagents, and files
+5. `01kz3q7hb` — Per-turn usage drill-down API and web Usage analytics page
 
-Tasks 2–5 depend on task 1; 2, 3, and 5 can proceed in parallel once 1 lands, and
-4 benefits from 3. This parent stays `blocked` until the children complete.
+Tasks 3–5 depend on 1 and 2: every surface reports cost next to tokens, and
+without accurate costing they would each either invent their own cost math or
+show cost as zero for interactive sessions. Once 2 lands, 3–5 can proceed in
+parallel (5 benefits from 4). This parent stays `blocked` until the children
+complete.
 
 ## Motivation / context
 
@@ -129,7 +132,7 @@ offenders.
 - [ ] Backend owns the aggregation (per CLAUDE.md: frontend is a thin display
       layer). Tests for new endpoints + a component test for the page.
 
-### Phase 5 — Cost accuracy (optional, can be split out)
+### Phase 5 — Cost accuracy (tracked as `01kz3q6a5`; sequenced immediately after Phase 1)
 
 - [ ] Add a model→pricing config (Opus/Sonnet/Haiku input/output/cache rates).
 - [ ] Compute estimated cost from tokens where `total_cost_usd` is absent; label

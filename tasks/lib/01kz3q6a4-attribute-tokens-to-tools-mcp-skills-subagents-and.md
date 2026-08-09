@@ -5,7 +5,7 @@ status: pending
 priority: high
 type: feature
 phase: "usage-improvements"
-dependencies: ["01kz3q60q"]
+dependencies: ["01kz3q60q", "01kz3q6a5"]
 tags: ["usage", "analytics", "backend"]
 created: "2026-08-03"
 parent: 01kz3q22m
