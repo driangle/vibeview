@@ -1,6 +1,7 @@
 import type { Exchange } from '../../types';
 import { formatCost, formatDurationMs, formatTokenCount } from '../../utils';
 import { exchangeBadges } from './exchangeData';
+import { useCostUIEnabled } from '../../hooks/useCostUIEnabled';
 
 /** One of the three stat tiles (elapsed / tokens / cost). */
 function StatTile({ value, label }: { value: string; label: string }) {
@@ -19,6 +20,7 @@ function StatTile({ value, label }: { value: string; label: string }) {
  */
 export function ExchangeSummary({ exchange }: { exchange: Exchange }) {
   const badges = exchangeBadges(exchange);
+  const showCost = useCostUIEnabled();
 
   return (
     <div className="flex flex-col gap-3.5 border-b border-border p-4">
@@ -26,10 +28,10 @@ export function ExchangeSummary({ exchange }: { exchange: Exchange }) {
         {exchange.promptPreview || <span className="text-muted-fg">(no prompt)</span>}
       </p>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className={`grid gap-2 ${showCost ? 'grid-cols-3' : 'grid-cols-2'}`}>
         <StatTile value={formatDurationMs(exchange.durationMs)} label="elapsed" />
         <StatTile value={formatTokenCount(exchange.tokens)} label="tokens" />
-        <StatTile value={formatCost(exchange.costUSD)} label="cost" />
+        {showCost && <StatTile value={formatCost(exchange.costUSD)} label="cost" />}
       </div>
 
       {badges.length > 0 && (

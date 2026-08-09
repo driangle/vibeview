@@ -11,8 +11,10 @@ import {
   formatDurationMs,
 } from '../utils';
 import type { ActivityState, MessageResponse, SubagentDetail, UsageTotals } from '../types';
+import { useCostUIEnabled } from '../hooks/useCostUIEnabled';
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
+  const showCost = useCostUIEnabled();
   const totalTokens =
     usage.inputTokens +
     usage.outputTokens +
@@ -33,7 +35,7 @@ function InlineMetrics({ usage }: { usage: UsageTotals }) {
           </span>
         </div>
       </TokenBreakdownPopover>
-      {usage.costUSD > 0 && (
+      {showCost && usage.costUSD > 0 && (
         <div className="flex flex-col">
           <span className="font-headline text-[10px] text-muted-fg uppercase tracking-tighter">
             Cost

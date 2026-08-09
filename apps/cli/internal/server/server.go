@@ -24,6 +24,7 @@ import (
 	"github.com/driangle/vibeview/apps/lib/search"
 	"github.com/driangle/vibeview/apps/lib/session"
 	"github.com/driangle/vibeview/apps/lib/timeline"
+	"github.com/driangle/vibeview/internal/features"
 	"github.com/driangle/vibeview/internal/pidcheck"
 	"github.com/driangle/vibeview/internal/projects"
 	"github.com/driangle/vibeview/internal/settings"
@@ -282,6 +283,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		Dirs:         s.dirs,
 		SettingsPath: s.settingsPath,
 		ProjectsPath: s.projectsPath,
+		CostEnabled:  features.CostUIEnabled(),
 	})
 }
 
@@ -1063,6 +1065,9 @@ type ConfigResponse struct {
 	Dirs         []string `json:"dirs,omitempty"`
 	SettingsPath string   `json:"settingsPath"`
 	ProjectsPath string   `json:"projectsPath"`
+	// CostEnabled mirrors the VIBEVIEW_COST_ENABLED env var so the web UI shows
+	// or hides cost figures in lockstep with the CLI. See docs/cost.md.
+	CostEnabled bool `json:"costEnabled"`
 }
 
 // ActivityDayResponse is a single day's session count.

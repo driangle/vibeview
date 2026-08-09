@@ -70,7 +70,8 @@ describe('ExchangeDetailPanel', () => {
     expect(screen.getByText('Wire up the timeline')).toBeInTheDocument();
     expect(screen.getByText('45s')).toBeInTheDocument(); // elapsed tile
     expect(screen.getByText('12.0k')).toBeInTheDocument(); // tokens tile
-    expect(screen.getByText('$0.42')).toBeInTheDocument(); // cost tile
+    // Cost display is disabled via COST_UI_ENABLED — the cost tile is not rendered.
+    expect(screen.queryByText('$0.42')).toBeNull();
     expect(screen.getByText('Error in results')).toBeInTheDocument(); // flag badge
     expect(screen.getByText('npm run typeCheck')).toBeInTheDocument(); // command
     expect(screen.getByText('apps/web/src/pages/SessionView.tsx')).toBeInTheDocument(); // file

@@ -11,6 +11,7 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/logutil"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/internal/features"
 	"github.com/spf13/cobra"
 )
 
@@ -275,7 +276,10 @@ func buildStatsReport(sessions []session.SessionMeta) statsReport {
 // --- Styled rendering ---
 
 func renderStatsStyled(w io.Writer, r statsReport) {
-	hasCost := r.TotalCostUSD != nil
+	// Cost display is gated behind VIBEVIEW_COST_ENABLED (see docs/cost.md).
+	// JSON/YAML output still carries authoritative cost; only the human-readable
+	// summary hides it.
+	hasCost := features.CostUIEnabled() && r.TotalCostUSD != nil
 
 	fmt.Fprintln(w, sectionTitle("Summary"))
 	if r.Title != "" {

@@ -24,6 +24,9 @@ export interface AppConfig {
   dirs?: string[];
   settingsPath: string;
   projectsPath: string;
+  /** Whether cost ($) figures are shown, driven by the server's
+   *  VIBEVIEW_COST_ENABLED env var. See docs/cost.md. */
+  costEnabled?: boolean;
 }
 
 export interface UsageTotals {

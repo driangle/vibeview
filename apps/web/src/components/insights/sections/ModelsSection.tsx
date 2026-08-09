@@ -4,6 +4,7 @@ import { barPct } from '../../timeline-track/format';
 import { SidebarSection } from '../../SidebarSection';
 import type { InsightsActions } from '../actions';
 import { assignModelColors } from '../colors';
+import { useCostUIEnabled } from '../../../hooks/useCostUIEnabled';
 
 /**
  * A readable short label for a model id, e.g. `claude-opus-4-8` → `Opus 4.8`,
@@ -26,11 +27,13 @@ function ModelCard({
   model,
   color,
   maxTokens,
+  showCost,
   onClick,
 }: {
   model: ModelUsage;
   color: string;
   maxTokens: number;
+  showCost: boolean;
   onClick: () => void;
 }) {
   return (
@@ -44,7 +47,11 @@ function ModelCard({
         <span className="min-w-0 flex-1 truncate text-xs font-medium text-fg">
           {formatModelName(model.model)}
         </span>
-        <span className="flex-none font-mono text-[11px] text-fg">{formatCost(model.costUSD)}</span>
+        {showCost && (
+          <span className="flex-none font-mono text-[11px] text-fg">
+            {formatCost(model.costUSD)}
+          </span>
+        )}
       </div>
       <div className="h-[5px] rounded-full bg-secondary">
         <div
@@ -74,6 +81,7 @@ export function ModelsSection({
   actions: InsightsActions;
 }) {
   const { models, modelSwitches } = insights;
+  const showCost = useCostUIEnabled();
   if (models.length === 0) return null;
 
   const colors = assignModelColors(models);
@@ -94,6 +102,7 @@ export function ModelsSection({
             model={m}
             color={colors[i]}
             maxTokens={maxTokens}
+            showCost={showCost}
             onClick={() => actions.onEntity({ query: m.model })}
           />
         ))}

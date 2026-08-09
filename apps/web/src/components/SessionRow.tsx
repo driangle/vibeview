@@ -52,6 +52,8 @@ interface SessionRowProps {
   isSelected?: boolean;
   rowIndex?: number;
   dateFormat?: string;
+  /** Whether to render the cost cell; kept in sync with the table's Cost header. */
+  showCost?: boolean;
 }
 
 export function SessionRow({
@@ -61,6 +63,7 @@ export function SessionRow({
   isSelected,
   rowIndex,
   dateFormat = 'relative',
+  showCost = false,
 }: SessionRowProps) {
   const navigate = useNavigate();
   const time = formatSessionDate(session.timestamp);
@@ -132,9 +135,11 @@ export function SessionRow({
       </td>
 
       {/* Cost */}
-      <td className="px-4 py-3 text-sm text-fg text-right whitespace-nowrap font-medium">
-        {session.usage.costUSD > 0 ? `$${session.usage.costUSD.toFixed(2)}` : '—'}
-      </td>
+      {showCost && (
+        <td className="px-4 py-3 text-sm text-fg text-right whitespace-nowrap font-medium">
+          {session.usage.costUSD > 0 ? `$${session.usage.costUSD.toFixed(2)}` : '—'}
+        </td>
+      )}
     </tr>
   );
 }

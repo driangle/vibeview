@@ -378,6 +378,33 @@ These flags are available on all commands:
 | `--log-level` | `warn` | Log level: `debug`, `warn`, `error` |
 | `--version` | | Print version and exit (no `-v` shorthand; `-v` is used by `inspect` for `--verbose`) |
 
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLAUDE_CONFIG_DIR` | `~/.claude` | Claude data directory, if `--claude-dir` is not given (see [Session discovery](#session-discovery)). |
+| `VIBEVIEW_COST_ENABLED` | _(off)_ | Show cost (`$`) figures in the CLI and web UI. Set to `1`/`true` to enable. |
+| `NO_COLOR` | | If set, disables ANSI colors in CLI output. |
+
+### Cost display is off by default
+
+Cost (`$`) figures are **hidden by default** in both the CLI and the web UI while
+token→cost estimation is being reworked for accuracy. Interactive sessions carry
+per-message token counts but no authoritative cost, and estimating from a model
+pricing table is not yet reliable enough to show.
+
+Set `VIBEVIEW_COST_ENABLED=1` to turn cost back on for both surfaces at runtime —
+no rebuild:
+
+```bash
+VIBEVIEW_COST_ENABLED=1 vibeview web     # or: export it for the whole session
+VIBEVIEW_COST_ENABLED=1 vibeview stats
+```
+
+Machine-readable output (`--json` / `--yaml`) is unaffected: it still includes
+authoritative cost where a session provides it. See `docs/cost.md` in the repo
+for the full rationale and the path to re-enabling.
+
 ## Session discovery
 
 vibeview automatically discovers sessions from Claude Code's data directory (`~/.claude/projects/`). No configuration is needed. The web server watches the session directory and picks up new sessions in real time.

@@ -10,6 +10,7 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/logutil"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/internal/features"
 	"github.com/spf13/cobra"
 )
 
@@ -84,8 +85,15 @@ func sortSessions(sessions []session.SessionMeta, field string) {
 // --- Table rendering ---
 
 func renderSessionsTable(sessions []session.SessionMeta, total, offset int) {
-	headers := []string{"ID", "TITLE", "DIRECTORY", "MODEL", "DATE", "MSGS", "COST"}
-	widths := []int{8, 30, 20, 18, 20, 5, 8}
+	// Cost display is gated behind VIBEVIEW_COST_ENABLED (see docs/cost.md).
+	showCost := features.CostUIEnabled()
+
+	headers := []string{"ID", "TITLE", "DIRECTORY", "MODEL", "DATE", "MSGS"}
+	widths := []int{8, 30, 20, 18, 20, 5}
+	if showCost {
+		headers = append(headers, "COST")
+		widths = append(widths, 8)
+	}
 
 	rows := make([]tableRow, len(sessions))
 	for i, s := range sessions {
@@ -109,15 +117,18 @@ func renderSessionsTable(sessions []session.SessionMeta, total, offset int) {
 			date = t.Format("2006-01-02 15:04")
 		}
 
-		rows[i] = tableRow{cols: []string{
+		cols := []string{
 			s.SessionID[:min(8, len(s.SessionID))],
 			title,
 			dir,
 			model,
 			date,
 			fmt.Sprintf("%d", s.MessageCount),
-			formatCost(s.Usage.CostUSD),
-		}}
+		}
+		if showCost {
+			cols = append(cols, formatCost(s.Usage.CostUSD))
+		}
+		rows[i] = tableRow{cols: cols}
 	}
 
 	renderTable(os.Stdout, headers, rows, widths)

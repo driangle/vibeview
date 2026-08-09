@@ -9,6 +9,7 @@ import (
 
 	"github.com/driangle/vibeview/apps/lib/logutil"
 	"github.com/driangle/vibeview/apps/lib/session"
+	"github.com/driangle/vibeview/internal/features"
 	"github.com/spf13/cobra"
 )
 
@@ -256,8 +257,15 @@ func renderSiblingsSection(w *os.File, siblings []session.SessionMeta) {
 		return
 	}
 
-	headers := []string{"ID", "TITLE", "DATE", "MSGS", "COST"}
-	widths := []int{8, 36, 20, 5, 8}
+	// Cost display is gated behind VIBEVIEW_COST_ENABLED (see docs/cost.md).
+	showCost := features.CostUIEnabled()
+
+	headers := []string{"ID", "TITLE", "DATE", "MSGS"}
+	widths := []int{8, 36, 20, 5}
+	if showCost {
+		headers = append(headers, "COST")
+		widths = append(widths, 8)
+	}
 	rows := make([]tableRow, len(siblings))
 	for i, s := range siblings {
 		title := s.CustomTitle
@@ -268,13 +276,16 @@ func renderSiblingsSection(w *os.File, siblings []session.SessionMeta) {
 		if s.Timestamp > 0 {
 			date = time.UnixMilli(s.Timestamp).Format("2006-01-02 15:04")
 		}
-		rows[i] = tableRow{cols: []string{
+		cols := []string{
 			s.SessionID[:min(8, len(s.SessionID))],
 			truncateStr(title, widths[1]),
 			date,
 			fmt.Sprintf("%d", s.MessageCount),
-			formatCost(s.Usage.CostUSD),
-		}}
+		}
+		if showCost {
+			cols = append(cols, formatCost(s.Usage.CostUSD))
+		}
+		rows[i] = tableRow{cols: cols}
 	}
 	renderTable(w, headers, rows, widths)
 	fmt.Fprintln(w)

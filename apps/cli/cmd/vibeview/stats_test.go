@@ -129,6 +129,10 @@ func TestRenderStatsStyled(t *testing.T) {
 	colorEnabled = false
 	defer func() { colorEnabled = detectColor() }()
 
+	// Cost rows are gated behind VIBEVIEW_COST_ENABLED; enable it so this test
+	// exercises the full styled output including cost.
+	t.Setenv("VIBEVIEW_COST_ENABLED", "1")
+
 	r := buildStatsReport([]session.SessionMeta{
 		{
 			SessionID:    "s1",
@@ -149,6 +153,38 @@ func TestRenderStatsStyled(t *testing.T) {
 	output := buf.String()
 
 	for _, want := range []string{"Summary", "Sessions", "Messages", "Cost", "Tokens", "Models", "Averages"} {
+		if !strings.Contains(output, want) {
+			t.Errorf("output missing %q", want)
+		}
+	}
+}
+
+func TestRenderStatsStyledHidesCostByDefault(t *testing.T) {
+	colorEnabled = false
+	defer func() { colorEnabled = detectColor() }()
+
+	// VIBEVIEW_COST_ENABLED unset → cost is hidden while other sections remain.
+	t.Setenv("VIBEVIEW_COST_ENABLED", "")
+
+	r := buildStatsReport([]session.SessionMeta{
+		{
+			SessionID:    "s1",
+			Timestamp:    1711000000000,
+			MessageCount: 10,
+			Model:        "claude-sonnet-4-20250514",
+			DurationMs:   60000,
+			Usage:        session.UsageTotals{InputTokens: 500, OutputTokens: 200, CostUSD: 1.00},
+		},
+	})
+
+	var buf bytes.Buffer
+	renderStatsStyled(&buf, r)
+	output := buf.String()
+
+	if strings.Contains(output, "Cost") {
+		t.Error("styled output should not mention Cost when VIBEVIEW_COST_ENABLED is unset")
+	}
+	for _, want := range []string{"Summary", "Sessions", "Tokens"} {
 		if !strings.Contains(output, want) {
 			t.Errorf("output missing %q", want)
 		}

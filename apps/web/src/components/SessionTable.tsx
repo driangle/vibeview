@@ -2,6 +2,7 @@ import { SessionRow } from './SessionRow';
 import { SortHeader } from './SortHeader';
 import type { SortColumn, SortDirection } from './SortHeader';
 import type { Session } from '../types';
+import { useCostUIEnabled } from '../hooks/useCostUIEnabled';
 
 interface SessionTableProps {
   sessions: Session[];
@@ -28,6 +29,7 @@ export function SessionTable({
   hasFilters,
   dateFormat,
 }: SessionTableProps) {
+  const showCost = useCostUIEnabled();
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
       <table className="w-full table-fixed">
@@ -93,15 +95,17 @@ export function SessionTable({
               onToggle={onToggleSort}
               className="w-[13%] hidden lg:table-cell"
             />
-            <SortHeader
-              label="Cost"
-              column="cost"
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onToggle={onToggleSort}
-              className="w-[10%]"
-              icon="dollar"
-            />
+            {showCost && (
+              <SortHeader
+                label="Cost"
+                column="cost"
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onToggle={onToggleSort}
+                className="w-[10%]"
+                icon="dollar"
+              />
+            )}
           </tr>
         </thead>
         <tbody>
@@ -114,11 +118,15 @@ export function SessionTable({
               isSelected={selectedIndex === index}
               rowIndex={index}
               dateFormat={dateFormat}
+              showCost={showCost}
             />
           ))}
           {isLoaded && sessions.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-fg">
+              <td
+                colSpan={showCost ? 7 : 6}
+                className="px-4 py-12 text-center text-sm text-muted-fg"
+              >
                 {hasFilters ? 'No sessions match your filters' : 'No sessions found'}
               </td>
             </tr>
