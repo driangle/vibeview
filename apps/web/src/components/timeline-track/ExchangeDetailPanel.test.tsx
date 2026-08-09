@@ -101,6 +101,14 @@ describe('ExchangeDetailPanel', () => {
     expect(screen.getByLabelText('Next exchange')).toBeDisabled();
   });
 
+  it('closes on Escape, as a modal overlay', async () => {
+    const user = userEvent.setup();
+    const { onClose } = renderPanel();
+
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('calls onClose and onOpenInConversation from the header and footer', async () => {
     const user = userEvent.setup();
     const { onClose, onOpenInConversation } = renderPanel();

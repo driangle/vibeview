@@ -100,7 +100,7 @@ export function SessionViewHeader({
       ? formatDurationMs(sessionDurationMs)
       : formatDuration(displayMessages);
   return (
-    <div className="sticky top-0 z-10">
+    <div>
       {/* Session Header */}
       <section className="px-4 py-3 sm:px-8 sm:py-4 border-b border-border bg-[var(--color-card)]">
         <div className="max-w-4xl mx-auto space-y-1 sm:space-y-2">

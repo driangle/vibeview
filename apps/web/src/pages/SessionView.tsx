@@ -184,31 +184,34 @@ export function SessionView() {
         ref={containerRef}
         onScroll={handleScroll}
       >
-        <SessionViewHeader
-          sessionId={session.id}
-          title={title}
-          dir={session.dir}
-          timestamp={session.timestamp}
-          activityState={activityState}
-          liveUsage={liveUsage}
-          displayMessages={displayMessages}
-          sessionDurationMs={timeline ? timeline.insights.totalSpanMs : null}
-          search={searchSlot}
-          onExportPdf={handleExportPdf}
-          onToggleSidebar={() => setSidebarOpen((v) => !v)}
-          focusedAgentId={focusedAgentId}
-          onExitAgent={handleExitAgent}
-          subagentData={subagentData}
-          subagentLoading={subagentLoading}
-          subagentDisplayMessages={subagentDisplayMessages}
-          focusedAgentPrompt={focusedAgentPrompt}
-        />
+        {/* Header + tabs pin together so both stay visible while content scrolls. */}
+        <div className="sticky top-0 z-10 bg-[var(--color-card)]">
+          <SessionViewHeader
+            sessionId={session.id}
+            title={title}
+            dir={session.dir}
+            timestamp={session.timestamp}
+            activityState={activityState}
+            liveUsage={liveUsage}
+            displayMessages={displayMessages}
+            sessionDurationMs={timeline ? timeline.insights.totalSpanMs : null}
+            search={searchSlot}
+            onExportPdf={handleExportPdf}
+            onToggleSidebar={() => setSidebarOpen((v) => !v)}
+            focusedAgentId={focusedAgentId}
+            onExitAgent={handleExitAgent}
+            subagentData={subagentData}
+            subagentLoading={subagentLoading}
+            subagentDisplayMessages={subagentDisplayMessages}
+            focusedAgentPrompt={focusedAgentPrompt}
+          />
 
-        <SessionTabs value={tab} onChange={setTab} />
+          <SessionTabs value={tab} onChange={setTab} />
+        </div>
 
         {tab === 'timeline' ? (
           <div className="flex flex-1 flex-col overflow-hidden px-4 sm:px-8">
-            <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
+            <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
               <TimelineTab
                 timeline={timeline}
                 controller={timelineController}

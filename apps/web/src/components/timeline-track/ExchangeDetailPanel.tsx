@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Exchange } from '../../types';
 import { formatDurationMs } from '../../utils';
+import { Modal } from '../Modal';
 import { ModelBadge } from '../ModelBadge';
 import { RawJsonModal } from '../RawJsonModal';
 import { ExchangeSummary } from './ExchangeSummary';
@@ -23,9 +24,11 @@ interface ExchangeDetailPanelProps {
 const HEADER_ICON = 'material-symbols-outlined cursor-pointer text-[18px] hover:text-fg';
 
 /**
- * The right-hand detail panel for the selected exchange: a header (number,
- * clock, duration, model pill, prev/next/close), the summary block, the inline
- * messages, and a footer ("Open in conversation", "Raw JSON"). Selection and
+ * The centered detail modal for the selected exchange: a header (number, clock,
+ * duration, model pill, prev/next/close), the summary block, the inline messages
+ * at full conversation reading width, and a footer ("Open in conversation", "Raw
+ * JSON"). It overlays the timeline rather than sharing width with the track, so
+ * the messages read exactly as they do in the conversation view. Selection and
  * navigation are owned by the parent; this component renders one exchange.
  */
 export function ExchangeDetailPanel({
@@ -40,11 +43,11 @@ export function ExchangeDetailPanel({
   const clock = formatTimeOfDay(exchange.startTime);
 
   return (
-    <div
-      className="flex w-[404px] flex-none flex-col border-l border-border bg-card"
-      data-testid="exchange-detail-panel"
-    >
-      <div className="flex flex-none items-center justify-between border-b border-border px-4 py-2.5">
+    <Modal onClose={onClose} className="flex w-full max-w-4xl flex-col bg-card">
+      <div
+        className="flex flex-none items-center justify-between border-b border-border px-5 py-3"
+        data-testid="exchange-detail-panel"
+      >
         <div className="flex items-baseline gap-2">
           <span className="text-[13px] font-semibold">Exchange {exchange.index + 1}</span>
           <span className="font-mono text-[10px] text-muted-fg">
@@ -83,7 +86,7 @@ export function ExchangeDetailPanel({
         <ExchangeMessages exchange={exchange} context={context} />
       </div>
 
-      <div className="flex flex-none gap-2 border-t border-border px-4 py-3">
+      <div className="flex flex-none gap-2 border-t border-border px-5 py-3">
         <button
           type="button"
           onClick={onOpenInConversation}
@@ -109,6 +112,6 @@ export function ExchangeDetailPanel({
           onClose={() => setShowRaw(false)}
         />
       )}
-    </div>
+    </Modal>
   );
 }
