@@ -13,7 +13,7 @@ See [Installation](./installation) for other methods.
 ## 2. Run
 
 ```bash
-vibeview
+vibeview web
 ```
 
 vibeview starts a local web server. Open the URL printed in the terminal (or pass `--open` to launch the browser automatically). It discovers sessions from Claude Code — no configuration needed.
