@@ -52,6 +52,19 @@ func toolResultMsg(uuid string, ts int64, toolUseID string, isError bool) claude
 	return userMsg(uuid, ts, toolResult(toolUseID, "output", isError))
 }
 
+// metaMsg is a user message flagged as meta (slash-command marker, caveat, etc.).
+func metaMsg(uuid string, ts int64, text string) claude.Message {
+	m := userMsg(uuid, ts, textBlock(text))
+	m.IsMeta = true
+	return m
+}
+
+// sidechainMsg is a subagent-conversation message (either role) flagged sidechain.
+func sidechainMsg(msg claude.Message) claude.Message {
+	msg.IsSidechain = true
+	return msg
+}
+
 // --- grouping / boundary tests ---
 
 func TestBuildExchanges_Grouping(t *testing.T) {
@@ -112,6 +125,36 @@ func TestBuildExchanges_Grouping(t *testing.T) {
 			},
 			wantCount:       2,
 			wantPromptEmpty: []bool{true, false},
+		},
+		{
+			name: "meta message does not start a new exchange and is dropped",
+			messages: []claude.Message{
+				userMsg("u1", 1000, textBlock("real prompt")),
+				assistantMsg("a1", 1100, "claude-opus-4-1-20250805", nil, textBlock("reply")),
+				metaMsg("m1", 1200, "<command-name>/clear</command-name>"),
+				userMsg("u2", 2000, textBlock("second prompt")),
+				assistantMsg("a2", 2100, "claude-opus-4-1-20250805", nil, textBlock("reply")),
+			},
+			wantCount:       2,
+			wantPromptEmpty: []bool{false, false},
+			wantUUIDsPerExch: [][]string{
+				{"u1", "a1"},
+				{"u2", "a2"},
+			},
+		},
+		{
+			name: "sidechain subagent turns are excluded from the main track",
+			messages: []claude.Message{
+				userMsg("u1", 1000, textBlock("delegate this")),
+				assistantMsg("a1", 1100, "claude-opus-4-1-20250805", nil,
+					toolUse("t1", "Agent", map[string]any{"prompt": "go"})),
+				sidechainMsg(userMsg("su1", 1200, textBlock("subagent prompt"))),
+				sidechainMsg(assistantMsg("sa1", 1300, "claude-opus-4-1-20250805", nil, textBlock("subagent work"))),
+				assistantMsg("a2", 1400, "claude-opus-4-1-20250805", nil, textBlock("done")),
+			},
+			wantCount:        1,
+			wantPromptEmpty:  []bool{false},
+			wantUUIDsPerExch: [][]string{{"u1", "a1", "a2"}},
 		},
 	}
 

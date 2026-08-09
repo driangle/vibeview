@@ -30,11 +30,22 @@ func isUserPrompt(msg claude.Message) bool {
 	return false
 }
 
-// groupIntoExchanges splits messages into raw exchanges. A genuine user prompt
-// starts a new exchange; assistant messages accumulate into the current one;
-// everything else (tool-result-only user messages, progress, system, snapshots)
-// is auxiliary. Leading assistant/auxiliary messages with no prior prompt form
-// an exchange with a nil user message.
+// isTimelineNoise reports whether a message should be excluded from the timeline
+// entirely. Meta messages (slash-command markers like /clear, caveats, local
+// command stdout) and subagent sidechain turns are not part of the human
+// conversation: keeping them would let a meta message spuriously start a new
+// exchange and let sidechain prompts interleave subagent turns into the main
+// track. Mirrors the CLI show renderer's skip rule.
+func isTimelineNoise(msg claude.Message) bool {
+	return msg.IsMeta || msg.IsSidechain
+}
+
+// groupIntoExchanges splits messages into raw exchanges. Meta and sidechain
+// messages are dropped first (see isTimelineNoise). A genuine user prompt starts
+// a new exchange; assistant messages accumulate into the current one; everything
+// else (tool-result-only user messages, progress, system, snapshots) is
+// auxiliary. Leading assistant/auxiliary messages with no prior prompt form an
+// exchange with a nil user message.
 func groupIntoExchanges(messages []claude.Message) []rawExchange {
 	var exchanges []rawExchange
 	var current *rawExchange
@@ -47,6 +58,9 @@ func groupIntoExchanges(messages []claude.Message) []rawExchange {
 	}
 
 	for _, msg := range messages {
+		if isTimelineNoise(msg) {
+			continue
+		}
 		switch {
 		case isUserPrompt(msg):
 			flush()
