@@ -24,6 +24,7 @@ const emptyInsights: TimelineResponse['insights'] = {
   totalCostUSD: 0,
   totalDurationMs: 0,
   totalIdleMs: 0,
+  totalSpanMs: 0,
 };
 
 function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchange {

@@ -74,7 +74,7 @@ export function TrackRow({
       aria-current={selected || undefined}
       style={selected ? { boxShadow: 'inset 3px 0 0 var(--primary)' } : undefined}
       className={`${ROW_LAYOUT} w-full border-b border-border/60 text-left hover:bg-primary/5 ${
-        density === 'compact' ? 'py-1' : 'py-2'
+        density === 'compact' ? 'py-2' : 'py-3'
       } ${selected ? 'bg-primary/10' : ''}`}
     >
       {/* Time */}

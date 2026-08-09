@@ -37,7 +37,7 @@ func TestBuildInsights_EmptySession(t *testing.T) {
 	if ins.Top5TokenSharePct != 0 {
 		t.Errorf("Top5TokenSharePct = %d, want 0", ins.Top5TokenSharePct)
 	}
-	if ins.TotalTokens != 0 || ins.TotalCostUSD != 0 || ins.TotalDurationMs != 0 {
+	if ins.TotalTokens != 0 || ins.TotalCostUSD != 0 || ins.TotalDurationMs != 0 || ins.TotalSpanMs != 0 {
 		t.Errorf("totals not zero: %+v", ins)
 	}
 	// Lists must serialize as [] not null.
@@ -207,6 +207,11 @@ func TestBuildInsights_TimeSplitSumsToSpan(t *testing.T) {
 	}
 	if ins.TotalIdleMs != 10000 {
 		t.Errorf("TotalIdleMs = %d, want 10000", ins.TotalIdleMs)
+	}
+	// TotalSpanMs is the single duration the header and overview render: the full
+	// session span, always active + idle.
+	if want := ins.TotalDurationMs + ins.TotalIdleMs; ins.TotalSpanMs != want {
+		t.Errorf("TotalSpanMs = %d, want %d (TotalDurationMs + TotalIdleMs)", ins.TotalSpanMs, want)
 	}
 }
 

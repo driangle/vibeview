@@ -239,6 +239,8 @@ export interface TimelineInsights {
   totalCostUSD: number;
   totalDurationMs: number;
   totalIdleMs: number;
+  /** Full session span (active + idle); the single duration the header and overview render. */
+  totalSpanMs: number;
 }
 
 /** The Timeline Track payload for a single session. Mirrors Go timeline.TimelineResponse. */

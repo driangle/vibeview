@@ -96,6 +96,7 @@ const timelineInsights: TimelineInsights = {
   totalCostUSD: 1.3,
   totalDurationMs: 60_000,
   totalIdleMs: 0,
+  totalSpanMs: 0,
 };
 
 function makeExchange(overrides: Partial<Exchange> & { index: number }): Exchange {

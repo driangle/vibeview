@@ -8,13 +8,13 @@
 /** Width/flex class per column, keyed by the header label it sits under. */
 export const COLUMN_CLASS = {
   time: 'w-[46px] flex-none',
-  elapsed: 'w-[128px] flex-none',
+  elapsed: 'w-[140px] flex-none',
   prompt: 'flex-1 min-w-0',
-  tools: 'w-[196px] flex-none',
-  files: 'w-[156px] flex-none',
+  tools: 'w-[220px] flex-none',
+  files: 'w-[176px] flex-none',
   tokens: 'w-[88px] flex-none',
   flags: 'w-[54px] flex-none',
 } as const;
 
 /** Shared horizontal layout (flex, gap, padding) for the header and every row. */
-export const ROW_LAYOUT = 'flex items-center gap-3 px-5';
+export const ROW_LAYOUT = 'flex items-center gap-5 px-8';

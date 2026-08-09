@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import { ActivityBadge } from './ActivityBadge';
 import { CopyableText } from './CopyableText';
 import { TokenBreakdownPopover } from './TokenBreakdownPopover';
-import { formatDate, formatTokenCount, formatCost, formatDuration } from '../utils';
+import {
+  formatDate,
+  formatTokenCount,
+  formatCost,
+  formatDuration,
+  formatDurationMs,
+} from '../utils';
 import type { ActivityState, MessageResponse, SubagentDetail, UsageTotals } from '../types';
 
 function InlineMetrics({ usage }: { usage: UsageTotals }) {
@@ -49,6 +55,13 @@ interface SessionViewHeaderProps {
   activityState: ActivityState | undefined;
   liveUsage: UsageTotals | null;
   displayMessages: MessageResponse[];
+  /**
+   * Full session span (active + idle) from the server timeline aggregate, or null
+   * when no timeline is available. When present it is the single source of truth
+   * for the session duration, matching the sidebar overview; the client-side
+   * {@link formatDuration} over messages is only a fallback for older sessions.
+   */
+  sessionDurationMs: number | null;
   /** The single view-scoped search control, rendered in the header's right cluster. */
   search?: ReactNode;
   onExportPdf: () => void;
@@ -69,6 +82,7 @@ export function SessionViewHeader({
   activityState,
   liveUsage,
   displayMessages,
+  sessionDurationMs,
   search,
   onExportPdf,
   onToggleSidebar,
@@ -79,6 +93,12 @@ export function SessionViewHeader({
   subagentDisplayMessages,
   focusedAgentPrompt,
 }: SessionViewHeaderProps) {
+  // Prefer the server-computed span so the header matches the sidebar overview
+  // exactly; fall back to the client wall-clock only when there is no timeline.
+  const durationLabel =
+    sessionDurationMs && sessionDurationMs > 0
+      ? formatDurationMs(sessionDurationMs)
+      : formatDuration(displayMessages);
   return (
     <div className="sticky top-0 z-10">
       {/* Session Header */}
@@ -128,7 +148,7 @@ export function SessionViewHeader({
             </Link>{' '}
             &middot; {formatDate(timestamp)} &middot; {displayMessages.length} msg
             {displayMessages.length !== 1 ? 's' : ''}
-            {formatDuration(displayMessages) && <> &middot; {formatDuration(displayMessages)}</>}
+            {durationLabel && <> &middot; {durationLabel}</>}
           </p>
         </div>
       </section>

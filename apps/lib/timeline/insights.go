@@ -60,6 +60,7 @@ type TimelineInsights struct {
 	TotalCostUSD         float64            `json:"totalCostUSD"`
 	TotalDurationMs      int64              `json:"totalDurationMs"` // summed active exchange durations
 	TotalIdleMs          int64              `json:"totalIdleMs"`     // summed gaps between exchanges
+	TotalSpanMs          int64              `json:"totalSpanMs"`     // full session span (active + idle); the single duration the header and overview render
 }
 
 // TimeSplitSegment is one slice of the "where the time went" breakdown. Pct is
@@ -129,6 +130,7 @@ func BuildInsights(exchanges []Exchange, messages []claude.Message) TimelineInsi
 		TotalCostUSD:         totalCostUSD(exchanges),
 		TotalDurationMs:      totalDurationMs(exchanges),
 		TotalIdleMs:          totalIdleMs(exchanges),
+		TotalSpanMs:          span, // == totalDurationMs + totalIdleMs by construction
 	}
 }
 

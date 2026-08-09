@@ -75,7 +75,7 @@ export function TimelineToolbar({
   shownLabel,
 }: TimelineToolbarProps) {
   return (
-    <div className="flex flex-none flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-border bg-surface-dim px-5 py-2.5">
+    <div className="flex flex-none flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-border px-8 py-2.5">
       <div className="flex flex-wrap gap-1.5">
         {CHIP_SPECS.map((spec) => (
           <FilterChip

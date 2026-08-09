@@ -20,8 +20,7 @@ export function OverviewSection({
   const { insights, exchanges } = timeline;
   const { timeSplit, errorCount, longestExchangeIndex, top5TokenSharePct } = insights;
 
-  const totalLabel = formatDurationMs(insights.totalDurationMs + insights.totalIdleMs);
-  const activeLabel = formatDurationMs(insights.totalDurationMs);
+  const totalLabel = formatDurationMs(insights.totalSpanMs);
   const longest = exchanges.find((e) => e.index === longestExchangeIndex);
   const longestLabel = longest ? formatDurationMs(longest.durationMs) : '—';
 
@@ -30,7 +29,7 @@ export function OverviewSection({
       id="overview"
       icon="schedule"
       title="Overview"
-      meta={`${activeLabel} active`}
+      meta={totalLabel}
       defaultCollapsed={false}
     >
       <div className="flex flex-col gap-4">

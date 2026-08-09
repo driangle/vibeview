@@ -192,6 +192,7 @@ export function SessionView() {
           activityState={activityState}
           liveUsage={liveUsage}
           displayMessages={displayMessages}
+          sessionDurationMs={timeline ? timeline.insights.totalSpanMs : null}
           search={searchSlot}
           onExportPdf={handleExportPdf}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}

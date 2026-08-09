@@ -69,7 +69,7 @@ export function OverviewStrip({
 
   return (
     <div
-      className="flex flex-none items-center gap-3.5 border-b border-border bg-card px-5 py-2.5"
+      className="flex flex-none items-center gap-3.5 border-b border-border px-8 py-3"
       data-testid="overview-strip"
     >
       <div className="flex w-[70px] flex-none flex-col gap-0.5">

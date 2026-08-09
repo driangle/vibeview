@@ -76,7 +76,7 @@ export function SessionInsightsSidebar({
   );
 
   return (
-    <aside className="w-full lg:w-80 shrink-0 bg-surface-dim p-4 sm:p-6 overflow-y-auto print:hidden">
+    <aside className="w-full lg:w-96 shrink-0 bg-surface-dim p-4 sm:p-6 overflow-y-auto print:hidden">
       <div className="space-y-8">
         {isSubagentView && (
           <div className="flex items-center gap-2 rounded-md border border-info/25 bg-info/5 px-3 py-2">
