@@ -33,7 +33,7 @@ The plugin gives Claude Code access to the `vibeview` CLI so it can answer quest
 - "Show me the sessions with the most messages"
 - "What tools did I use most in the last project?"
 
-Claude Code will run the appropriate `vibeview` command (`search`, `inspect`, `stats`, `sessions`, `show`) and interpret the results for you.
+Claude Code will run the appropriate `vibeview` command (`search`, `sessions`, `show`, `inspect`, `related`, `stats`, `self`, `web`) and interpret the results for you.
 
 ## Prerequisites
 
@@ -49,8 +49,10 @@ The skill exposes all vibeview CLI commands:
 | `vibeview sessions` | List and sort sessions by date, messages, model, or directory |
 | `vibeview inspect <id>` | Get detailed metadata for a session |
 | `vibeview show <id>` | Read back conversation content |
+| `vibeview related <id>` | Group a session with its subagents and time-clustered siblings |
 | `vibeview stats` | Summarize activity across sessions and projects |
 | `vibeview self` | Discover the current session from within Claude Code |
+| `vibeview web` | Launch the local web interface for browsing sessions |
 
 All commands support `--json` output for structured processing. See the [CLI reference](./cli) for full details.
 
