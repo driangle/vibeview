@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ConversationFlow } from '../components/ConversationFlow';
 import { SessionTabs, type SessionTab } from '../components/SessionTabs';
 import { TimelineTab } from '../components/timeline-track/TimelineTab';
-import { TimelineSidebar } from '../components/timeline-track/TimelineSidebar';
 import { TimelineSearch } from '../components/timeline-track/TimelineSearch';
+import { SessionInsightsSidebar } from '../components/insights/SessionInsightsSidebar';
+import { buildConversationActions, buildTimelineActions } from '../components/insights/actions';
 import { useTimeline } from '../components/timeline-track/useTimeline';
 import { ConversationSearch } from '../components/ConversationSearch';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
@@ -14,7 +15,6 @@ import { useSessionData } from '../hooks/useSessionData';
 import { useSubagentData } from '../hooks/useSubagentData';
 import { usePrintMode } from '../hooks/usePrintMode';
 import { useMessagePagination } from '../hooks/useMessagePagination';
-import { SessionSidebar } from '../components/SessionSidebar';
 import { SessionViewHeader } from '../components/SessionViewHeader';
 import { MobileSidebar } from '../components/MobileSidebar';
 import { Footer } from '../components/Footer';
@@ -129,26 +129,37 @@ export function SessionView() {
   const title = liveCustomTitle || session.customTitle || session.slug || session.id;
   const activityState = liveActivityState ?? session.activityState;
 
-  const sidebarProps = {
-    filePath: focusedAgentId ? undefined : session.filePath,
-    project: session.dir,
-    model: session.model,
-    timestamp: session.timestamp,
-    sessionId: session.id,
-    toolResults: activeToolResults,
-    insights: focusedAgentId ? (subagentData?.insights ?? null) : insights,
-    onNavigateToMessage: navigateToMessage,
-    focusedAgentId,
-    subagentLoading,
-    onFocusAgent: focusedAgentId ? undefined : handleFocusAgent,
-  };
+  // One sidebar for both tabs; only the interaction wiring differs. On Timeline a
+  // click filters/jumps the track; on Conversation it scrolls to the message.
+  const activeInsights = focusedAgentId ? (subagentData?.insights ?? null) : insights;
+  const activeTimeline = focusedAgentId ? null : timeline;
+  const actions =
+    tab === 'timeline'
+      ? buildTimelineActions(timelineController)
+      : buildConversationActions({
+          navigateToMessage,
+          timeline,
+          insights,
+          setTab,
+          controller: timelineController,
+        });
 
-  const sidebarContent =
-    tab === 'timeline' ? (
-      <TimelineSidebar timeline={timeline} controller={timelineController} />
-    ) : (
-      <SessionSidebar {...sidebarProps} />
-    );
+  const sidebarContent = (
+    <SessionInsightsSidebar
+      insights={activeInsights}
+      timeline={activeTimeline}
+      actions={actions}
+      toolResults={activeToolResults}
+      filePath={focusedAgentId ? undefined : session.filePath}
+      project={session.dir}
+      model={session.model}
+      timestamp={session.timestamp}
+      sessionId={session.id}
+      isSubagentView={Boolean(focusedAgentId)}
+      subagentLoading={subagentLoading}
+      onFocusAgent={focusedAgentId ? undefined : handleFocusAgent}
+    />
+  );
 
   // A single search control lives in the header and scopes to the active view:
   // the timeline filter on the Timeline tab, the message search on Conversation.

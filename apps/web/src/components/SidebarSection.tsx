@@ -38,7 +38,10 @@ export function LocateButton({ onClick }: { onClick: (e: React.MouseEvent) => vo
 }
 
 function useCollapsed(key: string, defaultValue = true): [boolean, () => void] {
-  const storageKey = `sidebar-collapsed:${key}`;
+  // Namespaced for the unified Session Insights sidebar so it starts from the
+  // section defaults (only Overview expanded) rather than inheriting collapse
+  // prefs left over from the previous per-tab sidebars. Persisted from there on.
+  const storageKey = `insights-collapsed:${key}`;
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(storageKey);
     return stored !== null ? stored === 'true' : defaultValue;
@@ -57,6 +60,7 @@ export function SidebarSection({
   icon,
   title,
   count,
+  meta,
   defaultCollapsed = true,
   children,
 }: {
@@ -64,6 +68,8 @@ export function SidebarSection({
   icon: string;
   title: string;
   count?: number;
+  /** A right-aligned qualifier (e.g. "2 model switches") shown before the chevron. */
+  meta?: string;
   defaultCollapsed?: boolean;
   children: React.ReactNode;
 }) {
@@ -82,8 +88,12 @@ export function SidebarSection({
             {count}
           </span>
         )}
+        {/* Summary hint appears only when collapsed, so collapsing never hides the headline number. */}
+        {collapsed && meta && (
+          <span className="ml-auto font-mono text-[10px] normal-case text-muted-fg">{meta}</span>
+        )}
         <span
-          className="material-symbols-outlined text-xs ml-auto transition-transform duration-150"
+          className={`material-symbols-outlined text-xs transition-transform duration-150 ${collapsed && meta ? '' : 'ml-auto'}`}
           style={{ transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
         >
           expand_more

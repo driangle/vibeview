@@ -1,12 +1,15 @@
-import { useState, useMemo, useCallback } from 'react';
-import type { FileOperation } from './FileViewer';
-import { SidebarSection, LocateButton } from './SidebarSection';
-import type { SessionInsights } from '../types';
+import { useCallback, useMemo, useState } from 'react';
+import type { SessionInsights } from '../../../types';
+import type { FileOperation } from '../../FileViewer';
+import { SidebarSection, LocateButton } from '../../SidebarSection';
+import { barPct } from '../../timeline-track/format';
+import type { InsightsActions } from '../actions';
 
-interface FilesTouchedProps {
+interface FilesSectionProps {
   files: SessionInsights['files'];
+  /** Open the file's operations in the local viewer. */
   onFileClick: (filePath: string, operations: FileOperation[]) => void;
-  onNavigateToMessage: (uuid: string) => void;
+  actions: InsightsActions;
 }
 
 function CopyPathButton({ filePath }: { filePath: string }) {
@@ -40,7 +43,9 @@ function FileGroup({
   defaultOpen,
   onFileClick,
   fileToUuid,
-  onNavigateToMessage,
+  fileToCount,
+  maxCount,
+  actions,
 }: {
   label: string;
   icon: string;
@@ -48,7 +53,9 @@ function FileGroup({
   defaultOpen: boolean;
   onFileClick: (filePath: string) => void;
   fileToUuid: Map<string, string>;
-  onNavigateToMessage: (uuid: string) => void;
+  fileToCount: Map<string, number>;
+  maxCount: number;
+  actions: InsightsActions;
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -82,6 +89,7 @@ function FileGroup({
           {files.map((filePath) => {
             const fileName = filePath.split('/').pop() || filePath;
             const uuid = fileToUuid.get(filePath);
+            const count = fileToCount.get(filePath) ?? 1;
             return (
               <div key={filePath} className="flex items-center gap-1 group">
                 <div
@@ -100,9 +108,26 @@ function FileGroup({
                     <span className="text-xs font-medium text-fg truncate">{fileName}</span>
                     <span className="text-[10px] text-muted-fg font-mono truncate">{filePath}</span>
                   </div>
+                  {count > 1 && (
+                    <div className="flex flex-none items-center gap-1.5">
+                      <div className="h-[6px] w-8 overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className="h-full rounded-full bg-primary/55"
+                          style={{ width: `${barPct(count, maxCount)}%` }}
+                        />
+                      </div>
+                      <span className="w-6 text-right font-mono text-[10px] text-muted-fg">
+                        {count}×
+                      </span>
+                    </div>
+                  )}
                   <CopyPathButton filePath={filePath} />
                 </div>
-                {uuid && <LocateButton onClick={() => onNavigateToMessage(uuid)} />}
+                {uuid && (
+                  <LocateButton
+                    onClick={() => actions.onEntity({ query: filePath, messageUuid: uuid })}
+                  />
+                )}
               </div>
             );
           })}
@@ -112,22 +137,23 @@ function FileGroup({
   );
 }
 
-export function FilesTouched({
-  files,
-  onFileClick,
-  onNavigateToMessage,
-}: FilesTouchedProps) {
+/**
+ * The Files section: the session's written/read files, each opening its
+ * operations in the viewer, with a per-file touch-count meter (derived from the
+ * touch entries) and a tab-aware locate button.
+ */
+export function FilesSection({ files, onFileClick, actions }: FilesSectionProps) {
   const { categories, entries } = files;
 
-  // Map each file path to the first message UUID that touched it
-  const fileToUuid = useMemo(() => {
-    const map = new Map<string, string>();
+  // First message that touched each file, and how many times it was touched.
+  const { fileToUuid, fileToCount, maxCount } = useMemo(() => {
+    const uuid = new Map<string, string>();
+    const count = new Map<string, number>();
     for (const entry of entries) {
-      if (!map.has(entry.filePath)) {
-        map.set(entry.filePath, entry.messageUuid);
-      }
+      if (!uuid.has(entry.filePath)) uuid.set(entry.filePath, entry.messageUuid);
+      count.set(entry.filePath, (count.get(entry.filePath) ?? 0) + 1);
     }
-    return map;
+    return { fileToUuid: uuid, fileToCount: count, maxCount: Math.max(0, ...count.values()) };
   }, [entries]);
 
   const handleFileClick = useCallback(
@@ -144,7 +170,7 @@ export function FilesTouched({
   if (totalCount === 0) return null;
 
   return (
-    <SidebarSection id="files-touched" icon="folder_open" title="Files Touched" count={totalCount}>
+    <SidebarSection id="files-touched" icon="folder_open" title="Files" count={totalCount}>
       <div className="space-y-3">
         <FileGroup
           label="Written"
@@ -153,7 +179,9 @@ export function FilesTouched({
           defaultOpen
           onFileClick={handleFileClick}
           fileToUuid={fileToUuid}
-          onNavigateToMessage={onNavigateToMessage}
+          fileToCount={fileToCount}
+          maxCount={maxCount}
+          actions={actions}
         />
         <FileGroup
           label="Read"
@@ -162,7 +190,9 @@ export function FilesTouched({
           defaultOpen={categories.read.length <= 5}
           onFileClick={handleFileClick}
           fileToUuid={fileToUuid}
-          onNavigateToMessage={onNavigateToMessage}
+          fileToCount={fileToCount}
+          maxCount={maxCount}
+          actions={actions}
         />
       </div>
     </SidebarSection>

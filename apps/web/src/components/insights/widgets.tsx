@@ -1,27 +1,20 @@
 import type { ReactNode } from 'react';
 
 /**
- * Shared presentational primitives for the Session insights popover: the section
- * heading, the clickable meter row, and the headline tile. Pure display — colours
- * and widths are passed in; they derive nothing.
+ * Shared presentational primitives for the Session Insights sidebar: the
+ * clickable meter row and the headline tile. Pure display — colours and widths
+ * are passed in; they derive nothing.
+ *
+ * Hover archetypes used across the insights sections (keep these consistent):
+ * - card rows  → `hover:bg-bg`
+ * - meter rows → `hover:bg-primary/10`
+ * - chips      → `hover:bg-primary/15`
  */
 
-/** An uppercase section heading, optionally with a right-aligned meta value. */
-export function SectionLabel({ children, meta }: { children: ReactNode; meta?: string }) {
-  return (
-    <div className="flex items-baseline justify-between">
-      <span className="text-[10px] font-medium tracking-wider text-muted-fg uppercase">
-        {children}
-      </span>
-      {meta && <span className="font-mono text-[10px] text-muted-fg">{meta}</span>}
-    </div>
-  );
-}
-
 /**
- * One clickable meter row (models, busiest files, most-run commands): arbitrary
- * left content, a value-scaled bar, and arbitrary right content. Clicking filters
- * the track.
+ * One clickable meter row (models, files, commands): arbitrary left content, a
+ * value-scaled bar, and arbitrary right content. Clicking runs the passed action
+ * (filter the track / navigate the conversation, depending on the active tab).
  */
 export function MeterRow({
   left,
@@ -51,7 +44,7 @@ export function MeterRow({
   );
 }
 
-/** One headline tile: a big value over a caption. Clicking jumps the track. */
+/** One headline tile: a big value over a caption. Clicking runs the passed action. */
 export function Tile({
   value,
   caption,

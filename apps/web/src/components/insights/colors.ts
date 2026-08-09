@@ -1,31 +1,31 @@
 import type { ModelUsage } from '../../types';
-import { MODEL_BAND_PALETTE } from './overview';
+import { MODEL_BAND_PALETTE } from '../timeline-track/overview';
 
 /**
- * Pure presentation helpers for the Session insights popover: they shape how the
- * server-provided `TimelineInsights` aggregate is drawn (segment colour, per-model
- * accent). They never derive new metrics — every number comes from the Go
- * timeline payload. Bar widths reuse `barPct` from `./format`.
+ * Pure presentation helpers for the Session Insights sidebar: they shape how the
+ * server-provided timeline aggregate is drawn (segment colour, per-model accent).
+ * They never derive new metrics — every number comes from the Go timeline
+ * payload. Bar widths reuse `barPct` from `../timeline-track/format`.
  */
 
 /**
  * The CSS `background` for a "where the time went" segment, keyed by the
- * server-provided label. Semantic accents with no theme token, so these literals
- * are the single source of truth (mirroring the designer's palette). "Waiting on
- * you" renders as a hatch so idle time reads distinctly from active work.
+ * server-provided label. Each role maps onto a semantic theme token so light and
+ * dark both follow for free. Idle ("Waiting on you") is a solid muted grey — the
+ * least interesting time, so it must not be the loudest texture in the panel.
  */
 export function timeSplitBackground(label: string): string {
   switch (label) {
     case 'Model generation':
-      return 'hsl(220 100% 55% / 0.65)';
+      return 'var(--primary)';
     case 'Tool calls':
-      return 'hsl(35 90% 50% / 0.7)';
+      return 'var(--warning)';
     case 'Subagents':
-      return 'hsl(188 80% 45% / 0.75)';
+      return 'var(--info)';
     case 'Waiting on you':
-      return 'repeating-linear-gradient(45deg, hsl(220 14% 82%) 0 3px, transparent 3px 6px)';
+      return 'color-mix(in oklch, var(--muted-fg) 45%, transparent)';
     default:
-      return 'hsl(220 14% 70%)';
+      return 'var(--muted-fg)';
   }
 }
 

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { SidebarSection } from './SessionInsights';
+import { SidebarSection } from './SidebarSection';
 import { fetcher } from '../api';
 import type { FileOperation } from './FileViewer';
 
