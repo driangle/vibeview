@@ -1,11 +1,12 @@
 ---
 title: "Expose session-HTML rendering as a Go SDK (+ thin 'vibeview export' CLI)"
 id: "01kztbrsq"
-status: in-progress
+status: completed
 priority: medium
 type: feature
 tags: ["export", "cli", "integration"]
 created: "2026-08-12"
+completed_at: 2026-08-12
 ---
 
 # Add 'vibeview export' — static single-session HTML for embedding
