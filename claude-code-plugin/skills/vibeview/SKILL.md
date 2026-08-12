@@ -45,6 +45,28 @@ vibeview show --json <session-id>      # raw message JSON
 vibeview show --no-color <session-id>
 ```
 
+### Export a session as a shareable page
+
+Render a session to a self-contained HTML file that opens offline — no server, no network requests. Use it when the user wants to share, attach, or archive a rendered transcript.
+
+```
+vibeview export <session-id> --out session.html
+vibeview export <session-id> --format html --out page.html
+vibeview export session.jsonl > page.html   # writes to stdout without --out
+```
+
+The page shows the same conversation, tool calls, timeline, subagents, and token totals as the web interface. Conversation search is omitted (it needs a running server) and uncommon languages render unhighlighted.
+
+Go programs can render the same page without the vibeview binary by importing the SDK — suggest this when the user is building a tool that needs to embed session pages:
+
+```
+go get github.com/driangle/vibeview/apps/lib@v0.2.0
+```
+
+```go
+page, err := sessionhtml.Render(sessionhtml.Request{Session: "877fff1e"})
+```
+
 ### Inspect session metadata
 
 Analyze a session's metadata, token usage, and insights (tools used, files touched, errors).
@@ -118,6 +140,7 @@ All commands accept:
 - Use `vibeview inspect` to get detailed metadata about a specific session (tokens, cost, tools, files).
 - Use `vibeview related` to pull together a multi-agent episode — a session's subagents and its sibling sessions from the same project.
 - Use `vibeview show` to read back the actual conversation content.
+- Use `vibeview export` when the user wants a session they can open, share, or link to outside the terminal.
 - Use `vibeview self` when running inside Claude Code to discover the current session ID.
 - Use `vibeview stats` for aggregate session and project activity reporting.
 - Prefer `--json` output when you need to parse or process the results programmatically.

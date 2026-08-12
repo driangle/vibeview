@@ -279,6 +279,17 @@ func ParseMessageLine(line []byte) (Message, error) {
 	if err := json.Unmarshal(line, &msg); err != nil {
 		return Message{}, fmt.Errorf("parse message line: %w", err)
 	}
+	// Transcripts written by the Agent SDK's stream-json output spell the field
+	// session_id. Everything else about the line is the same, so accepting the
+	// alias is enough to read those files (e.g. skival's per-run transcripts).
+	if msg.SessionID == "" {
+		var alias struct {
+			SessionID string `json:"session_id"`
+		}
+		if json.Unmarshal(line, &alias) == nil {
+			msg.SessionID = alias.SessionID
+		}
+	}
 	return msg, nil
 }
 

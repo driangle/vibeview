@@ -94,6 +94,7 @@ Run "vibeview web" to start the web interface.`,
 	root.AddCommand(searchCmd(&claudeDir, &logLevel))
 	root.AddCommand(statsCmd(&claudeDir, &logLevel))
 	root.AddCommand(showCmd(&claudeDir, &logLevel))
+	root.AddCommand(exportCmd(&claudeDir, &logLevel))
 	root.AddCommand(sessionsCmd(&claudeDir, &logLevel))
 	root.AddCommand(relatedCmd(&claudeDir, &logLevel))
 	root.AddCommand(selfCmd(&claudeDir, &logLevel))

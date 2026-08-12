@@ -787,6 +787,11 @@ func loadSessionFromFile(path string) (SessionMeta, error) {
 	if firstTS > 0 {
 		meta.StartTime = firstTS
 		meta.EndTime = lastTS
+		// Some transcripts open with an untimestamped line (the Agent SDK's
+		// system/init, for one), leaving the session with no date to show.
+		if meta.Timestamp == 0 {
+			meta.Timestamp = firstTS
+		}
 	}
 	if firstTS > 0 && lastTS > firstTS {
 		meta.DurationMs = lastTS - firstTS

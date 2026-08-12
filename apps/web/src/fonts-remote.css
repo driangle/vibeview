@@ -1,0 +1,8 @@
+/* Web fonts fetched from Google Fonts, used by the live web app only.
+ *
+ * Kept out of index.css so the static export bundle can share every other style
+ * without pulling in a network request: an exported page must open offline. The
+ * export entry inlines a subset of the icon font instead (vite.config.export.ts)
+ * and lets text fall back to the system stack. */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');

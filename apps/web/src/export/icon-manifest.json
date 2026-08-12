@@ -1,0 +1,41 @@
+{
+  "included": [
+    "account_tree",
+    "arrow_back",
+    "attach_file",
+    "build",
+    "close",
+    "content_copy",
+    "description",
+    "edit_document",
+    "edit_note",
+    "error",
+    "expand_less",
+    "expand_more",
+    "filter_alt_off",
+    "folder",
+    "folder_open",
+    "forum",
+    "graph_3",
+    "groups",
+    "image",
+    "info",
+    "keyboard_arrow_down",
+    "keyboard_arrow_up",
+    "magic_button",
+    "my_location",
+    "open_in_full",
+    "picture_as_pdf",
+    "psychology",
+    "schedule",
+    "search",
+    "smart_toy",
+    "terminal",
+    "visibility",
+    "visibility_off"
+  ],
+  "excluded": [
+    "clock",
+    "dollar"
+  ]
+}

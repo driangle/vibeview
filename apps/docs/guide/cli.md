@@ -212,6 +212,42 @@ vibeview show session.jsonl
 | `--json` | `false` | Output raw messages as JSON |
 | `--no-color` | `false` | Strip ANSI color codes |
 
+### `vibeview export`
+
+Render one session to a self-contained HTML file. The page carries both the
+session and the viewer that renders it, so it opens straight from disk with no
+server and no network requests — suitable for attaching to a report, sharing, or
+archiving next to other artifacts.
+
+Input can be a session ID (full or prefix) or a `.jsonl` file path. Output goes
+to stdout unless `--out` is given.
+
+```bash
+vibeview export 877fff1e --out session.html
+vibeview export 877fff1e-80c9-4d20-a600-f278eb2c7bdc --format html --out page.html
+vibeview export session.jsonl > page.html
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--format` | `html` | Output format (only `html` today) |
+| `--out` | `-` | Output file, or `-` for stdout |
+
+The page renders the same session view as the web interface — conversation,
+tool calls, timeline, subagent conversations, and token/cost totals — with two
+differences that come from having no backend:
+
+- Conversation search is omitted (it queries the server). The Timeline tab's
+  filter is client-side and still works.
+- Code blocks in less common languages render unhighlighted; the bundled
+  grammars cover the mainstream languages.
+
+Pages are roughly 800 KB plus the session's own content.
+
+Go programs can render the same page without this binary by importing the
+[Go SDK](/guide/go-sdk):
+`go get github.com/driangle/vibeview/apps/lib@v0.2.0`.
+
 ### `vibeview search`
 
 Full-text search across all session content. Uses the same search algorithm as the web interface.

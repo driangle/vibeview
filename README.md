@@ -107,6 +107,28 @@ vibeview show --verbose <session-id>    # expand tool call details
 vibeview show --json <session-id>       # raw message JSON
 ```
 
+#### `export`
+
+Render a session to a self-contained HTML page that opens offline.
+
+```sh
+vibeview export <session-id> --out session.html
+vibeview export session.jsonl > page.html
+```
+
+The same renderer is importable, so Go programs can produce session pages
+without the binary:
+
+```sh
+go get github.com/driangle/vibeview/apps/lib@v0.2.0
+```
+
+```go
+page, err := sessionhtml.Render(sessionhtml.Request{Session: "877fff1e"})
+```
+
+See the [Go SDK guide](https://driangle.github.io/vibeview/guide/go-sdk) for details.
+
 #### `sessions`
 
 List sessions in a formatted table.

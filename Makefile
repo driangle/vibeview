@@ -1,4 +1,4 @@
-.PHONY: check check-lite install install-dev install-dev-full build web dev docs docs-dev docs-preview lint setup-hooks
+.PHONY: check check-lite install install-dev install-dev-full build web web-export dev docs docs-dev docs-preview lint setup-hooks
 
 # ldflags for injecting git info into dev builds
 DEV_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
@@ -17,7 +17,11 @@ dev: ## Run CLI + Vite dev server with hot reload
 web: ## Build the React SPA
 	cd apps/web && npm run build
 
-build: web ## Build the single binary with embedded SPA
+web-export: ## Build the static export page template
+	cd apps/web && npm run build:export
+	cp apps/web/dist-export/export.html apps/lib/sessionhtml/template.html
+
+build: web web-export ## Build the single binary with embedded SPA
 	rm -rf apps/cli/internal/spa/dist
 	cp -r apps/web/dist apps/cli/internal/spa/dist
 	cd apps/cli && go build -ldflags "$(DEV_LDFLAGS)" -o vibeview ./cmd/vibeview
@@ -39,7 +43,7 @@ check: check-lite ## Full validation: check-lite + tests, docs build
 	cd apps/web && npm test --if-present
 	cd apps/docs && npm run build
 
-install: web ## Build and install the CLI binary
+install: web web-export ## Build and install the CLI binary
 	rm -rf apps/cli/internal/spa/dist
 	cp -r apps/web/dist apps/cli/internal/spa/dist
 	cd apps/cli && go install -ldflags "$(DEV_LDFLAGS)" ./cmd/vibeview
@@ -47,7 +51,7 @@ install: web ## Build and install the CLI binary
 install-dev: ## Install CLI in dev mode as vibeview-dev
 	cd apps/cli && go build -ldflags "$(DEV_LDFLAGS)" -o "$$(go env GOPATH)/bin/vibeview-dev" ./cmd/vibeview
 
-install-dev-full: web ## Rebuild web SPA and install CLI as vibeview-dev
+install-dev-full: web web-export ## Rebuild web SPA and install CLI as vibeview-dev
 	rm -rf apps/cli/internal/spa/dist
 	cp -r apps/web/dist apps/cli/internal/spa/dist
 	cd apps/cli && go build -ldflags "$(DEV_LDFLAGS)" -o "$$(go env GOPATH)/bin/vibeview-dev" ./cmd/vibeview

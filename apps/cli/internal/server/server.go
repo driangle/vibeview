@@ -5,25 +5,23 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/driangle/vibeview/apps/lib/claude"
-	"github.com/driangle/vibeview/apps/lib/insights"
-	"github.com/driangle/vibeview/apps/lib/messagedto"
 	"github.com/driangle/vibeview/apps/lib/pathutil"
 	"github.com/driangle/vibeview/apps/lib/redact"
 	"github.com/driangle/vibeview/apps/lib/search"
 	"github.com/driangle/vibeview/apps/lib/session"
-	"github.com/driangle/vibeview/apps/lib/timeline"
+	"github.com/driangle/vibeview/apps/lib/sessiondetail"
 	"github.com/driangle/vibeview/internal/features"
 	"github.com/driangle/vibeview/internal/pidcheck"
 	"github.com/driangle/vibeview/internal/projects"
@@ -591,56 +589,24 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path, err := session.ResolveFilePath(s.claudeDir, *meta)
+	resp, err := sessiondetail.Build(s.claudeDir, *meta)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		writeJSON(w, detailErrorStatus(err), map[string]string{"error": err.Error()})
 		return
-	}
-	// Contain the resolved path so a session file that symlinks outside the
-	// Claude directory is not followed on read — parity with the tailer path.
-	if _, err := pathutil.SafeResolve(path, s.claudeDir); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
-		return
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session file not found"})
-		return
-	}
-	defer f.Close()
-
-	messages, parseResult, err := claude.ParseSessionFile(f)
-	if err != nil {
-		// A read error after some messages were parsed is recoverable: render the
-		// partial content rather than discarding it. Reserve 5xx for genuinely
-		// unreadable files where nothing could be parsed.
-		if len(messages) == 0 {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse session"})
-			return
-		}
-		log.Printf("session %s: read error after %d messages, rendering partial content: %v", id, len(messages), err)
-	}
-
-	msgResponses := make([]messagedto.Message, 0, len(messages))
-	for _, msg := range messages {
-		msgResponses = append(msgResponses, messagedto.From(msg))
-	}
-
-	extracted := insights.Extract(messages)
-	sessionDir := strings.TrimSuffix(path, ".jsonl")
-	insights.ResolveSubagentIDs(extracted.Subagents, sessionDir)
-	// Timeline strings (prompt previews, commands, file paths) are redacted at
-	// the source by timeline.Build, matching the rest of the payload.
-	tl := timeline.Build(messages)
-	resp := SessionDetailResponse{
-		SessionResponse: toSessionResponse(*meta),
-		FilePath:        redact.MaskHomePath(path),
-		Messages:        msgResponses,
-		Insights:        &extracted,
-		Timeline:        &tl,
-		SkippedLines:    parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// detailErrorStatus maps a session payload error to its HTTP status.
+func detailErrorStatus(err error) int {
+	switch {
+	case errors.Is(err, sessiondetail.ErrInvalidSessionPath), errors.Is(err, sessiondetail.ErrInvalidAgentID):
+		return http.StatusBadRequest
+	case errors.Is(err, sessiondetail.ErrSessionFileNotFound), errors.Is(err, sessiondetail.ErrSubagentNotFound):
+		return http.StatusNotFound
+	default:
+		return http.StatusInternalServerError
+	}
 }
 
 // maxRawSessionBytes caps the raw session content returned to the client so a
@@ -698,177 +664,18 @@ func (s *Server) handleGetSubagent(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	agentID := r.PathValue("agentId")
 
-	// Reject any agent ID that could walk outside the subagents directory before
-	// it is interpolated into a filesystem path.
-	if err := pathutil.ValidateAgentID(agentID); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid agent ID"})
-		return
-	}
-
 	meta := s.index.FindSession(id)
 	if meta == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
 		return
 	}
 
-	sessionPath, err := session.ResolveFilePath(s.claudeDir, *meta)
+	resp, err := sessiondetail.BuildSubagent(s.claudeDir, *meta, agentID)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
+		writeJSON(w, detailErrorStatus(err), map[string]string{"error": err.Error()})
 		return
-	}
-	// Contain the resolved session path before deriving the subagents directory
-	// from it, so a symlinked session file cannot redirect reads outside the
-	// Claude directory.
-	if _, err := pathutil.SafeResolve(sessionPath, s.claudeDir); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid session path"})
-		return
-	}
-
-	// Subagent files live at {session-dir}/subagents/agent-{agentId}.jsonl
-	sessionDir := strings.TrimSuffix(sessionPath, ".jsonl")
-	subagentsDir := filepath.Join(sessionDir, "subagents")
-
-	// If the agent ID is a synthetic tool_use_ prefix, resolve to the real file ID
-	// by matching the tool_use ID against the session's Agent tool_use blocks.
-	if strings.HasPrefix(agentID, "tool_use_") {
-		if resolved := resolveToolUseAgentID(sessionDir, agentID); resolved != "" {
-			agentID = resolved
-		}
-	}
-
-	// Resolve and contain the path so a symlink or crafted ID cannot escape the
-	// session's subagents directory.
-	agentPath, err := safeSubagentPath(subagentsDir, agentID, ".jsonl")
-	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "subagent session not found"})
-		return
-	}
-
-	f, err := os.Open(agentPath)
-	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "subagent session not found"})
-		return
-	}
-	defer f.Close()
-
-	messages, parseResult, err := claude.ParseSessionFile(f)
-	if err != nil {
-		// Render partial content on a recoverable read error; reserve 5xx for a
-		// genuinely unreadable file where nothing could be parsed.
-		if len(messages) == 0 {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to parse subagent session"})
-			return
-		}
-		log.Printf("subagent %s: read error after %d messages, rendering partial content: %v", agentID, len(messages), err)
-	}
-
-	msgResponses := make([]messagedto.Message, 0, len(messages))
-	for _, msg := range messages {
-		msgResponses = append(msgResponses, messagedto.From(msg))
-	}
-
-	// Read optional meta file for agent type and description. A missing or
-	// unsafe meta path is not fatal — the agent conversation still renders.
-	var agentType, description string
-	if metaPath, err := safeSubagentPath(subagentsDir, agentID, ".meta.json"); err == nil {
-		if metaBytes, err := os.ReadFile(metaPath); err == nil {
-			var metaData struct {
-				AgentType   string `json:"agentType"`
-				Description string `json:"description"`
-			}
-			if json.Unmarshal(metaBytes, &metaData) == nil {
-				agentType = metaData.AgentType
-				description = metaData.Description
-			}
-		}
-	}
-
-	extracted := insights.Extract(messages)
-	resp := SubagentDetailResponse{
-		AgentID:      agentID,
-		AgentType:    agentType,
-		Description:  description,
-		Messages:     msgResponses,
-		Insights:     &extracted,
-		SkippedLines: parseResult.SkippedLines,
 	}
 	writeJSON(w, http.StatusOK, resp)
-}
-
-// safeSubagentPath builds the path to a subagent file (agent-<id><suffix>) and
-// verifies it stays within subagentsDir, guarding against traversal and symlink
-// escape. It returns an error if the ID is malformed or the resolved path
-// escapes the directory (which also covers the file simply not existing).
-func safeSubagentPath(subagentsDir, agentID, suffix string) (string, error) {
-	if err := pathutil.ValidateAgentID(agentID); err != nil {
-		return "", err
-	}
-	path := filepath.Join(subagentsDir, "agent-"+agentID+suffix)
-	return pathutil.SafeResolve(path, subagentsDir)
-}
-
-// resolveToolUseAgentID resolves a synthetic "tool_use_<toolUseId>" agent ID
-// to the real agent file ID by matching the tool_use description against meta files.
-func resolveToolUseAgentID(sessionDir, syntheticID string) string {
-	toolUseID := strings.TrimPrefix(syntheticID, "tool_use_")
-
-	// Read the parent session to find the Agent tool_use description.
-	parentPath := sessionDir + ".jsonl"
-	pf, err := os.Open(parentPath)
-	if err != nil {
-		return ""
-	}
-	defer pf.Close()
-	messages, _, err := claude.ParseSessionFile(pf)
-	if err != nil {
-		return ""
-	}
-
-	var description string
-	for _, msg := range messages {
-		for _, block := range insights.GetContentBlocks(msg) {
-			if block.Type == "tool_use" && block.Name == "Agent" && block.ID == toolUseID {
-				description, _ = block.Input["description"].(string)
-				break
-			}
-		}
-		if description != "" {
-			break
-		}
-	}
-	if description == "" {
-		return ""
-	}
-
-	// Match against meta files.
-	subagentsDir := filepath.Join(sessionDir, "subagents")
-	files, err := os.ReadDir(subagentsDir)
-	if err != nil {
-		return ""
-	}
-	for _, f := range files {
-		name := f.Name()
-		if !strings.HasPrefix(name, "agent-") || !strings.HasSuffix(name, ".meta.json") {
-			continue
-		}
-		// Contain each meta read within subagentsDir so a symlinked entry
-		// cannot redirect the read outside the directory.
-		metaPath, err := pathutil.SafeResolve(filepath.Join(subagentsDir, name), subagentsDir)
-		if err != nil {
-			continue
-		}
-		data, err := os.ReadFile(metaPath)
-		if err != nil {
-			continue
-		}
-		var meta struct {
-			Description string `json:"description"`
-		}
-		if json.Unmarshal(data, &meta) == nil && meta.Description == description {
-			return strings.TrimSuffix(strings.TrimPrefix(name, "agent-"), ".meta.json")
-		}
-	}
-	return ""
 }
 
 func (s *Server) handleSessionStream(w http.ResponseWriter, r *http.Request) {
@@ -1092,18 +899,17 @@ type ActivityResponse struct {
 	Dirs      []string                       `json:"dirs"`
 }
 
-// SessionResponse is the API representation of a session in list responses.
-type SessionResponse struct {
-	ID            string              `json:"id"`
-	Dir           string              `json:"dir"`
-	CustomTitle   string              `json:"customTitle"`
-	Timestamp     string              `json:"timestamp"`
-	MessageCount  int                 `json:"messageCount"`
-	Model         string              `json:"model"`
-	Slug          string              `json:"slug"`
-	Usage         session.UsageTotals `json:"usage"`
-	ActivityState string              `json:"activityState"`
-}
+// The session payloads are assembled by the shared sessiondetail package, so
+// the API and the static export (`vibeview export`) serve identical shapes.
+// These aliases keep the API-facing names.
+type (
+	// SessionResponse is the API representation of a session in list responses.
+	SessionResponse = sessiondetail.Session
+	// SubagentDetailResponse is the API representation of a subagent's conversation.
+	SubagentDetailResponse = sessiondetail.SubagentDetail
+	// SessionDetailResponse is the API representation of a single session with messages.
+	SessionDetailResponse = sessiondetail.Detail
+)
 
 // PaginatedSessionsResponse wraps a page of sessions with the total count and
 // aggregate usage totals over the full filtered set (not just the returned page).
@@ -1131,47 +937,14 @@ type MessageSearchResponse struct {
 	Total   int                    `json:"total"`
 }
 
-// SubagentDetailResponse is the API representation of a subagent's conversation.
-type SubagentDetailResponse struct {
-	AgentID      string                    `json:"agentId"`
-	AgentType    string                    `json:"agentType,omitempty"`
-	Description  string                    `json:"description,omitempty"`
-	Messages     []messagedto.Message      `json:"messages"`
-	Insights     *insights.SessionInsights `json:"insights,omitempty"`
-	SkippedLines int                       `json:"skippedLines,omitempty"`
-}
-
-// SessionDetailResponse is the API representation of a single session with messages.
-type SessionDetailResponse struct {
-	SessionResponse
-	FilePath     string                     `json:"filePath"`
-	Messages     []messagedto.Message       `json:"messages"`
-	Insights     *insights.SessionInsights  `json:"insights,omitempty"`
-	Timeline     *timeline.TimelineResponse `json:"timeline,omitempty"`
-	SkippedLines int                        `json:"skippedLines,omitempty"`
-}
-
 // --- Helpers ---
 
 func toSessionResponse(m session.SessionMeta) SessionResponse {
-	return SessionResponse{
-		ID:            m.SessionID,
-		Dir:           m.Project,
-		CustomTitle:   m.CustomTitle,
-		Timestamp:     msToISO(m.Timestamp),
-		MessageCount:  m.MessageCount,
-		Model:         m.Model,
-		Slug:          m.Slug,
-		Usage:         m.Usage,
-		ActivityState: m.ActivityState,
-	}
+	return sessiondetail.FromMeta(m)
 }
 
 func msToISO(ms int64) string {
-	if ms == 0 {
-		return ""
-	}
-	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
+	return sessiondetail.TimestampISO(ms)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

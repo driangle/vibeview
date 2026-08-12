@@ -1328,3 +1328,31 @@ func TestEnrichSessionFallbackToEncodedName(t *testing.T) {
 		t.Errorf("expected fallback to encoded dir %q, got %q", encodedDir, sessions[0].Project)
 	}
 }
+
+// An SDK transcript opens with an untimestamped system/init line. Without a
+// fallback the session has no date at all, which renders as "Invalid Date".
+func TestLoadFromPathsDatesSessionFromFirstTimestampedMessage(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "run-1.conversation.jsonl")
+	content := `{"type":"system","subtype":"init","session_id":"a703066a-828e-419b-9b23-d996b3e30092"}
+{"type":"assistant","uuid":"a1","session_id":"a703066a-828e-419b-9b23-d996b3e30092","timestamp":1700000005000,"message":{"role":"assistant","content":[{"type":"text","text":"done"}]}}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := LoadFromPaths([]string{path})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sessions := idx.GetSessions()
+	if len(sessions) != 1 {
+		t.Fatalf("sessions = %d, want 1 (session id comes from session_id, not the filename)", len(sessions))
+	}
+	if sessions[0].SessionID != "a703066a-828e-419b-9b23-d996b3e30092" {
+		t.Errorf("SessionID = %q, want the id from the transcript", sessions[0].SessionID)
+	}
+	if sessions[0].Timestamp != 1700000005000 {
+		t.Errorf("Timestamp = %d, want 1700000005000", sessions[0].Timestamp)
+	}
+}

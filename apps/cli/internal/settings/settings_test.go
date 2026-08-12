@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"github.com/driangle/vibeview/apps/lib/sessionhtml"
 	"os"
 	"path/filepath"
 	"testing"
@@ -146,5 +147,26 @@ func TestMergeJSONBoolOverride(t *testing.T) {
 	}
 	if merged.AutoFollow != true {
 		t.Error("merged autoFollow should be true when explicitly set")
+	}
+}
+
+// An exported session page ships the same display defaults as the app, so a
+// page and the live UI paginate and format identically. sessionhtml cannot
+// import this package (it lives in the shared module), so the two definitions
+// are kept honest here.
+func TestDefaultsMatchExportedPageDefaults(t *testing.T) {
+	app := Default()
+	page := sessionhtml.DefaultViewSettings()
+
+	if app.Theme != page.Theme ||
+		app.DefaultSort.Column != page.DefaultSort.Column ||
+		app.DefaultSort.Direction != page.DefaultSort.Direction ||
+		app.PageSize != page.PageSize ||
+		app.DateFormat != page.DateFormat ||
+		app.AutoFollow != page.AutoFollow ||
+		app.RefreshInterval != page.RefreshInterval ||
+		app.MessagesPerPage != page.MessagesPerPage ||
+		app.RecentThreshold != page.RecentThreshold {
+		t.Errorf("settings defaults have drifted:\n  app  = %+v\n  page = %+v", app, page)
 	}
 }

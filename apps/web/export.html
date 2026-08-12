@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vibeview session</title>
+    <script>
+      (function () {
+        var stored = localStorage.getItem('vibeview:theme');
+        var dark =
+          stored === '"dark"' ||
+          (stored !== '"light"' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- The CLI replaces this node's contents with the exported session payload. -->
+    <script id="vibeview-export-data" type="application/json">
+      null
+    </script>
+    <script type="module" src="/src/export/main.tsx"></script>
+  </body>
+</html>

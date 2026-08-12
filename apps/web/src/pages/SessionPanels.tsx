@@ -1,4 +1,5 @@
 import { ConversationSearch } from '../components/ConversationSearch';
+import { useStaticExport } from '../export/StaticExportContext';
 import { TimelineSearch } from '../components/timeline-track/TimelineSearch';
 import { SessionInsightsSidebar } from '../components/insights/SessionInsightsSidebar';
 import { buildConversationActions, buildTimelineActions } from '../components/insights/actions';
@@ -82,6 +83,9 @@ interface SessionSearchSlotProps {
 /**
  * A single search control that scopes to the active view: the timeline filter on
  * the Timeline tab, the message search on Conversation. Hidden in the subagent view.
+ *
+ * Conversation search queries the backend, so a static export omits it — the
+ * timeline filter is client-side and works offline.
  */
 export function SessionSearchSlot({
   tab,
@@ -90,6 +94,8 @@ export function SessionSearchSlot({
   sessionId,
   navigateToMessage,
 }: SessionSearchSlotProps) {
+  const staticExport = useStaticExport();
+
   if (tab === 'timeline') {
     return (
       <TimelineSearch
@@ -102,6 +108,6 @@ export function SessionSearchSlot({
       />
     );
   }
-  if (focusedAgentId) return null;
+  if (focusedAgentId || staticExport) return null;
   return <ConversationSearch sessionId={sessionId} onNavigateToMessage={navigateToMessage} />;
 }

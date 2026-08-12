@@ -465,3 +465,28 @@ func FuzzParseHistoryLine(f *testing.F) {
 		_, _ = ParseHistoryLine(data)
 	})
 }
+
+// Transcripts from the Agent SDK's stream-json output (skival writes one per
+// run) spell the field session_id rather than sessionId.
+func TestParseMessageLine_SnakeCaseSessionID(t *testing.T) {
+	line := `{"type":"assistant","uuid":"a1","session_id":"sdk-session","timestamp":1700000001,"message":{"role":"assistant","content":[{"type":"text","text":"hi"}]}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.SessionID != "sdk-session" {
+		t.Errorf("SessionID = %q, want %q", msg.SessionID, "sdk-session")
+	}
+}
+
+// The camelCase field stays authoritative where both are present.
+func TestParseMessageLine_PrefersCamelCaseSessionID(t *testing.T) {
+	line := `{"type":"assistant","uuid":"a1","sessionId":"camel","session_id":"snake","timestamp":1700000001}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.SessionID != "camel" {
+		t.Errorf("SessionID = %q, want %q", msg.SessionID, "camel")
+	}
+}
