@@ -64,7 +64,7 @@ go get github.com/driangle/vibeview/apps/lib@v0.2.0
 ```
 
 ```go
-page, err := sessionhtml.Render(sessionhtml.Request{Session: "877fff1e"})
+page, err := sessionhtml.RenderSessionHTML(sessionhtml.Request{Session: "877fff1e"})
 ```
 
 ### Inspect session metadata

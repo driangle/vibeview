@@ -5,11 +5,13 @@
 // React SessionView the vibeview web UI serves — with every asset inlined, so it
 // opens from disk with no server and no network requests.
 //
-//	page, err := sessionhtml.Render(sessionhtml.Request{Session: "877fff1e"})
+//	page, err := sessionhtml.RenderSessionHTML(sessionhtml.Request{Session: "877fff1e"})
 //	if err != nil {
 //	    return err
 //	}
 //	os.WriteFile("session.html", page, 0o644)
+//
+// [Render] is the same function under a shorter name.
 //
 // Session may be a session ID (full or a unique prefix) or the path to a .jsonl
 // transcript. Programs that embed this package need no vibeview binary on PATH:
@@ -107,6 +109,15 @@ func DefaultViewSettings() ViewSettings {
 		MessagesPerPage: 100,
 		RecentThreshold: 300000,
 	}
+}
+
+// RenderSessionHTML resolves the request and returns a complete HTML document.
+//
+// It is the same function as [Render], under the fully qualified name. Callers
+// who dot-import or alias the package, or who prefer the explicit spelling at
+// the call site, can use either.
+func RenderSessionHTML(req Request) ([]byte, error) {
+	return Render(req)
 }
 
 // Render resolves the request and returns a complete HTML document.

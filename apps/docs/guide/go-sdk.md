@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-    page, err := sessionhtml.Render(sessionhtml.Request{
+    page, err := sessionhtml.RenderSessionHTML(sessionhtml.Request{
         Session: "877fff1e", // session ID, prefix, or path to a .jsonl transcript
     })
     if err != nil {
@@ -33,8 +33,9 @@ func main() {
 }
 ```
 
-`Render` returns a complete HTML document with the session and the viewer
-inlined: it opens from disk, offline, with no external requests.
+`RenderSessionHTML` returns a complete HTML document with the session and the viewer
+inlined: it opens from disk, offline, with no external requests. `sessionhtml.Render`
+is the same function under a shorter name.
 
 ### Request
 

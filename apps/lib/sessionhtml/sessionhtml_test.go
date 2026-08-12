@@ -1,6 +1,7 @@
 package sessionhtml
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -153,5 +154,25 @@ func TestRenderNeutralizesClosingScriptTag(t *testing.T) {
 	messages, _ := embedded["session"].(map[string]any)["messages"].([]any)
 	if len(messages) != 1 {
 		t.Fatalf("messages = %d, want 1 (payload did not survive escaping)", len(messages))
+	}
+}
+
+// RenderSessionHTML is the name the SDK contract exposes; it must behave
+// exactly like Render.
+func TestRenderSessionHTMLMatchesRender(t *testing.T) {
+	claudeDir, _ := writeSession(t, conversation)
+	req := Request{Session: "sess-1", ClaudeDir: claudeDir}
+
+	viaAlias, err := RenderSessionHTML(req)
+	if err != nil {
+		t.Fatalf("RenderSessionHTML() error: %v", err)
+	}
+	viaRender, err := Render(req)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+
+	if !bytes.Equal(viaAlias, viaRender) {
+		t.Error("RenderSessionHTML and Render produced different pages")
 	}
 }

@@ -1,6 +1,6 @@
 {
   "name": "vibeview",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Browse, search, and analyze your Claude Code sessions with the vibeview CLI",
   "author": {
     "name": "German Greiner"
