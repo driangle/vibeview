@@ -60,6 +60,34 @@ because there is no backend behind the page:
 
 Pages are roughly 800 KB plus the session's own content.
 
+## Releases
+
+Versions are cut automatically. When a change to `apps/lib/**` lands on `main`,
+CI tags the next `apps/lib/vX.Y.Z`, pushes it, and repoints `apps/cli/go.mod` at
+it — so `go get github.com/driangle/vibeview/apps/lib@latest` always includes
+what is on main.
+
+The bump is a **patch** by default. Pre-1.0 a breaking API change is a **minor**
+bump, which a diff cannot detect, so flag it in the commit that makes the break:
+
+```
+feat(sdk): rename Request.Session to Request.Ref
+
+sdk-bump: minor
+```
+
+Any commit touching `apps/lib` since the last tag carrying that line promotes the
+whole batch. Get it wrong and the mistake is permanent — module versions are
+immutable once the proxy has fetched them.
+
+To release by hand from a clean tree:
+
+```sh
+make release-sdk VERSION=0.2.1   # tags, pushes, repoints the pin, commits
+make check-sdk                   # is there anything unreleased?
+make verify-sdk                  # does the latest tag resolve for consumers?
+```
+
 ## Reading a session without rendering
 
 `github.com/driangle/vibeview/apps/lib/sessiondetail` exposes the payload

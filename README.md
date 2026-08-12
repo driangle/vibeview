@@ -30,6 +30,11 @@ Run the Go test suite directly after cloning; no web build is required:
 cd apps/cli && go test ./...
 ```
 
+`apps/lib` is a separate Go module published as the SDK. CI tags the next
+`apps/lib/vX.Y.Z` whenever it changes on `main`; mark a breaking change with
+`sdk-bump: minor` in the commit message, or it ships as a patch. See the
+[Go SDK guide](https://driangle.github.io/vibeview/guide/go-sdk#releases).
+
 ## Usage
 
 ```sh

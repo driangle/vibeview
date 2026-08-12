@@ -1,4 +1,4 @@
-.PHONY: check check-lite install install-dev install-dev-full build web web-export dev docs docs-dev docs-preview lint setup-hooks
+.PHONY: check check-lite install install-dev install-dev-full build web web-export dev docs docs-dev docs-preview lint setup-hooks release-sdk check-sdk verify-sdk
 
 # ldflags for injecting git info into dev builds
 DEV_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
@@ -69,6 +69,16 @@ lint: ## Run linters for Go and Web
 	cd apps/cli && go vet ./...
 	cd apps/cli && golangci-lint run ./...
 	cd apps/web && npm run lint
+
+release-sdk: ## Tag and release the apps/lib Go module (VERSION=x.y.z)
+	@test -n "$(VERSION)" || (echo "usage: make release-sdk VERSION=x.y.z" && exit 1)
+	./scripts/release-sdk.sh $(VERSION)
+
+check-sdk: ## Report whether apps/lib has unreleased changes
+	./scripts/check-sdk-pin.sh --strict
+
+verify-sdk: ## Check the latest apps/lib tag resolves through the module proxy
+	./scripts/verify-sdk-release.sh
 
 setup-hooks: ## Configure git to use .githooks/ for hooks
 	git config core.hooksPath .githooks

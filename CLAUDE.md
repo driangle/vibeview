@@ -2,6 +2,7 @@
 
 - Run `make check-lite` frequently to catch compilation and lint errors early.
 - After finishing a task, run `make check` to verify lint, tests, and build all pass.
+- **`apps/lib` is a published Go module.** CI tags the next `apps/lib/vX.Y.Z` when it changes on `main`, so a change there reaches outside consumers as soon as it lands. A breaking API change must say `sdk-bump: minor` in its commit message, or it ships as a patch — and versions are immutable once pushed.
 
 ## Naming
 

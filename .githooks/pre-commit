@@ -3,4 +3,9 @@ set -euo pipefail
 
 echo "Running pre-commit checks..."
 make check-lite
+
+# Reports unreleased SDK changes; never blocks. CI cuts the tag once the
+# change is on main.
+./scripts/check-sdk-pin.sh --staged
+
 echo "All pre-commit checks passed."
