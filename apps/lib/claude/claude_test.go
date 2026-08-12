@@ -168,6 +168,27 @@ func TestParseMessageLine_Mode(t *testing.T) {
 	}
 }
 
+func TestParseMessageLine_RateLimitEvent(t *testing.T) {
+	line := `{"type":"rate_limit_event","uuid":"r1","timestamp":"2026-04-16T10:09:19.406Z","data":{"rate_limit_info":{"rateLimitType":"five_hour","status":"allowed","isUsingOverage":false,"resetsAt":1786486800},"session_id":"s1"}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypeRateLimitEvent {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypeRateLimitEvent)
+	}
+	info, ok := msg.Data["rate_limit_info"].(map[string]any)
+	if !ok {
+		t.Fatalf("Data[rate_limit_info] = %v, want a map", msg.Data["rate_limit_info"])
+	}
+	if info["rateLimitType"] != "five_hour" {
+		t.Errorf("rateLimitType = %v, want %q", info["rateLimitType"], "five_hour")
+	}
+	if info["status"] != "allowed" {
+		t.Errorf("status = %v, want %q", info["status"], "allowed")
+	}
+}
+
 func TestParseMessageLine_Attachment(t *testing.T) {
 	line := `{"type":"attachment","uuid":"a1","sessionId":"s1","timestamp":"2026-04-16T10:09:19.406Z","attachment":{"type":"deferred_tools_delta","addedNames":["Read","Write"],"removedNames":[]}}`
 	msg, err := ParseMessageLine([]byte(line))

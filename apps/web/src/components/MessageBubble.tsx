@@ -7,6 +7,7 @@ import {
   ModeMessage,
   PermissionModeMessage,
   QueueOperationMessage,
+  RateLimitEventMessage,
   SystemMessage,
   UnknownMessage,
 } from './EventMessages';
@@ -118,6 +119,10 @@ export function MessageBubble({
 
   if (message.type === 'queue-operation') {
     return <QueueOperationMessage message={message} />;
+  }
+
+  if (message.type === 'rate_limit_event') {
+    return <RateLimitEventMessage message={message} />;
   }
 
   if (message.type === 'last-prompt') {

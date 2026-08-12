@@ -103,7 +103,8 @@ export interface MessageResponse {
     | 'last-prompt'
     | 'permission-mode'
     | 'attachment'
-    | 'mode';
+    | 'mode'
+    | 'rate_limit_event';
   timestamp: string;
   isMeta?: boolean;
   isSidechain?: boolean;

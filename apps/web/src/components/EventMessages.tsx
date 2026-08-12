@@ -76,6 +76,25 @@ export function ModeMessage({ message }: { message: MessageResponse }) {
   );
 }
 
+export function RateLimitEventMessage({ message }: { message: MessageResponse }) {
+  const info = (message.data?.rate_limit_info ?? {}) as Record<string, unknown>;
+  const limitType = info.rateLimitType ? String(info.rateLimitType) : 'unknown';
+  const status = info.status ? String(info.status) : 'unknown';
+  const detailText = `${formatSubtype(limitType)} · ${status}`;
+
+  return (
+    <EventMessage
+      message={message}
+      label="Rate limit"
+      borderColor="border-rose-300 dark:border-rose-600"
+      labelColor="text-rose-500 dark:text-rose-400"
+      detailColor="text-rose-400 dark:text-rose-500"
+      detailText={detailText}
+      rawData={info}
+    />
+  );
+}
+
 export function AttachmentMessage({ message }: { message: MessageResponse }) {
   const attachmentType = String(message.attachment?.type ?? 'unknown');
   const label = formatAttachmentType(attachmentType);

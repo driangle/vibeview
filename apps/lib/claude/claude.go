@@ -75,6 +75,7 @@ const (
 	MessageTypePermissionMode      MessageType = "permission-mode"
 	MessageTypeAttachment          MessageType = "attachment"
 	MessageTypeMode                MessageType = "mode"
+	MessageTypeRateLimitEvent      MessageType = "rate_limit_event"
 )
 
 // Message represents a single line from a session JSONL file.
