@@ -43,3 +43,22 @@ func TestFromZeroTimestamp(t *testing.T) {
 		t.Errorf("Timestamp = %q, want empty for zero timestamp", m.Timestamp)
 	}
 }
+
+func TestFromCarriesResultCost(t *testing.T) {
+	msg := claude.Message{
+		UUID:         "r1",
+		Type:         claude.MessageTypeResult,
+		Timestamp:    claude.Timestamp(1700000000000),
+		TotalCostUSD: 0.25,
+		Data:         map[string]any{"subtype": "success"},
+	}
+
+	m := From(msg)
+
+	if m.TotalCostUSD != 0.25 {
+		t.Errorf("TotalCostUSD = %v, want %v", m.TotalCostUSD, 0.25)
+	}
+	if m.Data["subtype"] != "success" {
+		t.Errorf("Data[subtype] = %v, want %q", m.Data["subtype"], "success")
+	}
+}

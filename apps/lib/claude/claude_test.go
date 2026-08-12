@@ -511,3 +511,27 @@ func TestParseMessageLine_PrefersCamelCaseSessionID(t *testing.T) {
 		t.Errorf("SessionID = %q, want %q", msg.SessionID, "camel")
 	}
 }
+
+func TestParseMessageLine_Result(t *testing.T) {
+	line := `{"type":"result","uuid":"r1","timestamp":"2026-04-16T10:09:19.406Z","total_cost_usd":0.25,"data":{"subtype":"success","is_error":false,"duration_ms":31080,"num_turns":5}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypeResult {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypeResult)
+	}
+	if msg.TotalCostUSD != 0.25 {
+		t.Errorf("TotalCostUSD = %v, want %v", msg.TotalCostUSD, 0.25)
+	}
+	if msg.Data["subtype"] != "success" {
+		t.Errorf("Data[subtype] = %v, want %q", msg.Data["subtype"], "success")
+	}
+	if msg.Data["num_turns"] != float64(5) {
+		t.Errorf("Data[num_turns] = %v, want %v", msg.Data["num_turns"], 5)
+	}
+	// total_cost_usd maps to a named field, so it must not be duplicated into Data.
+	if _, ok := msg.Data["total_cost_usd"]; ok {
+		t.Error("total_cost_usd should not be duplicated into Data")
+	}
+}

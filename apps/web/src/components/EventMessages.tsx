@@ -98,6 +98,34 @@ export function RateLimitEventMessage({ message }: { message: MessageResponse })
   );
 }
 
+export function ResultMessage({ message }: { message: MessageResponse }) {
+  const data = (message.data ?? {}) as Record<string, unknown>;
+  const subtype = data.subtype ? String(data.subtype) : data.is_error ? 'error' : 'success';
+
+  const parts = [humanize(subtype)];
+  if (typeof data.duration_ms === 'number') {
+    parts.push(`${(data.duration_ms / 1000).toFixed(1)}s`);
+  }
+  if (typeof data.num_turns === 'number') {
+    parts.push(`${data.num_turns} turn${data.num_turns === 1 ? '' : 's'}`);
+  }
+  const cost = data.total_cost_usd ?? message.total_cost_usd;
+  if (typeof cost === 'number' && cost > 0) {
+    parts.push(`$${cost.toFixed(4)}`);
+  }
+
+  return (
+    <EventMessage
+      message={message}
+      label="Result"
+      borderColor="border-teal-300 dark:border-teal-600"
+      labelColor="text-teal-500 dark:text-teal-400"
+      detailColor="text-teal-400 dark:text-teal-500"
+      detailText={parts.join(' · ')}
+    />
+  );
+}
+
 export function AttachmentMessage({ message }: { message: MessageResponse }) {
   const attachmentType = String(message.attachment?.type ?? 'unknown');
   const label = humanize(attachmentType);

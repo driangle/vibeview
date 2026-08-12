@@ -119,6 +119,7 @@ export interface MessageResponse {
   aiTitle?: string;
   permissionMode?: string;
   attachment?: MessageData;
+  total_cost_usd?: number;
 }
 
 export interface PaginatedSessions {

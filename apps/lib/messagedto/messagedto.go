@@ -31,6 +31,7 @@ type Message struct {
 	AiTitle        string                `json:"aiTitle,omitempty"`
 	PermissionMode string                `json:"permissionMode,omitempty"`
 	Attachment     map[string]any        `json:"attachment,omitempty"`
+	TotalCostUSD   float64               `json:"total_cost_usd,omitempty"`
 }
 
 // From builds the API representation from a raw claude.Message, applying
@@ -54,6 +55,7 @@ func From(msg claude.Message) Message {
 		AiTitle:        msg.AiTitle,
 		PermissionMode: msg.PermissionMode,
 		Attachment:     redact.RedactMapValues(msg.Attachment),
+		TotalCostUSD:   msg.TotalCostUSD,
 	}
 	if kind == "channel-message" {
 		m.ChannelInfo = insights.ExtractChannelInfo(msg)
