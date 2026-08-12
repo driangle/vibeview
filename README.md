@@ -6,6 +6,8 @@ A local CLI tool for browsing your Claude Code sessions in a clean, read-only we
 
 vibeview watches your `~/.claude` directory, discovers sessions in real time, and presents them as a browsable chat UI with tool calls, file edits, thinking blocks, and cost breakdowns.
 
+![Sessions list](apps/docs/public/images/sessions-list.png)
+
 ## Install
 
 **Homebrew:**
@@ -146,13 +148,31 @@ vibeview sessions --dir myproject --json
 
 ## Web UI
 
+### Session detail
+
+A read-only chat view with messages, tool calls, thinking blocks, and diffs, plus a
+sidebar summarizing files touched, tool usage, skills, subagents, and errors.
+
+![Session detail](apps/docs/public/images/sessions-detail.png)
+
+Tool calls expand inline to show their input and result:
+
+![Expanded tool calls](apps/docs/public/images/tool-calls.png)
+
+### Activity
+
+Contribution graph, hourly patterns, and usage trends across all your sessions.
+
+![Activity](apps/docs/public/images/activity.png)
+
+### Everything else
+
 - **Sessions list** -- browse, filter, sort, and search all sessions
-- **Session detail** -- read-only chat view with messages, tool calls, thinking blocks, and diffs
-- **Activity** -- contribution graph, hourly patterns, and usage trends
 - **Directories** -- sessions grouped by project
 - **Settings** -- theme, sort order, page size, cost display, custom model pricing
 
-Live sessions update in real time via SSE.
+Live sessions update in real time via SSE. See the
+[web interface guide](https://driangle.github.io/vibeview/guide/web-interface) for more.
 
 ## Claude Code Plugin
 
