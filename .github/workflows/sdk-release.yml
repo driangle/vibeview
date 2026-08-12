@@ -18,6 +18,14 @@ on:
     branches: [main]
     paths:
       - "apps/lib/**"
+  # Manual runs, for checking the release flow without landing an SDK change.
+  # Defaults to a dry run: it reports the version it would cut and stops.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report what would be released without tagging or pushing"
+        type: boolean
+        default: true
 
 # Two pushes landing together must not both try to cut a version.
 concurrency:
@@ -47,9 +55,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          ./scripts/auto-release-sdk.sh
+          ./scripts/auto-release-sdk.sh ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Push the pin bump
+        if: ${{ !inputs.dry_run }}
         run: |
           # No-op when the script made no commit. If main moved under us, rebase
           # the go.mod-only commit and retry once before failing.
@@ -59,4 +68,5 @@ jobs:
           }
 
       - name: Verify the released version resolves
+        if: ${{ !inputs.dry_run }}
         run: ./scripts/verify-sdk-release.sh
