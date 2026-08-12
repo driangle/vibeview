@@ -8,9 +8,9 @@ import {
   PermissionModeMessage,
   QueueOperationMessage,
   RateLimitEventMessage,
-  SystemMessage,
-  UnknownMessage,
 } from './EventMessages';
+import { SystemMessage } from './SystemMessage';
+import { UnknownMessage } from './UnknownMessage';
 import { ChannelMessage } from './ChannelMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage, SkillLoadedMessage } from './UserMessage';
