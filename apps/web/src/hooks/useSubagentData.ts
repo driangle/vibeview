@@ -3,6 +3,7 @@ import useSWR from 'swr';
 import { fetcher } from '../api';
 import type { ContentBlock, SessionInsights, SubagentDetail } from '../types';
 import { buildToolResultMap } from './useSessionData';
+import { isHiddenMessage } from '../lib/messageVisibility';
 
 export function useSubagentData(
   sessionId: string | undefined,
@@ -21,7 +22,7 @@ export function useSubagentData(
 
   const subagentDisplayMessages = useMemo(() => {
     if (!subagentData) return [];
-    return subagentData.messages.filter((m) => m.type !== 'file-history-snapshot');
+    return subagentData.messages.filter((m) => !isHiddenMessage(m));
   }, [subagentData]);
 
   const focusedAgentPrompt = useMemo(() => {

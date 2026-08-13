@@ -9,6 +9,7 @@ import type {
   UsageTotals,
 } from '../types';
 import { useSessionStream } from './useSessionStream';
+import { isHiddenMessage } from '../lib/messageVisibility';
 
 export function buildToolResultMap(messages: MessageResponse[]): Map<string, ContentBlock> {
   const map = new Map<string, ContentBlock>();
@@ -127,7 +128,7 @@ export function useSessionData(id: string | undefined) {
 
   // Filter out non-renderable messages for pagination.
   const displayMessages = useMemo(() => {
-    return allMessages.filter((m) => m.type !== 'file-history-snapshot');
+    return allMessages.filter((m) => !isHiddenMessage(m));
   }, [allMessages]);
 
   return {

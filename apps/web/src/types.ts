@@ -96,6 +96,7 @@ export interface MessageResponse {
     | 'result'
     | 'system'
     | 'file-history-snapshot'
+    | 'file-history-delta'
     | 'custom-title'
     | 'ai-title'
     | 'agent-name'

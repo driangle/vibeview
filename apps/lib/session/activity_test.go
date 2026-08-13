@@ -185,9 +185,10 @@ func TestDeriveActivityState_SkipsSystemMessages(t *testing.T) {
 		}},
 		{Type: claude.MessageTypeSystem, Timestamp: ts},
 		{Type: claude.MessageTypeFileHistorySnapshot, Timestamp: ts},
+		{Type: claude.MessageTypeFileHistoryDelta, Timestamp: ts},
 		{Type: claude.MessageTypeCustomTitle, Timestamp: ts},
 	}
-	// Should skip system/snapshot/custom-title and find the user message.
+	// Should skip system/snapshot/delta/custom-title and find the user message.
 	if got := DeriveActivityState(msgs); got != ActivityWorking {
 		t.Errorf("skips non-semantic: got %q, want %q", got, ActivityWorking)
 	}

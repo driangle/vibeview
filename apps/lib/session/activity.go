@@ -73,7 +73,7 @@ func DeriveActivityState(messages []claude.Message) string {
 			return ActivityIdle
 
 		// Skip non-semantic message types.
-		case claude.MessageTypeSystem, claude.MessageTypeFileHistorySnapshot, claude.MessageTypeCustomTitle, claude.MessageTypeAiTitle, claude.MessageTypeQueueOperation, claude.MessageTypeLastPrompt, claude.MessageTypePermissionMode, claude.MessageTypeAttachment, claude.MessageTypeMode, claude.MessageTypeRateLimitEvent:
+		case claude.MessageTypeSystem, claude.MessageTypeFileHistorySnapshot, claude.MessageTypeFileHistoryDelta, claude.MessageTypeCustomTitle, claude.MessageTypeAiTitle, claude.MessageTypeQueueOperation, claude.MessageTypeLastPrompt, claude.MessageTypePermissionMode, claude.MessageTypeAttachment, claude.MessageTypeMode, claude.MessageTypeRateLimitEvent:
 			continue
 		}
 	}

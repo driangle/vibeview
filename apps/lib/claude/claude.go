@@ -67,6 +67,7 @@ const (
 	MessageTypeProgress            MessageType = "progress"
 	MessageTypeSystem              MessageType = "system"
 	MessageTypeFileHistorySnapshot MessageType = "file-history-snapshot"
+	MessageTypeFileHistoryDelta    MessageType = "file-history-delta"
 	MessageTypeCustomTitle         MessageType = "custom-title"
 	MessageTypeAiTitle             MessageType = "ai-title"
 	MessageTypeResult              MessageType = "result"

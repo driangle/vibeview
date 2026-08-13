@@ -140,6 +140,20 @@ func TestParseMessageLine_FileHistorySnapshot(t *testing.T) {
 	}
 }
 
+func TestParseMessageLine_FileHistoryDelta(t *testing.T) {
+	line := `{"type":"file-history-delta","uuid":"fh2","timestamp":"2026-08-13T20:15:43Z","data":{"messageId":"cf6b5b47","trackingPath":"evals/add-task/workspace/.verify/go.mod"}}`
+	msg, err := ParseMessageLine([]byte(line))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg.Type != MessageTypeFileHistoryDelta {
+		t.Errorf("Type = %q, want %q", msg.Type, MessageTypeFileHistoryDelta)
+	}
+	if msg.Data["trackingPath"] != "evals/add-task/workspace/.verify/go.mod" {
+		t.Errorf("Data[trackingPath] = %v, want %q", msg.Data["trackingPath"], "evals/add-task/workspace/.verify/go.mod")
+	}
+}
+
 func TestParseMessageLine_PermissionMode(t *testing.T) {
 	line := `{"type":"permission-mode","permissionMode":"auto","sessionId":"s1"}`
 	msg, err := ParseMessageLine([]byte(line))

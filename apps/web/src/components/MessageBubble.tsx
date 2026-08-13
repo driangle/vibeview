@@ -15,6 +15,7 @@ import { UnknownMessage } from './UnknownMessage';
 import { ChannelMessage } from './ChannelMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage, SkillLoadedMessage } from './UserMessage';
+import { isHiddenMessage } from '../lib/messageVisibility';
 
 function isHookMessage(msg: MessageResponse): boolean {
   return msg.type === 'progress' && msg.data?.type === 'hook_progress';
@@ -68,7 +69,7 @@ export function MessageBubble({
     );
   }
 
-  if (message.type === 'file-history-snapshot') return null;
+  if (isHiddenMessage(message)) return null;
 
   if (message.type === 'user' && message.message) {
     const content = message.message.content;
