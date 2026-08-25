@@ -32,24 +32,23 @@ type Options struct {
 	Limit     int
 	ClaudeDir string
 	Dirs      []string // If non-empty, only search sessions whose Project matches one of these directories.
+
+	// After and Before bound the search to sessions active in a time range,
+	// as epoch millis. A session matches when its [start, end] window overlaps
+	// the range. Zero means unbounded on that side, so a zero pair searches
+	// every session.
+	//
+	// This narrows term-based matching to a period of interest — searching for
+	// a commit's changed files, say, where the paths alone would match far too
+	// many sessions.
+	After  int64
+	Before int64
 }
 
 // Search scans session JSONL files for messages containing the query string.
 // It returns up to opts.Limit results, searching newest sessions first.
 func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
-	sessions := idx.GetSessions()
-	if len(opts.Dirs) > 0 {
-		filtered := make([]session.SessionMeta, 0, len(sessions))
-		for _, sm := range sessions {
-			for _, d := range opts.Dirs {
-				if strings.Contains(sm.Project, d) {
-					filtered = append(filtered, sm)
-					break
-				}
-			}
-		}
-		sessions = filtered
-	}
+	sessions := filterSessions(idx.GetSessions(), opts)
 	terms := parseQuery(opts.Query)
 	if len(terms) == 0 {
 		return nil
@@ -123,6 +122,56 @@ func Search(ctx context.Context, idx *session.Index, opts Options) []Result {
 		results = append(results, s.result)
 	}
 	return results
+}
+
+// filterSessions applies the non-content filters — project directory and time
+// window — before any file is opened, so excluded sessions are never scanned.
+func filterSessions(sessions []session.SessionMeta, opts Options) []session.SessionMeta {
+	if len(opts.Dirs) == 0 && opts.After == 0 && opts.Before == 0 {
+		return sessions
+	}
+	filtered := make([]session.SessionMeta, 0, len(sessions))
+	for _, sm := range sessions {
+		if !matchesDirs(sm, opts.Dirs) || !withinWindow(sm, opts.After, opts.Before) {
+			continue
+		}
+		filtered = append(filtered, sm)
+	}
+	return filtered
+}
+
+// matchesDirs reports whether a session's project path contains any of dirs.
+// An empty dirs list matches every session.
+func matchesDirs(sm session.SessionMeta, dirs []string) bool {
+	if len(dirs) == 0 {
+		return true
+	}
+	for _, d := range dirs {
+		if strings.Contains(sm.Project, d) {
+			return true
+		}
+	}
+	return false
+}
+
+// withinWindow reports whether a session's time window overlaps [after, before].
+// A zero bound is unbounded on that side. Sessions with no usable timestamp are
+// excluded whenever a bound is set, since there is no evidence they belong.
+func withinWindow(sm session.SessionMeta, after, before int64) bool {
+	if after == 0 && before == 0 {
+		return true
+	}
+	start, end := sm.TimeWindow()
+	if start == 0 {
+		return false
+	}
+	if after > 0 && end < after {
+		return false
+	}
+	if before > 0 && start > before {
+		return false
+	}
+	return true
 }
 
 // Field weights favor human-authored prose over machine text when both a text

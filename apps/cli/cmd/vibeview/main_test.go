@@ -436,7 +436,7 @@ func TestSearchE2E(t *testing.T) {
 		t.Fatalf("discover failed: %v", err)
 	}
 
-	results := doSearch(idx, dir, "database migration", 10)
+	results := doSearch(idx, searchParams{claudeDir: dir, query: "database migration", limit: 10})
 
 	if results.Total == 0 {
 		t.Fatal("expected at least 1 search result")
@@ -480,7 +480,7 @@ func TestSearchE2E_NoResults(t *testing.T) {
 		t.Fatalf("discover failed: %v", err)
 	}
 
-	results := doSearch(idx, dir, "xyznonexistent", 10)
+	results := doSearch(idx, searchParams{claudeDir: dir, query: "xyznonexistent", limit: 10})
 	if results.Total != 0 {
 		t.Errorf("Total = %d, want 0", results.Total)
 	}

@@ -21,6 +21,28 @@ vibeview search --dirs myproject "<query>"
 vibeview search --json "<query>"
 ```
 
+### Find the session behind a commit
+
+`--commit` derives the query from a git commit — its hash, the paths it changed,
+and its subject words — so the session that produced the commit is findable even
+when the transcript never quotes the hash.
+
+```
+vibeview search --commit <hash>                      # resolves in the cwd repo
+vibeview search --commit HEAD~3 --repo ~/src/proj
+vibeview search --commit <hash> --window 12h         # default window is 24h
+vibeview search --commit <hash> --dirs myproject     # scope out other projects
+```
+
+`--repo` says where to read the commit; `--dirs` filters which sessions are
+searched. They are separate because a session run from a git worktree records
+that worktree as its project, so the commit and the session live at different
+paths — don't scope `--dirs` to the main checkout when hunting for one.
+
+Results are limited to sessions active within `--window` of the commit time,
+which is what keeps common file paths from matching unrelated work. Widen the
+window when the commit was written well after the session that produced it.
+
 ### List sessions
 
 Browse all sessions in a table format.

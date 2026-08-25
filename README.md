@@ -92,6 +92,20 @@ vibeview search --limit 5 "auth middleware"
 vibeview search --json --dirs myproject "query"
 ```
 
+`--commit` builds the query from a git commit — its hash, changed paths, and
+subject — to find the session that produced it, even when the transcript never
+mentions the hash. Results are limited to sessions active within `--window`
+(default 24h) of the commit.
+
+`--repo` (default `.`) says where to read the commit, separately from `--dirs`,
+which filters which sessions are searched — so a session run from a git worktree
+is still found from a commit in the main checkout.
+
+```sh
+vibeview search --commit 0875806
+vibeview search --commit HEAD~3 --repo ~/src/myproject --window 12h
+```
+
 #### `stats`
 
 Show aggregate usage summary across sessions.

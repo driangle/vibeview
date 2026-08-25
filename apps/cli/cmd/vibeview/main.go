@@ -314,6 +314,9 @@ func searchCmd(claudeDir *string, logLevel *string) *cobra.Command {
 	var jsonOutput bool
 	var limit int
 	var dirsFlag string
+	var commitRef string
+	var repoDir string
+	var window time.Duration
 
 	cmd := &cobra.Command{
 		Use:   "search <query>",
@@ -325,15 +328,39 @@ A multi-word query matches each word independently; sessions are ranked by how
 many of the words they contain, then by frequency. Wrap words in double quotes
 to require them as an adjacent phrase.
 
+With --commit, the query is derived from a git commit instead: its hash, the
+paths it changed, and the meaningful words of its subject. Sessions are then
+ranked by how many of those facets they mention, so the session that produced a
+commit is findable even when it never quotes the hash. Results are restricted to
+sessions active within --window of the commit, which is what keeps common paths
+from matching unrelated work.
+
+--repo says where to read the commit; --dirs still filters which sessions are
+searched. Keeping them separate is what makes git worktrees work: a session run
+from a worktree records that worktree as its project, so the commit and the
+session live at different paths.
+
 Examples:
   vibeview search "refactor review cli"     # ranks sessions covering all 3 words
   vibeview search '"database migration"'    # requires the exact phrase
   vibeview search --limit 5 "auth middleware"
   vibeview search --dirs myproject "TODO"
-  vibeview search --json "error handling"`,
-		Args: cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+  vibeview search --json "error handling"
+  vibeview search --commit 0875806          # sessions behind a commit in the cwd repo
+  vibeview search --commit HEAD~3 --repo ~/src/proj --window 12h
+  vibeview search --commit 0875806 --dirs myproject   # scope to one project`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			logutil.SetLevel(logutil.LevelWarn)
+
+			var query string
+			if len(args) > 0 {
+				query = args[0]
+			}
+			if query == "" && commitRef == "" {
+				return fmt.Errorf("provide a query or --commit")
+			}
+			cmd.SilenceUsage = true
 
 			var dirs []string
 			if dirsFlag != "" {
@@ -344,20 +371,40 @@ Examples:
 				}
 			}
 
-			idx, err := discoverAndEnrich(*claudeDir, dirs)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error discovering sessions: %v\n", err)
-				os.Exit(1)
+			params := searchParams{
+				claudeDir: *claudeDir,
+				query:     query,
+				limit:     limit,
 			}
 
-			report := doSearch(idx, *claudeDir, args[0], limit)
-			outputAny(report, jsonOutput)
+			if commitRef != "" {
+				commit, err := search.ResolveCommit(cmd.Context(), repoDir, commitRef)
+				if err != nil {
+					return err
+				}
+				params.commit = &commit
+				// Commit terms lead; an explicit query adds terms alongside them.
+				params.query = strings.TrimSpace(commit.Query() + " " + query)
+				params.after = commit.Timestamp - window.Milliseconds()
+				params.before = commit.Timestamp + window.Milliseconds()
+			}
+
+			idx, err := discoverAndEnrich(*claudeDir, dirs)
+			if err != nil {
+				return fmt.Errorf("discovering sessions: %w", err)
+			}
+
+			outputAny(doSearch(idx, params), jsonOutput)
+			return nil
 		},
 	}
 
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "output as JSON instead of YAML")
 	cmd.Flags().IntVar(&limit, "limit", 20, "maximum number of results")
 	cmd.Flags().StringVar(&dirsFlag, "dirs", "", "comma-separated project path substrings to filter (OR-combined)")
+	cmd.Flags().StringVar(&commitRef, "commit", "", "build the query from a git commit (hash, tag, or revision)")
+	cmd.Flags().StringVar(&repoDir, "repo", ".", "git repository to resolve --commit in")
+	cmd.Flags().DurationVar(&window, "window", 24*time.Hour, "how far around the commit time to search (--commit only)")
 
 	return cmd
 }
@@ -372,8 +419,18 @@ type inspectReport struct {
 
 type searchReport struct {
 	Query   string              `json:"query" yaml:"query"`
+	Commit  *searchCommitInfo   `json:"commit,omitempty" yaml:"commit,omitempty"`
 	Total   int                 `json:"total" yaml:"total"`
 	Results []searchResultEntry `json:"results" yaml:"results"`
+}
+
+// searchCommitInfo echoes the commit a --commit query was derived from, so the
+// output shows what the terms came from.
+type searchCommitInfo struct {
+	Hash      string   `json:"hash" yaml:"hash"`
+	Subject   string   `json:"subject" yaml:"subject"`
+	Timestamp string   `json:"timestamp" yaml:"timestamp"`
+	Files     []string `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
 type searchResultEntry struct {
@@ -848,16 +905,41 @@ func discoverAndEnrich(claudeDir string, dirs []string) (*session.Index, error) 
 	return idx, nil
 }
 
-func doSearch(idx *session.Index, claudeDir, query string, limit int) searchReport {
+// searchParams carries one search request from the command layer to doSearch.
+type searchParams struct {
+	claudeDir string
+	query     string
+	limit     int
+
+	// after and before bound the session time window (epoch millis); zero on
+	// either side means unbounded. commit is set when the query was derived
+	// from a git commit, and is echoed in the report so the caller can see
+	// which commit produced these terms.
+	after  int64
+	before int64
+	commit *search.Commit
+}
+
+func doSearch(idx *session.Index, p searchParams) searchReport {
 	results := search.Search(context.Background(), idx, search.Options{
-		Query:     query,
-		Limit:     limit,
-		ClaudeDir: claudeDir,
+		Query:     p.query,
+		Limit:     p.limit,
+		ClaudeDir: p.claudeDir,
+		After:     p.after,
+		Before:    p.before,
 	})
 
 	report := searchReport{
-		Query: query,
+		Query: p.query,
 		Total: len(results),
+	}
+	if p.commit != nil {
+		report.Commit = &searchCommitInfo{
+			Hash:      p.commit.ShortHash,
+			Subject:   p.commit.Subject,
+			Timestamp: time.UnixMilli(p.commit.Timestamp).Format(time.RFC3339),
+			Files:     p.commit.Files,
+		}
 	}
 	for _, r := range results {
 		report.Results = append(report.Results, searchResultEntry{

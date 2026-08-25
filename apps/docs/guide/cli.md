@@ -262,6 +262,9 @@ vibeview search --dirs myproject "TODO"
 |------|---------|-------------|
 | `--limit` | `20` | Maximum number of results |
 | `--dirs` | | Comma-separated project path substrings to filter (OR-combined) |
+| `--commit` | | Build the query from a git commit (hash, tag, or revision) |
+| `--repo` | `.` | Git repository to resolve `--commit` in |
+| `--window` | `24h` | How far around the commit time to search (`--commit` only) |
 | `--json` | `false` | Output as JSON instead of YAML |
 
 #### Example output
@@ -277,6 +280,44 @@ results:
     timestamp: "2026-03-26T21:07:06+01:00"
     snippet: "...help with the database migration issue..."
 ```
+
+#### Finding the session behind a commit
+
+`--commit` answers "which session produced this commit?" It resolves the commit
+in a git repository and derives the query from it: the hash in both forms, every
+path the commit changed, and the meaningful words of its subject. Because
+sessions are ranked by how many of those facets they mention, the session that
+produced a commit surfaces first even when it never quotes the hash — which is
+the common case, since a hash only enters a transcript if the session itself ran
+the commit.
+
+```bash
+vibeview search --commit 0875806
+vibeview search --commit HEAD~3 --repo ~/src/myproject
+vibeview search --commit v1.2.0 --window 12h
+```
+
+Results are restricted to sessions active within `--window` of the commit time.
+That window is what keeps a common path like `main.go` from matching unrelated
+work; widen it for a commit written well after the session that produced it.
+
+Changed paths are repo-relative, so they match the absolute paths that appear in
+transcripts. Since a generic subject word can still pull in sessions from other
+projects, pair it with `--dirs` to scope the search:
+
+```bash
+vibeview search --commit 0875806 --dirs myproject
+```
+
+`--repo` and `--dirs` stay separate on purpose: `--repo` says where to read the
+commit, `--dirs` says which sessions to search. That separation is what makes
+git worktrees work. A session run from a worktree records the worktree as its
+project, so the commit and the session sit at different paths — point `--repo`
+at either checkout and the session is still found, as long as you don't scope
+`--dirs` to the other one.
+
+Merge commits resolve with no changed files — `git show` reports no diff for
+them — so they match on hash and subject alone.
 
 ### `vibeview stats`
 

@@ -118,6 +118,169 @@ func TestSearchFiltersByDirs(t *testing.T) {
 	}
 }
 
+// atTime returns meta with an explicit [start, end] time window.
+func atTime(meta session.SessionMeta, start, end int64) session.SessionMeta {
+	meta.Timestamp = start
+	meta.StartTime = start
+	meta.EndTime = end
+	return meta
+}
+
+func TestSearchFiltersByTimeWindow(t *testing.T) {
+	dir := t.TempDir()
+	const hour = int64(3600 * 1000)
+
+	// All three sessions match the query; only the window separates them.
+	inside := atTime(writeSession(t, dir, "sess-inside", "/proj", "matching term"), 10*hour, 11*hour)
+	before := atTime(writeSession(t, dir, "sess-before", "/proj", "matching term"), 1*hour, 2*hour)
+	after := atTime(writeSession(t, dir, "sess-after", "/proj", "matching term"), 50*hour, 51*hour)
+	// A session straddling the window's start overlaps it, so it belongs.
+	straddling := atTime(writeSession(t, dir, "sess-straddle", "/proj", "matching term"), 8*hour, 10*hour)
+
+	idx := indexOf(inside, before, after, straddling)
+
+	results := Search(context.Background(), idx, Options{
+		Query:  "matching term",
+		Limit:  10,
+		After:  9 * hour,
+		Before: 12 * hour,
+	})
+
+	got := make(map[string]bool, len(results))
+	for _, r := range results {
+		got[r.Meta.SessionID] = true
+	}
+	if !got["sess-inside"] || !got["sess-straddle"] {
+		t.Errorf("window dropped overlapping sessions: %v", got)
+	}
+	if got["sess-before"] || got["sess-after"] {
+		t.Errorf("window kept non-overlapping sessions: %v", got)
+	}
+}
+
+func TestSearchTimeWindowBoundsAreIndependent(t *testing.T) {
+	dir := t.TempDir()
+	const hour = int64(3600 * 1000)
+
+	early := atTime(writeSession(t, dir, "sess-early", "/proj", "matching term"), 1*hour, 2*hour)
+	late := atTime(writeSession(t, dir, "sess-late", "/proj", "matching term"), 50*hour, 51*hour)
+	idx := indexOf(early, late)
+
+	// Only After set: everything from that point on.
+	results := Search(context.Background(), idx, Options{Query: "matching term", Limit: 10, After: 10 * hour})
+	if len(results) != 1 || results[0].Meta.SessionID != "sess-late" {
+		t.Errorf("After-only bound returned %d results, want just sess-late", len(results))
+	}
+
+	// Only Before set: everything up to that point.
+	results = Search(context.Background(), idx, Options{Query: "matching term", Limit: 10, Before: 10 * hour})
+	if len(results) != 1 || results[0].Meta.SessionID != "sess-early" {
+		t.Errorf("Before-only bound returned %d results, want just sess-early", len(results))
+	}
+
+	// Neither bound set: no time filtering at all.
+	results = Search(context.Background(), idx, Options{Query: "matching term", Limit: 10})
+	if len(results) != 2 {
+		t.Errorf("unbounded search returned %d results, want 2", len(results))
+	}
+}
+
+func TestSearchTimeWindowExcludesUntimestampedSessions(t *testing.T) {
+	dir := t.TempDir()
+	const hour = int64(3600 * 1000)
+
+	// A session with no usable timestamp cannot be shown to fall in the window,
+	// so a bounded search must leave it out rather than guess.
+	idx := indexOf(
+		writeSession(t, dir, "sess-no-time", "/proj", "matching term"),
+		atTime(writeSession(t, dir, "sess-timed", "/proj", "matching term"), 10*hour, 11*hour),
+	)
+
+	results := Search(context.Background(), idx, Options{
+		Query: "matching term", Limit: 10, After: 9 * hour, Before: 12 * hour,
+	})
+
+	if len(results) != 1 || results[0].Meta.SessionID != "sess-timed" {
+		t.Fatalf("expected only sess-timed, got %d results", len(results))
+	}
+}
+
+// A commit's query must find the session that produced it even when the
+// transcript never quotes the hash — the whole point of --commit.
+func TestSearchFindsSessionByCommitQueryWithoutHash(t *testing.T) {
+	dir := t.TempDir()
+	const hour = int64(3600 * 1000)
+
+	commit := Commit{
+		Hash:      "0875806abcdef0123456789abcdef0123456789a",
+		ShortHash: "0875806",
+		Subject:   "feat(parser): support file-history-delta messages",
+		Files:     []string{"apps/lib/claude/parser.go"},
+		Timestamp: 10 * hour,
+	}
+
+	// The producing session edited the file and discussed the subject, but
+	// never mentions the hash.
+	producer := atTime(writeSession(t, dir, "sess-producer", "/proj",
+		"editing /Users/me/proj/apps/lib/claude/parser.go to handle file-history-delta messages"),
+		9*hour, 10*hour)
+	// Another session touched the same file, but weeks outside the window.
+	unrelated := atTime(writeSession(t, dir, "sess-old", "/proj",
+		"reading /Users/me/proj/apps/lib/claude/parser.go"), 400*hour, 401*hour)
+
+	idx := indexOf(producer, unrelated)
+
+	results := Search(context.Background(), idx, Options{
+		Query:  commit.Query(),
+		Limit:  10,
+		After:  commit.Timestamp - 24*hour,
+		Before: commit.Timestamp + 24*hour,
+	})
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if results[0].Meta.SessionID != "sess-producer" {
+		t.Errorf("matched %q, want sess-producer", results[0].Meta.SessionID)
+	}
+}
+
+// When several sessions fall in the window, the one matching more facets of the
+// commit ranks first.
+func TestSearchRanksBroaderCommitMatchFirst(t *testing.T) {
+	dir := t.TempDir()
+	const hour = int64(3600 * 1000)
+
+	commit := Commit{
+		ShortHash: "0875806",
+		Subject:   "fix parser handling of delta records",
+		Files:     []string{"apps/lib/claude/parser.go", "apps/lib/claude/delta.go"},
+		Timestamp: 10 * hour,
+	}
+
+	broad := atTime(writeSession(t, dir, "sess-broad", "/proj",
+		"touched apps/lib/claude/parser.go and apps/lib/claude/delta.go for delta records handling"),
+		9*hour, 10*hour)
+	narrow := atTime(writeSession(t, dir, "sess-narrow", "/proj",
+		"just skimmed apps/lib/claude/parser.go"), 9*hour, 10*hour)
+
+	idx := indexOf(narrow, broad)
+
+	results := Search(context.Background(), idx, Options{
+		Query:  commit.Query(),
+		Limit:  10,
+		After:  commit.Timestamp - 24*hour,
+		Before: commit.Timestamp + 24*hour,
+	})
+
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(results))
+	}
+	if results[0].Meta.SessionID != "sess-broad" {
+		t.Errorf("ranked %q first, want sess-broad", results[0].Meta.SessionID)
+	}
+}
+
 func TestSearchRedactsSecretsInSnippet(t *testing.T) {
 	dir := t.TempDir()
 	idx := indexOf(writeSession(t, dir, "sess-1", "/proj",
