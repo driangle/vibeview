@@ -171,7 +171,7 @@ func renderTable(w io.Writer, headers []string, rows []tableRow, widths []int) {
 		if i > 0 {
 			hdr.WriteString("  ")
 		}
-		hdr.WriteString(fmt.Sprintf("%-*s", widths[i], h))
+		fmt.Fprintf(&hdr, "%-*s", widths[i], h)
 	}
 	fmt.Fprintln(w, rowIndent(dim(hdr.String())))
 	for _, r := range rows {
@@ -180,7 +180,7 @@ func renderTable(w io.Writer, headers []string, rows []tableRow, widths []int) {
 			if i > 0 {
 				line.WriteString("  ")
 			}
-			line.WriteString(fmt.Sprintf("%-*s", widths[i], c))
+			fmt.Fprintf(&line, "%-*s", widths[i], c)
 		}
 		fmt.Fprintln(w, rowIndent(line.String()))
 	}

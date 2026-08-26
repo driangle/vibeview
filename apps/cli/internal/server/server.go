@@ -142,7 +142,7 @@ func (s *Server) routes() {
 func (s *Server) ListenAndServe(port int, certFile, keyFile string) error {
 	addr := fmt.Sprintf("%s:%d", s.host, port)
 
-	var handler http.Handler = corsHandler(port, s.allowedOrigins, s.mux)
+	handler := corsHandler(port, s.allowedOrigins, s.mux)
 	if s.token != "" {
 		handler = tokenAuthMiddleware(s.token, handler)
 	}

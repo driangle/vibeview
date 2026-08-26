@@ -1,0 +1,16 @@
+# Pins lint behaviour to this file rather than to whichever golangci-lint
+# version a machine happens to have installed. Without it, v1 and v2 disagree:
+# v2 dropped v1's built-in default exclusions, which turned idiomatic
+# `defer f.Close()` and `fmt.Fprintln(...)` calls into 23 errcheck failures and
+# made the pre-commit hook unpassable locally while CI stayed green.
+#
+# Requires golangci-lint v2 (and so golangci-lint-action v7 in CI); v1 cannot
+# parse this format.
+version: "2"
+
+linters:
+  exclusions:
+    presets:
+      # v1's EXC0001: unchecked Close/Flush/Fprint-family calls, where the
+      # error is genuinely not actionable.
+      - std-error-handling

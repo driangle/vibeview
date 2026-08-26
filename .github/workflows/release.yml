@@ -26,8 +26,10 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      # v7 runs golangci-lint v2, matching apps/cli/.golangci.yml. The v6
+      # action installs v1, which cannot parse that config.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           working-directory: apps/cli
 
