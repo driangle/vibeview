@@ -18,8 +18,17 @@ Find sessions by content. Returns matching sessions with context snippets.
 vibeview search "<query>"
 vibeview search --limit 5 "<query>"
 vibeview search --dirs myproject "<query>"
+vibeview search --dirs /Users/me/src/myproject "<query>"   # scope to one project
 vibeview search --json "<query>"
 ```
+
+**Always pass `--dirs <absolute_path>` when the project's absolute path is known**
+— e.g. the user is asking about work in the current working directory, or names a
+project you can resolve to a path. `--dirs` matches project-path substrings
+(comma-separated, OR-combined), so an absolute path narrows the search to that
+one project and keeps unrelated sessions out of the results. Only search
+unscoped when the project is genuinely unknown or the user is searching across
+everything.
 
 ### Find the session behind a commit
 
@@ -157,7 +166,7 @@ All commands accept:
 
 ## Usage guidance
 
-- Use `vibeview search` when the user wants to find a past conversation by topic or keyword.
+- Use `vibeview search` when the user wants to find a past conversation by topic or keyword. Pass `--dirs <absolute_path>` whenever you know the project path — it narrows results to that project. The same applies to `vibeview stats --dirs` and `vibeview sessions --dir`.
 - Use `vibeview sessions --sort messages` to help users identify their longest sessions.
 - Use `vibeview inspect` to get detailed metadata about a specific session (tokens, cost, tools, files).
 - Use `vibeview related` to pull together a multi-agent episode — a session's subagents and its sibling sessions from the same project.
